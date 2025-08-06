@@ -1,39 +1,71 @@
 // src/components/sections/FinancingSection.jsx
 import React from "react";
 
-export default function FinancingSection({ financing, onChange }) {
-  const handleChange = (field, value) => {
-    onChange({ ...financing, [field]: value });
+export default function FinancingSection({ financing = {}, onChange = () => {} }) {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    onChange({ [name]: value });
   };
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-bold">Financement</h2>
+      <h2 className="text-xl font-semibold">Financement</h2>
+
       <div>
-        <label className="block text-sm font-medium">Montant du prêt</label>
+        <label className="block text-sm font-medium text-gray-700">Type de financement</label>
+        <select
+          name="financingType"
+          value={financing.financingType || ''}
+          onChange={handleChange}
+          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+        >
+          <option value="conventional">Conventionnel</option>
+          <option value="aph">APH Sélect</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Montant du prêt</label>
         <input
           type="number"
-          value={financing.loanAmount || 0}
-          onChange={(e) => handleChange("loanAmount", parseFloat(e.target.value))}
-          className="w-full border rounded p-2"
+          name="loanAmount"
+          value={financing.loanAmount || ''}
+          onChange={handleChange}
+          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
         />
       </div>
+
       <div>
-        <label className="block text-sm font-medium">Taux d'intérêt (%)</label>
+        <label className="block text-sm font-medium text-gray-700">Taux hypothécaire (%)</label>
         <input
           type="number"
-          value={financing.interestRate || 0}
-          onChange={(e) => handleChange("interestRate", parseFloat(e.target.value))}
-          className="w-full border rounded p-2"
+          name="mortgageRate"
+          value={financing.mortgageRate || ''}
+          onChange={handleChange}
+          step="0.01"
+          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
         />
       </div>
+
       <div>
-        <label className="block text-sm font-medium">Durée (années)</label>
+        <label className="block text-sm font-medium text-gray-700">Amortissement (années)</label>
         <input
           type="number"
-          value={financing.term || 0}
-          onChange={(e) => handleChange("term", parseInt(e.target.value))}
-          className="w-full border rounded p-2"
+          name="amortization"
+          value={financing.amortization || ''}
+          onChange={handleChange}
+          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Terme (années)</label>
+        <input
+          type="number"
+          name="term"
+          value={financing.term || ''}
+          onChange={handleChange}
+          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
         />
       </div>
     </div>
