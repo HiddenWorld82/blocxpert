@@ -68,6 +68,7 @@ export default function OperatingExpensesSection({ expenses = {}, onChange, adva
         "insurance",
         "electricityHeating",
         "management",
+        "otherExpenses",
     ].reduce((sum, key) => sum + (parseFloat(expenses[key]) || 0), 0) + managementFee + vacancyAmount + maintenanceTotal + conciergeTotal
 
   useEffect(() => {
@@ -86,8 +87,8 @@ export default function OperatingExpensesSection({ expenses = {}, onChange, adva
       { field: "municipalTaxes", label: "Taxes municipales" },
       { field: "schoolTaxes", label: "Taxes scolaires" },
       { field: "electricityHeating", label: "Électricité/Chauffage" },
-      { field: "maintenance", label: "Entretien" },
-      { field: "concierge", label: "Conciergerie" },
+      { field: "maintenance", label: "Entretien (par logement)" },
+      { field: "concierge", label: "Conciergerie (par logement)" },
       { field: "managementRate", label: "Gestion / Administration (%)" },
       { field: "otherExpenses", label: "Autres dépenses" },
     ];
@@ -159,9 +160,9 @@ export default function OperatingExpensesSection({ expenses = {}, onChange, adva
     { field: "heating", label: "Chauffage" },
     { field: "electricity", label: "Électricité/Chauffage" },
     { field: "insurance", label: "Assurances" },
-    { field: "maintenance", label: "Entretien" },
+    { field: "maintenance", label: "Entretien (par logement)" },
     { field: "managementRate", label: "Gestion / Administration (%)" },
-    { field: "concierge", label: "Conciergerie" },
+    { field: "concierge", label: "Conciergerie (par logement)" },
     { field: "landscaping", label: "Aménagement paysager" },
     { field: "snowRemoval", label: "Déneigement" },
     { field: "extermination", label: "Extermination" },

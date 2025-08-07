@@ -24,9 +24,9 @@ const calculateRentability = (property, advancedExpenses) => {
       (parseFloat(property.heating) || 0) +
       (parseFloat(property.electricity) || 0) +
       (parseFloat(property.insurance) || 0) +
-      (parseFloat(property.maintenance) || (365 * numberOfUnits)) +
+      (parseFloat(property.maintenanceTotal) || 0) +
       (totalGrossRevenue * (parseFloat(property.managementRate) || 0) / 100) +
-      (parseFloat(property.concierge) || (610 * numberOfUnits)) +
+      (parseFloat(property.conciergeTotal) || 0) +
       (parseFloat(property.landscaping) || 0) +
       (parseFloat(property.snowRemoval) || 0) +
       (parseFloat(property.extermination) || 0) +
@@ -46,16 +46,16 @@ const calculateRentability = (property, advancedExpenses) => {
       (parseFloat(property.municipalTaxes) || 0) +
       (parseFloat(property.schoolTaxes) || 0) +
       (parseFloat(property.insurance) || 0) +
-      (parseFloat(property.maintenance) || (365 * numberOfUnits)) +
+      (parseFloat(property.maintenanceTotal) || 0) +
       (totalGrossRevenue * (parseFloat(property.managementRate) || 0) / 100) +
-      (parseFloat(property.concierge) || (610 * numberOfUnits)) +
+      (parseFloat(property.conciergeTotal) || 0) +
       (parseFloat(property.electricityHeating) || 0) +
       (parseFloat(property.otherExpenses) || 0) +
   }
 
   const totalExpenses = operatingExpenses + vacancyAmount;
   const netOperatingIncome = totalGrossRevenue - totalExpenses;
-  const debtCoveraeRatio = parseFloat(property.debtCoverageRatio) || 1.15;
+  const debtCoverageRatio = parseFloat(property.debtCoverageRatio) || 1.15;
   const maxDebtService = netOperatingIncome / debtCoverageRatio;
 
   const qualificationRate = (parseFloat(property.qualificationRate) || 6) / 100;
