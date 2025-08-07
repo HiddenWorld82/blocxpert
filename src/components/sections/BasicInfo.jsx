@@ -28,6 +28,7 @@ export default function BasicInfo({ property = {}, onChange, advancedExpenses })
               onChange={(val) => handleChange("askingPrice", val)}
               className="w-full border rounded p-2"
               placeholder="0"
+              type="currency"
             />
           </div>
         )}
@@ -38,6 +39,7 @@ export default function BasicInfo({ property = {}, onChange, advancedExpenses })
             onChange={(val) => handleChange("purchasePrice", val)}
             className="w-full border rounded p-2"
             placeholder="0"
+            type="currency"
           />
         </div>
         {advancedExpenses && (
@@ -48,6 +50,7 @@ export default function BasicInfo({ property = {}, onChange, advancedExpenses })
               onChange={(val) => handleChange("municipalEvaluation", val)}
               className="w-full border rounded p-2"
               placeholder="0"
+              type="currency"
             />
           </div>
         )}
