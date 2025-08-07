@@ -1,11 +1,41 @@
 import React, { useEffect } from "react";
 import { Info, Home, DollarSign, TrendingUp, Briefcase, Building, Calculator } from 'lucide-react';
-import FormattedNumberInput from "../FormattedNumberInput";
+import FormattedNumberInput, { formatCurrency } from "../FormattedNumberInput";
 
 export default function OperatingExpensesSection({ expenses = {}, onChange, advancedExpenses, lockedFields = {} }) {
   const handleChange = (field, value) => {
     onChange({ ...expenses, [field]: value });
   };
+
+  const numberOfUnits = parseInt(expenses.numberOfUnits) || 0;
+
+  const totalRevenue = [
+    "annualRent",
+    "parkingRevenue",
+    "internetRevenue",
+    "storageRevenue",
+    "otherRevenue",
+  ].reduce((sum, key) => sum + (parseFloat(expenses[key]) || 0), 0);
+
+  const managementFee = totalRevenue * ((parseFloat(expenses.managementRate) || 0) / 100);
+  const maintenanceTotal = 365 * numberOfUnits;
+  const conciergeTotal = 610 * numberOfUnits;
+
+  useEffect(() => {
+    if (!advancedExpenses) return;
+    if (lockedFields.maintenance) {
+      const expected = numberOfUnits > 0 ? maintenanceTotal.toString() : "";
+      if (expenses.maintenance !== expected) {
+        onChange(prev => ({ ...prev, maintenance: expected }));
+      }
+    }
+    if (lockedFields.concierge) {
+      const expected = numberOfUnits > 0 ? conciergeTotal.toString() : "";
+      if (expenses.concierge !== expected) {
+        onChange(prev => ({ ...prev, concierge: expected }));
+      }
+    }
+  }, [advancedExpenses, numberOfUnits, maintenanceTotal, conciergeTotal, lockedFields, expenses.maintenance, expenses.concierge, onChange]);
 
   const total = advancedExpenses
     ? [
@@ -30,7 +60,7 @@ export default function OperatingExpensesSection({ expenses = {}, onChange, adva
         "washerDryer",
         "hotWater",
         "otherExpenses",
-      ].reduce((sum, key) => sum + (parseFloat(expenses[key]) || 0), 0)
+      ].reduce((sum, key) => sum + (parseFloat(expenses[key]) || 0), 0) + managementFee
     : [
         "municipalTaxes",
         "schoolTaxes",
@@ -95,7 +125,7 @@ export default function OperatingExpensesSection({ expenses = {}, onChange, adva
     { field: "electricity", label: "Électricité" },
     { field: "insurance", label: "Assurances" },
     { field: "maintenance", label: "Entretien", locked: lockedFields?.maintenance },
-    { field: "managementRate", label: "Gestion (%)" },
+    { field: "managementRate", label: "Gestion / Administration (%)" },
     { field: "concierge", label: "Conciergerie", locked: lockedFields?.concierge },
     { field: "landscaping", label: "Aménagement paysager" },
     { field: "snowRemoval", label: "Déneigement" },
@@ -128,6 +158,23 @@ export default function OperatingExpensesSection({ expenses = {}, onChange, adva
               disabled={locked}
               type={field === "vacancyRate" || field === "managementRate" ? "percentage" : "currency"}
             />
+            {field === "managementRate" && (
+              <p className="text-xs text-gray-500 mt-1">
+                {expenses.managementRate
+                  ? `${expenses.managementRate}% de ${formatCurrency(totalRevenue)} = ${formatCurrency(managementFee)}`
+                  : ''}
+              </p>
+            )}
+            {field === "maintenance" && (
+              <p className="text-xs text-gray-500 mt-1">
+                {numberOfUnits ? `${formatCurrency(365)} × ${numberOfUnits} = ${formatCurrency(maintenanceTotal)}` : ''}
+              </p>
+            )}
+            {field === "concierge" && (
+              <p className="text-xs text-gray-500 mt-1">
+                {numberOfUnits ? `${formatCurrency(610)} × ${numberOfUnits} = ${formatCurrency(conciergeTotal)}` : ''}
+              </p>
+            )}
           </div>
         ))}
       </div>
