@@ -39,7 +39,11 @@ const calculateRentability = (property, advancedExpenses) => {
       (parseFloat(property.hotWater) || 0) +
       (parseFloat(property.otherExpenses) || 0);
   } else {
-    operatingExpenses = parseFloat(property.operatingExpenses) || 0;
+    operatingExpenses =
+      (parseFloat(property.municipalTaxes) || 0) +
+      (parseFloat(property.schoolTaxes) || 0) +
+      (parseFloat(property.electricityHeating) || 0) +
+      (parseFloat(property.otherExpenses) || 0);
   }
 
   const netOperatingIncome = effectiveGrossRevenue - operatingExpenses;
@@ -117,17 +121,26 @@ const calculateRentability = (property, advancedExpenses) => {
   const annualDebtService = monthlyPayment * 12;
   const cashFlow = netOperatingIncome - annualDebtService;
 
-  const acquisitionCosts =
-    (parseFloat(property.inspection) || 0) +
-    (parseFloat(property.environmental1) || 0) +
-    (parseFloat(property.environmental2) || 0) +
-    (parseFloat(property.environmental3) || 0) +
-    (parseFloat(property.otherTests) || 0) +
-    (parseFloat(property.appraiser) || 0) +
-    (parseFloat(property.renovations) || 0) +
-    (parseFloat(property.cmhcAnalysis) || 0) +
-    (parseFloat(property.cmhcTax) || 0) +
-    (parseFloat(property.welcomeTax) || 0);
+  const acquisitionCosts = advancedExpenses
+    ?
+      (parseFloat(property.inspection) || 0) +
+      (parseFloat(property.environmental1) || 0) +
+      (parseFloat(property.environmental2) || 0) +
+      (parseFloat(property.environmental3) || 0) +
+      (parseFloat(property.otherTests) || 0) +
+      (parseFloat(property.appraiser) || 0) +
+      (parseFloat(property.notary) || 0) +
+      (parseFloat(property.renovations) || 0) +
+      (parseFloat(property.cmhcAnalysis) || 0) +
+      (parseFloat(property.cmhcTax) || 0) +
+      (parseFloat(property.welcomeTax) || 0)
+    :
+      (parseFloat(property.expertises) || 0) +
+      (parseFloat(property.notary) || 0) +
+      (parseFloat(property.renovations) || 0) +
+      (parseFloat(property.cmhcAnalysis) || 0) +
+      (parseFloat(property.cmhcTax) || 0) +
+      (parseFloat(property.welcomeTax) || 0);
 
   const totalInvestment = downPayment + acquisitionCosts;
 

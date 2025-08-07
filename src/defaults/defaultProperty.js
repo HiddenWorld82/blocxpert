@@ -19,7 +19,6 @@ const defaultProperty = {
   schoolTaxes: '',
   electricityHeating: '',
   otherExpenses: '',
-  operatingExpenses: '',
 
   // Dépenses avancées
   vacancyRate: '3',
@@ -59,6 +58,8 @@ const defaultProperty = {
   environmental3: '',
   otherTests: '',
   appraiser: '',
+  expertises: '',
+  notary: '',
   renovations: '',
   cmhcAnalysis: '150',
   cmhcTax: '',

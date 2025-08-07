@@ -2,10 +2,11 @@ import React from "react";
 
 export default function OperatingExpensesSection({ expenses = {}, onChange, advancedExpenses, lockedFields = {} }) {
   const handleChange = (field, value) => {
-    const updated = { ...expenses, [field]: value };
+    onChange({ ...expenses, [field]: value });
+  };
 
-    if (advancedExpenses) {
-      const fieldsToSum = [
+  const total = advancedExpenses
+    ? [
         "municipalTaxes",
         "schoolTaxes",
         "heating",
@@ -27,21 +28,13 @@ export default function OperatingExpensesSection({ expenses = {}, onChange, adva
         "washerDryer",
         "hotWater",
         "otherExpenses",
-      ];
-      const total = fieldsToSum.reduce((sum, key) => sum + (parseFloat(updated[key]) || 0), 0);
-      updated.operatingExpenses = total;
-    } else {
-      const total = [
+      ].reduce((sum, key) => sum + (parseFloat(expenses[key]) || 0), 0)
+    : [
         "municipalTaxes",
         "schoolTaxes",
         "electricityHeating",
         "otherExpenses",
-      ].reduce((sum, key) => sum + (parseFloat(updated[key]) || 0), 0);
-      updated.operatingExpenses = total;
-    }
-
-    onChange(updated);
-  };
+      ].reduce((sum, key) => sum + (parseFloat(expenses[key]) || 0), 0);
 
   if (!advancedExpenses) {
     const simpleFields = [
@@ -72,7 +65,7 @@ export default function OperatingExpensesSection({ expenses = {}, onChange, adva
           <label className="block text-sm font-medium mb-1">Total des dépenses</label>
           <input
             type="number"
-            value={expenses.operatingExpenses || ""}
+            value={total || ""}
             className="w-full border rounded p-2 bg-gray-100"
             placeholder="0"
             disabled
@@ -130,7 +123,7 @@ export default function OperatingExpensesSection({ expenses = {}, onChange, adva
         <label className="block text-sm font-medium mb-1">Total des dépenses</label>
         <input
           type="number"
-          value={expenses.operatingExpenses || ""}
+          value={total || ""}
           className="w-full border rounded p-2 bg-gray-100"
           placeholder="0"
           disabled
