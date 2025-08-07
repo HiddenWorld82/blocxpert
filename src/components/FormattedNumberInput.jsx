@@ -13,9 +13,11 @@ export function formatCurrency(value) {
   if (Number.isNaN(number)) return "";
   return (
     new Intl.NumberFormat("fr-CA", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(number) + " $"
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    })
+      .format(number)
+      .replace(/\u00A0|\u202F/g, " ") + " $"
   );
 }
 
@@ -26,9 +28,11 @@ export function formatPercentage(value) {
   if (Number.isNaN(number)) return "";
   return (
     new Intl.NumberFormat("fr-CA", {
-      minimumFractionDigits: 2,
+      minimumFractionDigits: 0,
       maximumFractionDigits: 2,
-    }).format(number) + " %"
+    })
+      .format(number)
+      .replace(/\u00A0|\u202F/g, " ") + " %"
   );
 }
 
