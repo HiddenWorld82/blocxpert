@@ -65,8 +65,13 @@ export default function OperatingExpensesSection({ expenses = {}, onChange, adva
     : [
         "municipalTaxes",
         "schoolTaxes",
+        "vacancyBadDebt",
+        "insurance",
         "electricityHeating",
-        "otherExpenses",
+        "otherServices",
+        "maintenance",
+        "concierge",
+        "management",
       ].reduce((sum, key) => sum + (parseFloat(expenses[key]) || 0), 0);
 
   useEffect(() => {
@@ -82,8 +87,13 @@ export default function OperatingExpensesSection({ expenses = {}, onChange, adva
     const simpleFields = [
       { field: "municipalTaxes", label: "Taxes municipales" },
       { field: "schoolTaxes", label: "Taxes scolaires" },
+      { field: "vacancyBadDebt", label: "Vacances / mauvaises créances" },
+      { field: "insurance", label: "Assurance" },
       { field: "electricityHeating", label: "Électricité/Chauffage" },
-      { field: "otherExpenses", label: "Autres dépenses" },
+      { field: "otherServices", label: "Autres services" },
+      { field: "maintenance", label: "Entretien / réparation" },
+      { field: "concierge", label: "Conciergerie" },
+      { field: "management", label: "Gestion / administration" },
     ];
 
     return (
