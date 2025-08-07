@@ -67,6 +67,7 @@ const PropertyForm = ({
               onChange={setCurrentProperty}
               lockedFields={lockedFields}
               analysis={analysis}
+              advancedExpenses={advancedExpenses}
             />
 
             <div className="flex justify-between">
