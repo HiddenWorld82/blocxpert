@@ -35,7 +35,7 @@ export default function FinancingSection({ financing = {}, onChange, lockedField
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium mb-1">Taux d'intérêt (%)</label>
           <input
@@ -56,6 +56,20 @@ export default function FinancingSection({ financing = {}, onChange, lockedField
             className="w-full border rounded p-2"
             placeholder="25"
           />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Terme (années)</label>
+          <select
+            value={financing.term || ""}
+            onChange={(e) => handleChange("term", e.target.value)}
+            className="w-full border rounded p-2"
+          >
+            <option value="1">1 an</option>
+            <option value="2">2 ans</option>
+            <option value="3">3 ans</option>
+            <option value="5">5 ans</option>
+            <option value="10">10 ans</option>
+          </select>
         </div>
       </div>
 
