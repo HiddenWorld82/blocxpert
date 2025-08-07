@@ -4,7 +4,7 @@ import FinancingSection from './sections/FinancingSection';
 import AcquisitionCosts from './sections/AcquisitionCosts';
 import BasicInfo from './sections/BasicInfo';
 import RevenueSection from './sections/RevenueSection';
-import ExpensesSection from './sections/ExpensesSection';
+import OperatingExpensesSection from './sections/OperatingExpensesSection';
 
 const PropertyForm = ({
   currentProperty,
@@ -49,7 +49,7 @@ const PropertyForm = ({
               onChange={setCurrentProperty}
               advancedExpenses={advancedExpenses}
             />
-            <ExpensesSection
+            <OperatingExpensesSection
               expenses={currentProperty}
               onChange={setCurrentProperty}
               advancedExpenses={advancedExpenses}
