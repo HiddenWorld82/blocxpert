@@ -1,69 +1,69 @@
 // src/components/sections/RevenueSection.jsx
 import React from "react";
+import FormattedNumberInput from "../FormattedNumberInput";
 
 export default function RevenueSection({ revenue = {}, onChange, advancedExpenses }) {
   const handleChange = (field, value) => {
     onChange({ ...revenue, [field]: value });
   };
 
-  return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-bold">Revenus annuels</h2>
-      <div>
-        <label className="block text-sm font-medium mb-1">Loyers annuels</label>
-        <input
-          type="number"
-          value={revenue.annualRent || ""}
-          onChange={(e) => handleChange("annualRent", e.target.value)}
-          className="w-full border rounded p-2"
-          placeholder="0"
-        />
-      </div>
-      <div className="grid grid-cols-2 gap-4">
+  if (!advancedExpenses) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold">Revenus annuels</h2>
         <div>
-          <label className="block text-sm font-medium mb-1">Revenus de stationnement</label>
-          <input
-            type="number"
-            value={revenue.parkingRevenue || ""}
-            onChange={(e) => handleChange("parkingRevenue", e.target.value)}
+          <label className="block text-sm font-medium mb-1">Loyers annuels</label>
+          <FormattedNumberInput
+            value={revenue.annualRent || ""}
+            onChange={(val) => handleChange("annualRent", val)}
             className="w-full border rounded p-2"
             placeholder="0"
           />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Autres revenus</label>
-          <input
-            type="number"
+          <FormattedNumberInput
             value={revenue.otherRevenue || ""}
-            onChange={(e) => handleChange("otherRevenue", e.target.value)}
+            onChange={(val) => handleChange("otherRevenue", val)}
             className="w-full border rounded p-2"
             placeholder="0"
           />
         </div>
-        {advancedExpenses && (
-          <>
-            <div>
-              <label className="block text-sm font-medium mb-1">Revenus Internet</label>
-              <input
-                type="number"
-                value={revenue.internetRevenue || ""}
-                onChange={(e) => handleChange("internetRevenue", e.target.value)}
-                className="w-full border rounded p-2"
-                placeholder="0"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Revenus de rangement</label>
-              <input
-                type="number"
-                value={revenue.storageRevenue || ""}
-                onChange={(e) => handleChange("storageRevenue", e.target.value)}
-                className="w-full border rounded p-2"
-                placeholder="0"
-              />
-            </div>
-          </>
-        )}
+      </div>
+    );
+  }
+
+  const fields = [
+    { field: "parkingRevenue", label: "Revenus de stationnement" },
+    { field: "internetRevenue", label: "Revenus Internet" },
+    { field: "storageRevenue", label: "Revenus de rangement" },
+    { field: "otherRevenue", label: "Autres revenus" }
+  ];
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-xl font-bold">Revenus annuels</h2>
+      <div>
+        <label className="block text-sm font-medium mb-1">Loyers annuels</label>
+        <FormattedNumberInput
+          value={revenue.annualRent || ""}
+          onChange={(val) => handleChange("annualRent", val)}
+          className="w-full border rounded p-2"
+          placeholder="0"
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        {fields.map(({ field, label }) => (
+          <div key={field}>
+            <label className="block text-sm font-medium mb-1">{label}</label>
+            <FormattedNumberInput
+              value={revenue[field] || ""}
+              onChange={(val) => handleChange(field, val)}
+              className="w-full border rounded p-2"
+              placeholder="0"
+            />
+          </div>
+        ))}
       </div>
     </div>
   );
