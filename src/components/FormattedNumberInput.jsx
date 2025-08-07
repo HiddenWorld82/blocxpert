@@ -38,8 +38,10 @@ export function formatPercentage(value) {
 
 export default function FormattedNumberInput({ value, onChange, type, ...props }) {
   const [displayValue, setDisplayValue] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
 
   useEffect(() => {
+    if (isFocused) return;
     const str = parseLocaleNumber(value);
     if (str === "") {
       setDisplayValue("");
@@ -57,7 +59,7 @@ export default function FormattedNumberInput({ value, onChange, type, ...props }
         setDisplayValue(new Intl.NumberFormat("fr-CA").format(number));
       }
     }
-  }, [value, type]);
+  }, [value, type, isFocused]);
 
   const handleChange = (e) => {
     const raw = e.target.value;
@@ -67,10 +69,12 @@ export default function FormattedNumberInput({ value, onChange, type, ...props }
   };
 
   const handleFocus = () => {
+    setIsFocused(true);
     setDisplayValue(parseLocaleNumber(displayValue));
   };
 
   const handleBlur = () => {
+    setIsFocused(false);
     const numeric = parseLocaleNumber(displayValue);
     let formatted = numeric;
     if (type === "currency") {
