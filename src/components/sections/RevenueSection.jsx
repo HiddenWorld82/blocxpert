@@ -22,7 +22,7 @@ export default function RevenueSection({ revenue = {}, onChange, advancedExpense
             type="currency"
           />
         </div>
-        <div>
+        <div className="mt-4">
           <label className="block text-sm font-medium mb-1">Autres revenus</label>
           <FormattedNumberInput
             value={revenue.otherRevenue || ""}
@@ -44,8 +44,8 @@ export default function RevenueSection({ revenue = {}, onChange, advancedExpense
   ];
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-bold">Revenus annuels</h2>
+    <div className="border rounded-lg p-6">
+        <h2 className="text-lg font-semibold mb-4 text-green-600 flex items-center"> <DollarSign className="w-5 h-5 mr-2" />Revenus annuels</h2>
       <div>
         <label className="block text-sm font-medium mb-1">Loyers annuels</label>
         <FormattedNumberInput
@@ -56,7 +56,7 @@ export default function RevenueSection({ revenue = {}, onChange, advancedExpense
           type="currency"
         />
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4 mt-4">
         {fields.map(({ field, label }) => (
           <div key={field}>
             <label className="block text-sm font-medium mb-1">{label}</label>

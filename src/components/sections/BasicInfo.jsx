@@ -20,7 +20,7 @@ export default function BasicInfo({ property = {}, onChange, advancedExpenses })
           placeholder="123 rue Example, Montréal"
         />
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4 mt-4">
         {advancedExpenses && (
           <div>
             <label className="block text-sm font-medium mb-1">Prix demandé</label>

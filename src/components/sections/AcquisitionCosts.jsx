@@ -23,9 +23,9 @@ export default function AcquisitionCosts({ costs = {}, onChange, lockedFields = 
         locked: lockedFields?.welcomeTax,
       },
       {
-        field: "renovations",
-        label: "Rénovations",
-        info: "Travaux initiaux ou améliorations",
+        field: "otherFees",
+        label: "Autres frais",
+        info: "Autres frais d'acquisition tel que travaux à l'acquisition, frais analyse SCHL, taxe sur prime SCHL,  etc.",
       },
     ];
 
@@ -60,15 +60,15 @@ export default function AcquisitionCosts({ costs = {}, onChange, lockedFields = 
     { field: "environmental2", label: "Env. Phase II" },
     { field: "environmental3", label: "Env. Phase III" },
     { field: "appraiser", label: "Évaluateur" },
-    { field: "otherTests", label: "Autres tests" },
+    { field: "otherFees", label: "Autres frais" },
     { field: "notary", label: "Notaire" },
     { field: "welcomeTax", label: "Taxe de bienvenue", locked: lockedFields?.welcomeTax },
     { field: "renovations", label: "Rénovations" },
   ];
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-bold">Frais d'acquisition</h2>
+    <div className="border rounded-lg p-6">
+        <h2 className="text-lg font-semibold mb-4 text-orange-600 flex items-center"> <Briefcase className="w-5 h-5 mr-2" />Frais d'acquisition</h2>
       <div className="grid grid-cols-2 gap-4">
         {fields.map(({ field, label, locked }) => (
           <div key={field}>

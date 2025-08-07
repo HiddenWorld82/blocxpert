@@ -25,7 +25,7 @@ export default function FinancingSection({ financing = {}, onChange, lockedField
       </div>
       
       {financing.financingType === "cmhc_aph" && (
-        <div>
+        <div className="mt-4">
           <label className="block text-sm font-medium mb-1">Points APH</label>
           <FormattedNumberInput
             value={financing.aphPoints || ""}
@@ -36,7 +36,7 @@ export default function FinancingSection({ financing = {}, onChange, lockedField
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-4 mt-4">
         <div>
           <label className="block text-sm font-medium mb-1">Taux d'intérêt (%)</label>
           <FormattedNumberInput
@@ -72,7 +72,7 @@ export default function FinancingSection({ financing = {}, onChange, lockedField
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4 mt-4">
         <div>
           <label className="block text-sm font-medium mb-1">Taux de qualification (%)</label>
           <FormattedNumberInput

@@ -2,11 +2,10 @@
 
 const calculateWelcomeTax = (price) => {
   const brackets = [
-    { min: 0, max: 50000, rate: 0.005 },
-    { min: 50000, max: 250000, rate: 0.01 },
-    { min: 250000, max: 500000, rate: 0.015 },
-    { min: 500000, max: 1000000, rate: 0.02 },
-    { min: 1000000, max: Infinity, rate: 0.025 }
+    { min: 0, max: 61500, rate: 0.005 },
+    { min: 61500, max: 307800, rate: 0.01 },
+    { min: 307800, max: 601525, rate: 0.015 },
+    { min: 601525, max: Infinity, rate: 0.03 },
   ];
 
   let tax = 0;

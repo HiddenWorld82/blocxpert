@@ -21,9 +21,9 @@ const calculateRentability = (property, advancedExpenses) => {
       (parseFloat(property.heating) || 0) +
       (parseFloat(property.electricity) || 0) +
       (parseFloat(property.insurance) || 0) +
-      (numberOfUnits * (parseFloat(property.maintenance) || 610)) +
+      (numberOfUnits * (parseFloat(property.maintenance) || 0)) +
       (effectiveGrossRevenue * (parseFloat(property.managementRate) || 0) / 100) +
-      (numberOfUnits * (parseFloat(property.concierge) || 365)) +
+      (numberOfUnits * (parseFloat(property.concierge) || 0)) +
       (parseFloat(property.landscaping) || 0) +
       (parseFloat(property.snowRemoval) || 0) +
       (parseFloat(property.extermination) || 0) +
