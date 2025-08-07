@@ -121,26 +121,30 @@ const calculateRentability = (property, advancedExpenses) => {
   const annualDebtService = monthlyPayment * 12;
   const cashFlow = netOperatingIncome - annualDebtService;
 
-  const acquisitionCosts = advancedExpenses
-    ?
-      (parseFloat(property.inspection) || 0) +
-      (parseFloat(property.environmental1) || 0) +
-      (parseFloat(property.environmental2) || 0) +
-      (parseFloat(property.environmental3) || 0) +
-      (parseFloat(property.otherTests) || 0) +
-      (parseFloat(property.appraiser) || 0) +
-      (parseFloat(property.notary) || 0) +
-      (parseFloat(property.renovations) || 0) +
-      (parseFloat(property.cmhcAnalysis) || 0) +
-      (parseFloat(property.cmhcTax) || 0) +
-      (parseFloat(property.welcomeTax) || 0)
-    :
-      (parseFloat(property.expertises) || 0) +
-      (parseFloat(property.notary) || 0) +
-      (parseFloat(property.renovations) || 0) +
-      (parseFloat(property.cmhcAnalysis) || 0) +
-      (parseFloat(property.cmhcTax) || 0) +
-      (parseFloat(property.welcomeTax) || 0);
+  const acquisitionCosts = (
+    advancedExpenses
+      ? [
+          "inspection",
+          "environmental1",
+          "environmental2",
+          "environmental3",
+          "otherTests",
+          "appraiser",
+          "notary",
+          "renovations",
+          "cmhcAnalysis",
+          "cmhcTax",
+          "welcomeTax",
+        ]
+      : [
+          "expertises",
+          "notary",
+          "renovations",
+          "cmhcAnalysis",
+          "cmhcTax",
+          "welcomeTax",
+        ]
+  ).reduce((sum, key) => sum + (parseFloat(property[key]) || 0), 0);
 
   const totalInvestment = downPayment + acquisitionCosts;
 
