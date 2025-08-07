@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { Info, Home, DollarSign, TrendingUp, Briefcase, Building, Calculator } from 'lucide-react';
 import FormattedNumberInput from "../FormattedNumberInput";
 
 export default function OperatingExpensesSection({ expenses = {}, onChange, advancedExpenses, lockedFields = {} }) {
@@ -55,8 +56,8 @@ export default function OperatingExpensesSection({ expenses = {}, onChange, adva
     ];
 
     return (
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold">Dépenses d'exploitation</h2>
+      <div className="border rounded-lg p-6">
+        <h2 className="text-lg font-semibold mb-4 text-red-600 flex items-center"><TrendingUp className="w-5 h-5 mr-2" />Dépenses d'exploitation</h2>
         <div className="grid grid-cols-2 gap-4">
           {simpleFields.map(({ field, label }) => (
             <div key={field} className="col-span-1">

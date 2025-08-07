@@ -1,6 +1,6 @@
 // src/components/sections/AcquisitionCosts.jsx
 import React from "react";
-import { Info } from "lucide-react";
+import { Info, Home, DollarSign, TrendingUp, Briefcase, Building, Calculator } from 'lucide-react';
 import FormattedNumberInput from "../FormattedNumberInput";
 
 export default function AcquisitionCosts({ costs = {}, onChange, lockedFields = {}, advancedExpenses }) {
@@ -30,8 +30,8 @@ export default function AcquisitionCosts({ costs = {}, onChange, lockedFields = 
     ];
 
     return (
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold">Frais d'acquisition</h2>
+      <div className="border rounded-lg p-6">
+        <h2 className="text-lg font-semibold mb-4 text-orange-600 flex items-center"> <Briefcase className="w-5 h-5 mr-2" />Frais d'acquisition</h2>
         <div className="grid grid-cols-2 gap-4">
           {fields.map(({ field, label, info, locked }) => (
             <div key={field}>

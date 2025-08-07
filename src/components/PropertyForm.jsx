@@ -1,6 +1,7 @@
 // components/PropertyForm.jsx
 import React from 'react';
 import FinancingSection from './sections/FinancingSection';
+import { Info, Home, DollarSign, TrendingUp, Briefcase, Building, Calculator } from 'lucide-react';
 import AcquisitionCosts from './sections/AcquisitionCosts';
 import BasicInfo from './sections/BasicInfo';
 import RevenueSection from './sections/RevenueSection';

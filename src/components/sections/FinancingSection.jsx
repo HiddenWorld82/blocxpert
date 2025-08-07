@@ -1,5 +1,6 @@
 // src/components/sections/FinancingSection.jsx
 import React from "react";
+import { Info, Home, DollarSign, TrendingUp, Briefcase, Building, Calculator } from 'lucide-react';
 import FormattedNumberInput from "../FormattedNumberInput";
 
 export default function FinancingSection({ financing = {}, onChange, lockedFields = {}, setLockedFields }) {
@@ -8,8 +9,8 @@ export default function FinancingSection({ financing = {}, onChange, lockedField
   };
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-bold">Financement</h2>
+    <div className="border rounded-lg p-6">
+      <h2 className="text-lg font-semibold mb-4 text-purple-600 flex items-center"><Calculator className="w-5 h-5 mr-2" />Financement</h2>
       <div>
         <label className="block text-sm font-medium mb-1">Type de financement</label>
         <select

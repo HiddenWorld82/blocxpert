@@ -1,4 +1,5 @@
 import React from "react";
+import { Info, Home, DollarSign, TrendingUp, Briefcase, Building, Calculator } from 'lucide-react';
 import FormattedNumberInput from "../FormattedNumberInput";
 
 export default function BasicInfo({ property = {}, onChange, advancedExpenses }) {
@@ -7,8 +8,8 @@ export default function BasicInfo({ property = {}, onChange, advancedExpenses })
   };
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-bold">Informations de base</h2>
+    <div className="border rounded-lg p-6">
+      <h2 className="text-lg font-semibold mb-4 text-blue-600 flex items-center"><Home className="w-5 h-5 mr-2" />Informations de base</h2>
       <div>
         <label className="block text-sm font-medium mb-1">Adresse</label>
         <input
