@@ -1,4 +1,5 @@
 import React from "react";
+import FormattedNumberInput from "../FormattedNumberInput";
 
 export default function OperatingExpensesSection({ expenses = {}, onChange, advancedExpenses, lockedFields = {} }) {
   const handleChange = (field, value) => {
@@ -51,24 +52,25 @@ export default function OperatingExpensesSection({ expenses = {}, onChange, adva
           {simpleFields.map(({ field, label }) => (
             <div key={field} className="col-span-1">
               <label className="block text-sm font-medium mb-1">{label}</label>
-              <input
-                type="number"
+              <FormattedNumberInput
                 value={expenses[field] || ""}
-                onChange={(e) => handleChange(field, e.target.value)}
+                onChange={(val) => handleChange(field, val)}
                 className="w-full border rounded p-2"
                 placeholder="0"
+                type="currency"
               />
             </div>
           ))}
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Total des dépenses</label>
-          <input
-            type="number"
+          <FormattedNumberInput
             value={total || ""}
+            onChange={() => {}}
             className="w-full border rounded p-2 bg-gray-100"
             placeholder="0"
             disabled
+            type="currency"
           />
         </div>
       </div>
@@ -108,25 +110,26 @@ export default function OperatingExpensesSection({ expenses = {}, onChange, adva
         {fields.map(({ field, label, locked }) => (
           <div key={field} className="col-span-1">
             <label className="block text-sm font-medium mb-1">{label}</label>
-            <input
-              type="number"
+            <FormattedNumberInput
               value={expenses[field] || ""}
-              onChange={(e) => handleChange(field, e.target.value)}
+              onChange={(val) => handleChange(field, val)}
               className="w-full border rounded p-2"
               placeholder="0"
               disabled={locked}
+              type={field === "vacancyRate" || field === "managementRate" ? "percentage" : "currency"}
             />
           </div>
         ))}
       </div>
       <div>
         <label className="block text-sm font-medium mb-1">Total des dépenses</label>
-        <input
-          type="number"
+        <FormattedNumberInput
           value={total || ""}
+          onChange={() => {}}
           className="w-full border rounded p-2 bg-gray-100"
           placeholder="0"
           disabled
+          type="currency"
         />
       </div>
     </div>

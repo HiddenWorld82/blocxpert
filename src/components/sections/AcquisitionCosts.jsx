@@ -1,6 +1,7 @@
 // src/components/sections/AcquisitionCosts.jsx
 import React from "react";
 import { Info } from "lucide-react";
+import FormattedNumberInput from "../FormattedNumberInput";
 
 export default function AcquisitionCosts({ costs = {}, onChange, lockedFields = {}, advancedExpenses }) {
   const handleChange = (field, value) => {
@@ -38,13 +39,13 @@ export default function AcquisitionCosts({ costs = {}, onChange, lockedFields = 
                 {label}
                 <Info className="inline w-4 h-4 text-gray-400 ml-1" title={info} />
               </label>
-              <input
-                type="number"
+              <FormattedNumberInput
                 value={costs[field] || ""}
-                onChange={(e) => handleChange(field, e.target.value)}
+                onChange={(val) => handleChange(field, val)}
                 className="w-full border rounded p-2"
                 placeholder="0"
                 disabled={locked}
+                type="currency"
               />
             </div>
           ))}
@@ -72,13 +73,13 @@ export default function AcquisitionCosts({ costs = {}, onChange, lockedFields = 
         {fields.map(({ field, label, locked }) => (
           <div key={field}>
             <label className="block text-sm font-medium mb-1">{label}</label>
-            <input
-              type="number"
+            <FormattedNumberInput
               value={costs[field] || ""}
-              onChange={(e) => handleChange(field, e.target.value)}
+              onChange={(val) => handleChange(field, val)}
               className="w-full border rounded p-2"
               placeholder="0"
               disabled={locked}
+              type="currency"
             />
           </div>
         ))}
