@@ -1,6 +1,7 @@
 import React from "react";
+import FormattedNumberInput from "../FormattedNumberInput";
 
-export default function BasicInfo({ property = {}, onChange }) {
+export default function BasicInfo({ property = {}, onChange, advancedExpenses }) {
   const handleChange = (field, value) => {
     onChange({ ...property, [field]: value });
   };
@@ -19,22 +20,42 @@ export default function BasicInfo({ property = {}, onChange }) {
         />
       </div>
       <div className="grid grid-cols-2 gap-4">
+        {advancedExpenses && (
+          <div>
+            <label className="block text-sm font-medium mb-1">Prix demandé</label>
+            <FormattedNumberInput
+              value={property.askingPrice || ""}
+              onChange={(val) => handleChange("askingPrice", val)}
+              className="w-full border rounded p-2"
+              placeholder="0"
+            />
+          </div>
+        )}
         <div>
           <label className="block text-sm font-medium mb-1">Prix d'achat</label>
-          <input
-            type="number"
+          <FormattedNumberInput
             value={property.purchasePrice || ""}
-            onChange={(e) => handleChange("purchasePrice", e.target.value)}
+            onChange={(val) => handleChange("purchasePrice", val)}
             className="w-full border rounded p-2"
             placeholder="0"
           />
         </div>
+        {advancedExpenses && (
+          <div>
+            <label className="block text-sm font-medium mb-1">Évaluation municipale</label>
+            <FormattedNumberInput
+              value={property.municipalEvaluation || ""}
+              onChange={(val) => handleChange("municipalEvaluation", val)}
+              className="w-full border rounded p-2"
+              placeholder="0"
+            />
+          </div>
+        )}
         <div>
           <label className="block text-sm font-medium mb-1">Nombre d'unités</label>
-          <input
-            type="number"
+          <FormattedNumberInput
             value={property.numberOfUnits || ""}
-            onChange={(e) => handleChange("numberOfUnits", e.target.value)}
+            onChange={(val) => handleChange("numberOfUnits", val)}
             className="w-full border rounded p-2"
             placeholder="0"
           />
