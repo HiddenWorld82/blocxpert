@@ -65,14 +65,12 @@ export default function OperatingExpensesSection({ expenses = {}, onChange, adva
     : [
         "municipalTaxes",
         "schoolTaxes",
-        "vacancyBadDebt",
         "insurance",
         "electricityHeating",
-        "otherServices",
         "maintenance",
         "concierge",
         "management",
-      ].reduce((sum, key) => sum + (parseFloat(expenses[key]) || 0), 0);
+      ].reduce((sum, key) => sum + (parseFloat(expenses[key]) || 0), 0) + vacancyAmount;
 
   useEffect(() => {
     if (!advancedExpenses) {
@@ -85,15 +83,15 @@ export default function OperatingExpensesSection({ expenses = {}, onChange, adva
 
   if (!advancedExpenses) {
     const simpleFields = [
+      { field: "vacancyRate", label: "Vacances / mauvaises créances (%)" },
+      { field: "insurance", label: "Assurance" },
       { field: "municipalTaxes", label: "Taxes municipales" },
       { field: "schoolTaxes", label: "Taxes scolaires" },
-      { field: "vacancyBadDebt", label: "Vacances / mauvaises créances" },
-      { field: "insurance", label: "Assurance" },
       { field: "electricityHeating", label: "Électricité/Chauffage" },
-      { field: "otherServices", label: "Autres services" },
-      { field: "maintenance", label: "Entretien / réparation" },
-      { field: "concierge", label: "Conciergerie" },
-      { field: "management", label: "Gestion / administration" },
+      { field: "maintenance", label: "Entretien"/*, locked: lockedFields?.maintenance*/ },
+      { field: "concierge", label: "Conciergerie"/*, locked: lockedFields?.concierge*/ },
+      { field: "managementRate", label: "Gestion / Administration (%)" },
+      { field: "otherExpenses", label: "Autres dépenses" },
     ];
 
     return (
@@ -108,8 +106,32 @@ export default function OperatingExpensesSection({ expenses = {}, onChange, adva
                 onChange={(val) => handleChange(field, val)}
                 className="w-full border rounded p-2"
                 placeholder="0"
-                type="currency"
+                type={field === "vacancyRate" || field=== "managementRate" ? "percentage" : "currency"}
               />
+              {field === "vacancyRate" && (
+              <p className="text-xs text-gray-500 mt-1">
+                {expenses.vacancyRate
+                  ? `${expenses.vacancyRate}% de ${formatCurrency(totalRevenue)} = ${formatCurrency(vacancyAmount)}`
+                  : ''}
+              </p>
+            )}
+            {field === "managementRate" && (
+              <p className="text-xs text-gray-500 mt-1">
+                {expenses.managementRate
+                  ? `${expenses.managementRate}% de ${formatCurrency(totalRevenue)} = ${formatCurrency(managementFee)}`
+                  : ''}
+              </p>
+            )}
+            {field === "maintenance" && (
+              <p className="text-xs text-gray-500 mt-1">
+                {numberOfUnits ? `${formatCurrency(365)} × ${numberOfUnits} = ${formatCurrency(maintenanceTotal)}` : ''}
+              </p>
+            )}
+            {field === "concierge" && (
+              <p className="text-xs text-gray-500 mt-1">
+                {numberOfUnits ? `${formatCurrency(610)} × ${numberOfUnits} = ${formatCurrency(conciergeTotal)}` : ''}
+              </p>
+            )}
             </div>
           ))}
         </div>
@@ -133,11 +155,11 @@ export default function OperatingExpensesSection({ expenses = {}, onChange, adva
     { field: "municipalTaxes", label: "Taxes municipales" },
     { field: "schoolTaxes", label: "Taxes scolaires" },
     { field: "heating", label: "Chauffage" },
-    { field: "electricity", label: "Électricité" },
+    { field: "electricity", label: "Électricité/Chauffage" },
     { field: "insurance", label: "Assurances" },
-    { field: "maintenance", label: "Entretien", locked: lockedFields?.maintenance },
+    { field: "maintenance", label: "Entretien"/*, locked: lockedFields?.maintenance*/ },
     { field: "managementRate", label: "Gestion / Administration (%)" },
-    { field: "concierge", label: "Conciergerie", locked: lockedFields?.concierge },
+    { field: "concierge", label: "Conciergerie"/*, locked: lockedFields?.concierge*/ },
     { field: "landscaping", label: "Aménagement paysager" },
     { field: "snowRemoval", label: "Déneigement" },
     { field: "extermination", label: "Extermination" },

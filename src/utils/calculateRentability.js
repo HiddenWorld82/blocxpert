@@ -46,11 +46,11 @@ const calculateRentability = (property, advancedExpenses) => {
       (parseFloat(property.municipalTaxes) || 0) +
       (parseFloat(property.schoolTaxes) || 0) +
       (parseFloat(property.insurance) || 0) +
+      (parseFloat(property.maintenance) || (365 * numberOfUnits)) +
+      (totalGrossRevenue * (parseFloat(property.managementRate) || 0) / 100) +
+      (parseFloat(property.concierge) || (610 * numberOfUnits)) +
       (parseFloat(property.electricityHeating) || 0) +
-      (parseFloat(property.otherServices) || 0) +
-      (parseFloat(property.maintenance) || 0) +
-      (parseFloat(property.concierge) || 0) +
-      (parseFloat(property.management) || 0);
+      (parseFloat(property.otherExpenses) || 0) +
   }
 
   const totalExpenses = operatingExpenses + vacancyAmount;
