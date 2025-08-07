@@ -7,8 +7,6 @@ import Recommendations from './sections/Recommendations';
 import ExecutiveSummary from './sections/ExecutiveSummary';
 
 const PropertyReport = ({ currentProperty, setCurrentStep, analysis, onSave }) => {
-  const isPositiveCashFlow = analysis.cashFlow >= 0;
-
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-6xl mx-auto">
@@ -49,7 +47,7 @@ const PropertyReport = ({ currentProperty, setCurrentStep, analysis, onSave }) =
               <div>
                 <span className="text-gray-600">Prix par porte:</span>
                 <div className="font-semibold">
-                  {Math.round(analysis.pricePerUnit).toLocaleString('fr-CA')}$
+                  {Math.round(analysis.pricePerUnit || 0).toLocaleString('fr-CA')}$
                 </div>
               </div>
               <div>
@@ -65,6 +63,7 @@ const PropertyReport = ({ currentProperty, setCurrentStep, analysis, onSave }) =
           </div>
 
           <KeyIndicators analysis={analysis} />
+          
           <div className="grid md:grid-cols-2 gap-8 mb-8">
             <FinancialSummary analysis={analysis} />
             <FinancingSummary analysis={analysis} currentProperty={currentProperty} />
@@ -74,6 +73,7 @@ const PropertyReport = ({ currentProperty, setCurrentStep, analysis, onSave }) =
             analysis={analysis}
             currentProperty={currentProperty}
           />
+          
           <ExecutiveSummary
             analysis={analysis}
             currentProperty={currentProperty}

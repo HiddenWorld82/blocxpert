@@ -1,33 +1,54 @@
 // src/components/sections/FinancingSummary.jsx
 import React from "react";
 
-export default function FinancingSummary({ summary }) {
+export default function FinancingSummary({ analysis, currentProperty }) {
+  const formatMoney = (value) => {
+    if (value === null || value === undefined) return "—";
+    return new Intl.NumberFormat("fr-CA", {
+      style: "currency",
+      currency: "CAD",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(value);
+  };
+
   return (
-    <div className="space-y-2">
-      <h2 className="text-xl font-bold">Résumé du financement</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <SummaryLine label="Mensualité hypothécaire" value={summary?.monthlyPayment} />
-        <SummaryLine label="Total du prêt" value={summary?.totalLoan} />
-        <SummaryLine label="Frais d'acquisition totaux" value={summary?.totalCosts} />
-        <SummaryLine label="Mise de fonds" value={summary?.cashRequired} />
+    <div className="bg-white rounded-lg p-6">
+      <h3 className="text-lg font-semibold mb-4">Résumé du Financement</h3>
+      <div className="space-y-3">
+        <div className="flex justify-between">
+          <span className="text-gray-600">Prix d'achat:</span>
+          <span className="font-medium">
+            {formatMoney(parseFloat(currentProperty?.purchasePrice) || 0)}
+          </span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-gray-600">Prêt maximal:</span>
+          <span className="font-medium">{formatMoney(analysis?.maxLoanAmount)}</span>
+        </div>
+        {analysis?.cmhcPremium > 0 && (
+          <div className="flex justify-between">
+            <span className="text-gray-600">Prime SCHL:</span>
+            <span className="font-medium">{formatMoney(analysis?.cmhcPremium)}</span>
+          </div>
+        )}
+        <div className="flex justify-between">
+          <span className="text-gray-600">Mise de fonds:</span>
+          <span className="font-medium">{formatMoney(analysis?.downPayment)}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-gray-600">Frais d'acquisition:</span>
+          <span className="font-medium">{formatMoney(analysis?.acquisitionCosts)}</span>
+        </div>
+        <div className="flex justify-between border-t pt-3">
+          <span className="text-gray-600 font-semibold">Investissement total:</span>
+          <span className="font-bold text-lg">{formatMoney(analysis?.totalInvestment)}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-gray-600">Paiement mensuel:</span>
+          <span className="font-medium">{formatMoney(analysis?.monthlyPayment)}</span>
+        </div>
       </div>
-    </div>
-  );
-}
-
-function SummaryLine({ label, value }) {
-  const formatted =
-    value !== null && value !== undefined
-      ? value.toLocaleString("fr-CA", {
-          style: "currency",
-          currency: "CAD",
-        })
-      : "—";
-
-  return (
-    <div>
-      <p className="text-sm text-gray-600">{label}</p>
-      <p className="text-lg font-semibold">{formatted}</p>
     </div>
   );
 }

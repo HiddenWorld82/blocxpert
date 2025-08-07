@@ -1,40 +1,55 @@
 // src/components/sections/FinancialSummary.jsx
 import React from "react";
 
-export default function FinancialSummary({ expenses, onChange }) {
-  const handleChange = (field, value) => {
-    onChange({ ...expenses, [field]: value });
+export default function FinancialSummary({ analysis }) {
+  const formatMoney = (value) => {
+    if (value === null || value === undefined) return "—";
+    return new Intl.NumberFormat("fr-CA", {
+      style: "currency",
+      currency: "CAD",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(value);
   };
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-bold">Dépenses annuelles</h2>
-      <div>
-        <label className="block text-sm font-medium">Taxes municipales + scolaires</label>
-        <input
-          type="number"
-          value={expenses.taxes || 0}
-          onChange={(e) => handleChange("taxes", parseFloat(e.target.value))}
-          className="w-full border rounded p-2"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium">Assurances</label>
-        <input
-          type="number"
-          value={expenses.insurance || 0}
-          onChange={(e) => handleChange("insurance", parseFloat(e.target.value))}
-          className="w-full border rounded p-2"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium">Entretien & gestion</label>
-        <input
-          type="number"
-          value={expenses.maintenance || 0}
-          onChange={(e) => handleChange("maintenance", parseFloat(e.target.value))}
-          className="w-full border rounded p-2"
-        />
+    <div className="bg-white rounded-lg p-6">
+      <h3 className="text-lg font-semibold mb-4">Résumé Financier</h3>
+      <div className="space-y-3">
+        <div className="flex justify-between">
+          <span className="text-gray-600">Revenus bruts:</span>
+          <span className="font-medium">{formatMoney(analysis?.totalGrossRevenue)}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-gray-600">Revenus effectifs:</span>
+          <span className="font-medium">{formatMoney(analysis?.effectiveGrossRevenue)}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-gray-600">Dépenses d'exploitation:</span>
+          <span className="font-medium text-red-600">
+            {formatMoney(analysis?.operatingExpenses)}
+          </span>
+        </div>
+        <div className="flex justify-between border-t pt-3">
+          <span className="text-gray-600">Revenu net (NOI):</span>
+          <span className="font-semibold text-lg">
+            {formatMoney(analysis?.netOperatingIncome)}
+          </span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-gray-600">Service de dette annuel:</span>
+          <span className="font-medium text-red-600">
+            {formatMoney(analysis?.annualDebtService)}
+          </span>
+        </div>
+        <div className="flex justify-between border-t pt-3">
+          <span className="text-gray-600 font-semibold">Cash Flow annuel:</span>
+          <span className={`font-bold text-lg ${
+            analysis?.cashFlow >= 0 ? 'text-green-600' : 'text-red-600'
+          }`}>
+            {formatMoney(analysis?.cashFlow)}
+          </span>
+        </div>
       </div>
     </div>
   );

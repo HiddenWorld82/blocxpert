@@ -1,7 +1,7 @@
 // src/components/sections/FinancingSection.jsx
 import React from "react";
 
-export default function FinancingSection({ financing, onChange }) {
+export default function FinancingSection({ financing = {}, onChange, lockedFields = {}, setLockedFields }) {
   const handleChange = (field, value) => {
     onChange({ ...financing, [field]: value });
   };
@@ -10,31 +10,79 @@ export default function FinancingSection({ financing, onChange }) {
     <div className="space-y-4">
       <h2 className="text-xl font-bold">Financement</h2>
       <div>
-        <label className="block text-sm font-medium">Montant du prêt</label>
-        <input
-          type="number"
-          value={financing.loanAmount || 0}
-          onChange={(e) => handleChange("loanAmount", parseFloat(e.target.value))}
+        <label className="block text-sm font-medium mb-1">Type de financement</label>
+        <select
+          value={financing.financingType || "conventional"}
+          onChange={(e) => handleChange("financingType", e.target.value)}
           className="w-full border rounded p-2"
-        />
+        >
+          <option value="conventional">Conventionnel</option>
+          <option value="cmhc">SCHL Standard</option>
+          <option value="cmhc_aph">SCHL APH Select</option>
+        </select>
       </div>
-      <div>
-        <label className="block text-sm font-medium">Taux d'intérêt (%)</label>
-        <input
-          type="number"
-          value={financing.interestRate || 0}
-          onChange={(e) => handleChange("interestRate", parseFloat(e.target.value))}
-          className="w-full border rounded p-2"
-        />
+      
+      {financing.financingType === "cmhc_aph" && (
+        <div>
+          <label className="block text-sm font-medium mb-1">Points APH</label>
+          <input
+            type="number"
+            value={financing.aphPoints || ""}
+            onChange={(e) => handleChange("aphPoints", e.target.value)}
+            className="w-full border rounded p-2"
+            placeholder="0"
+          />
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Taux d'intérêt (%)</label>
+          <input
+            type="number"
+            step="0.1"
+            value={financing.mortgageRate || ""}
+            onChange={(e) => handleChange("mortgageRate", e.target.value)}
+            className="w-full border rounded p-2"
+            placeholder="5.5"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Amortissement (années)</label>
+          <input
+            type="number"
+            value={financing.amortization || ""}
+            onChange={(e) => handleChange("amortization", e.target.value)}
+            className="w-full border rounded p-2"
+            placeholder="25"
+          />
+        </div>
       </div>
-      <div>
-        <label className="block text-sm font-medium">Durée (années)</label>
-        <input
-          type="number"
-          value={financing.term || 0}
-          onChange={(e) => handleChange("term", parseInt(e.target.value))}
-          className="w-full border rounded p-2"
-        />
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Taux de qualification (%)</label>
+          <input
+            type="number"
+            step="0.1"
+            value={financing.qualificationRate || ""}
+            onChange={(e) => handleChange("qualificationRate", e.target.value)}
+            className="w-full border rounded p-2"
+            placeholder="6.0"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Ratio couverture dette</label>
+          <input
+            type="number"
+            step="0.01"
+            value={financing.debtCoverageRatio || ""}
+            onChange={(e) => handleChange("debtCoverageRatio", e.target.value)}
+            className="w-full border rounded p-2"
+            placeholder="1.15"
+            disabled={lockedFields?.debtCoverage}
+          />
+        </div>
       </div>
     </div>
   );

@@ -28,18 +28,18 @@ const PropertyForm = ({
           </div>
 
           <div className="space-y-8">
-            <BasicInfo currentProperty={currentProperty} setCurrentProperty={setCurrentProperty} />
-            <RevenueSection currentProperty={currentProperty} setCurrentProperty={setCurrentProperty} />
+            <BasicInfo property={currentProperty} onChange={setCurrentProperty} />
+            <RevenueSection revenue={currentProperty} onChange={setCurrentProperty} />
             <FinancingSection
-              currentProperty={currentProperty}
-              setCurrentProperty={setCurrentProperty}
+              financing={currentProperty}
+              onChange={setCurrentProperty}
               lockedFields={lockedFields}
               setLockedFields={setLockedFields}
               analysis={analysis}
             />
             <AcquisitionCosts
-              currentProperty={currentProperty}
-              setCurrentProperty={setCurrentProperty}
+              costs={currentProperty}
+              onChange={setCurrentProperty}
               lockedFields={lockedFields}
               analysis={analysis}
             />
