@@ -11,7 +11,8 @@ const calculateRentability = (property, advancedExpenses) => {
     (parseFloat(property.otherRevenue) || 0);
 
   const vacancyRate = (parseFloat(property.vacancyRate) || 0) / 100;
-  const effectiveGrossRevenue = totalGrossRevenue * (1 - vacancyRate);
+  const vacancyAmount = totalGrossRevenue * vacancyRate;
+  const effectiveGrossRevenue = totalGrossRevenue - vacancyAmount;
 
   let operatingExpenses = 0;
   if (advancedExpenses) {
@@ -46,7 +47,8 @@ const calculateRentability = (property, advancedExpenses) => {
       (parseFloat(property.otherExpenses) || 0);
   }
 
-  const netOperatingIncome = effectiveGrossRevenue - operatingExpenses;
+  const totalExpenses = operatingExpenses + vacancyAmount;
+  const netOperatingIncome = totalGrossRevenue - totalExpenses;
   const debtCoverageRatio = parseFloat(property.debtCoverageRatio) || 1.15;
   const maxDebtService = netOperatingIncome / debtCoverageRatio;
 
@@ -156,8 +158,8 @@ const calculateRentability = (property, advancedExpenses) => {
   return {
     totalGrossRevenue,
     effectiveGrossRevenue,
-    vacancyAmount: totalGrossRevenue - effectiveGrossRevenue,
-    operatingExpenses,
+    vacancyAmount,
+    operatingExpenses: totalExpenses,
     netOperatingIncome,
     maxLoanAmount,
     cmhcPremium,

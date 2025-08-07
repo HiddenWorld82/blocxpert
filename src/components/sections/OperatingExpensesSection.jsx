@@ -17,6 +17,7 @@ export default function OperatingExpensesSection({ expenses = {}, onChange, adva
     "otherRevenue",
   ].reduce((sum, key) => sum + (parseFloat(expenses[key]) || 0), 0);
 
+  const vacancyAmount = totalRevenue * ((parseFloat(expenses.vacancyRate) || 0) / 100);
   const managementFee = totalRevenue * ((parseFloat(expenses.managementRate) || 0) / 100);
   const maintenanceTotal = 365 * numberOfUnits;
   const conciergeTotal = 610 * numberOfUnits;
@@ -60,7 +61,7 @@ export default function OperatingExpensesSection({ expenses = {}, onChange, adva
         "washerDryer",
         "hotWater",
         "otherExpenses",
-      ].reduce((sum, key) => sum + (parseFloat(expenses[key]) || 0), 0) + managementFee
+      ].reduce((sum, key) => sum + (parseFloat(expenses[key]) || 0), 0) + managementFee + vacancyAmount
     : [
         "municipalTaxes",
         "schoolTaxes",
@@ -158,6 +159,13 @@ export default function OperatingExpensesSection({ expenses = {}, onChange, adva
               disabled={locked}
               type={field === "vacancyRate" || field === "managementRate" ? "percentage" : "currency"}
             />
+            {field === "vacancyRate" && (
+              <p className="text-xs text-gray-500 mt-1">
+                {expenses.vacancyRate
+                  ? `${expenses.vacancyRate}% de ${formatCurrency(totalRevenue)} = ${formatCurrency(vacancyAmount)}`
+                  : ''}
+              </p>
+            )}
             {field === "managementRate" && (
               <p className="text-xs text-gray-500 mt-1">
                 {expenses.managementRate
