@@ -42,16 +42,6 @@ export default function AcquisitionCosts({ costs = {}, onChange, lockedFields = 
           disabled={lockedFields?.welcomeTax}
         />
       </div>
-      <div>
-        <label className="block text-sm font-medium mb-1">Dépenses d'exploitation annuelles</label>
-        <input
-          type="number"
-          value={costs.operatingExpenses || ""}
-          onChange={(e) => handleChange("operatingExpenses", e.target.value)}
-          className="w-full border rounded p-2"
-          placeholder="0"
-        />
-      </div>
     </div>
   );
 }

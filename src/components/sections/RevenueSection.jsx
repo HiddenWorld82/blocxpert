@@ -1,7 +1,7 @@
 // src/components/sections/RevenueSection.jsx
 import React from "react";
 
-export default function RevenueSection({ revenue = {}, onChange }) {
+export default function RevenueSection({ revenue = {}, onChange, advancedExpenses }) {
   const handleChange = (field, value) => {
     onChange({ ...revenue, [field]: value });
   };
@@ -40,6 +40,30 @@ export default function RevenueSection({ revenue = {}, onChange }) {
             placeholder="0"
           />
         </div>
+        {advancedExpenses && (
+          <>
+            <div>
+              <label className="block text-sm font-medium mb-1">Revenus Internet</label>
+              <input
+                type="number"
+                value={revenue.internetRevenue || ""}
+                onChange={(e) => handleChange("internetRevenue", e.target.value)}
+                className="w-full border rounded p-2"
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Revenus de rangement</label>
+              <input
+                type="number"
+                value={revenue.storageRevenue || ""}
+                onChange={(e) => handleChange("storageRevenue", e.target.value)}
+                className="w-full border rounded p-2"
+                placeholder="0"
+              />
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
