@@ -1,5 +1,5 @@
 // Nouveau fichier principal : RentalPropertyAnalyzer.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, /*useEffect*/ } from 'react';
 import { Home, Plus } from 'lucide-react';
 import PropertyForm from './components/PropertyForm';
 import PropertyReport from './components/PropertyReport';
@@ -13,8 +13,8 @@ const RentalPropertyAnalyzer = () => {
   const [currentProperty, setCurrentProperty] = useState(defaultProperty);
   const [advancedExpenses, setAdvancedExpenses] = useState(false);
   const [lockedFields, setLockedFields] = useState({
-    maintenance: true,
-    concierge: true,
+    //maintenance: false,
+    //concierge: false,
     debtCoverage: true,
     welcomeTax: true
   });

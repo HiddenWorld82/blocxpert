@@ -55,7 +55,7 @@ const calculateRentability = (property, advancedExpenses) => {
 
   const totalExpenses = operatingExpenses + vacancyAmount;
   const netOperatingIncome = totalGrossRevenue - totalExpenses;
-  const debtCoverageRatio = parseFloat(property.debtCoverageRatio) || 1.15;
+  const debtCoveraeRatio = parseFloat(property.debtCoverageRatio) || 1.15;
   const maxDebtService = netOperatingIncome / debtCoverageRatio;
 
   const qualificationRate = (parseFloat(property.qualificationRate) || 6) / 100;

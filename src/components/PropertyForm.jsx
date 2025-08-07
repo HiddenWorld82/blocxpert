@@ -54,7 +54,7 @@ const PropertyForm = ({
               expenses={currentProperty}
               onChange={setCurrentProperty}
               advancedExpenses={advancedExpenses}
-              lockedFields={lockedFields}
+              //lockedFields={lockedFields}
             />
             <FinancingSection
               financing={currentProperty}
