@@ -19,6 +19,7 @@ const defaultProperty = {
   schoolTaxes: '',
   electricityHeating: '',
   otherExpenses: '',
+  operatingExpenses: '',
 
   // Dépenses avancées
   vacancyRate: '3',

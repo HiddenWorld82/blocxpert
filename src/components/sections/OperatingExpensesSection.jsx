@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import FormattedNumberInput from "../FormattedNumberInput";
 
 export default function OperatingExpensesSection({ expenses = {}, onChange, advancedExpenses, lockedFields = {} }) {
@@ -36,6 +36,15 @@ export default function OperatingExpensesSection({ expenses = {}, onChange, adva
         "electricityHeating",
         "otherExpenses",
       ].reduce((sum, key) => sum + (parseFloat(expenses[key]) || 0), 0);
+
+  useEffect(() => {
+    if (!advancedExpenses) {
+      const current = parseFloat(expenses.operatingExpenses) || 0;
+      if (current !== total) {
+        onChange(prev => ({ ...prev, operatingExpenses: total.toString() }));
+      }
+    }
+  }, [total, advancedExpenses, onChange, expenses.operatingExpenses]);
 
   if (!advancedExpenses) {
     const simpleFields = [
