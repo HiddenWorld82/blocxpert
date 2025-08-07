@@ -17,18 +17,20 @@ const defaultProperty = {
   // Dépenses simplifiées
   municipalTaxes: '',
   schoolTaxes: '',
+  vacancyBadDebt: '',
+  insurance: '',
   electricityHeating: '',
-  otherExpenses: '',
+  otherServices: '',
+  maintenance: '',
+  concierge: '',
+  management: '',
   operatingExpenses: '',
 
   // Dépenses avancées
   vacancyRate: '3',
   heating: '',
   electricity: '',
-  insurance: '',
-  maintenance: '',
   managementRate: '5',
-  concierge: '',
   landscaping: '',
   snowRemoval: '',
   extermination: '',
@@ -42,6 +44,7 @@ const defaultProperty = {
   garbage: '',
   washerDryer: '',
   hotWater: '',
+  otherExpenses: '',
 
   // Financement
   financingType: 'conventional',

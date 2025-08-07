@@ -10,8 +10,10 @@ const calculateRentability = (property, advancedExpenses) => {
     (parseFloat(property.storageRevenue) || 0) +
     (parseFloat(property.otherRevenue) || 0);
 
-  const vacancyRate = (parseFloat(property.vacancyRate) || 0) / 100;
-  const vacancyAmount = totalGrossRevenue * vacancyRate;
+  const vacancyRate = advancedExpenses ? (parseFloat(property.vacancyRate) || 0) / 100 : 0;
+  const vacancyAmount = advancedExpenses
+    ? totalGrossRevenue * vacancyRate
+    : (parseFloat(property.vacancyBadDebt) || 0);
   const effectiveGrossRevenue = totalGrossRevenue - vacancyAmount;
 
   let operatingExpenses = 0;
@@ -43,8 +45,12 @@ const calculateRentability = (property, advancedExpenses) => {
     operatingExpenses =
       (parseFloat(property.municipalTaxes) || 0) +
       (parseFloat(property.schoolTaxes) || 0) +
+      (parseFloat(property.insurance) || 0) +
       (parseFloat(property.electricityHeating) || 0) +
-      (parseFloat(property.otherExpenses) || 0);
+      (parseFloat(property.otherServices) || 0) +
+      (parseFloat(property.maintenance) || 0) +
+      (parseFloat(property.concierge) || 0) +
+      (parseFloat(property.management) || 0);
   }
 
   const totalExpenses = operatingExpenses + vacancyAmount;
