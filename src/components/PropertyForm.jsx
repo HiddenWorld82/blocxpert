@@ -4,6 +4,7 @@ import FinancingSection from './sections/FinancingSection';
 import AcquisitionCosts from './sections/AcquisitionCosts';
 import BasicInfo from './sections/BasicInfo';
 import RevenueSection from './sections/RevenueSection';
+import ExpensesSection from './sections/ExpensesSection';
 
 const PropertyForm = ({
   currentProperty,
@@ -11,7 +12,9 @@ const PropertyForm = ({
   lockedFields,
   setLockedFields,
   setCurrentStep,
-  analysis
+  analysis,
+  advancedExpenses,
+  setAdvancedExpenses
 }) => {
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -19,17 +22,35 @@ const PropertyForm = ({
         <div className="bg-white rounded-lg shadow-lg p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-semibold">Nouvelle Analyse d'Immeuble</h2>
-            <button
-              onClick={() => setCurrentStep('home')}
-              className="text-gray-600 hover:text-gray-800"
-            >
-              ← Retour
-            </button>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setAdvancedExpenses(!advancedExpenses)}
+                className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+              >
+                {advancedExpenses ? 'Mode simplifié' : 'Mode avancé'}
+              </button>
+              <button
+                onClick={() => setCurrentStep('home')}
+                className="text-gray-600 hover:text-gray-800"
+              >
+                ← Retour
+              </button>
+            </div>
           </div>
 
           <div className="space-y-8">
             <BasicInfo property={currentProperty} onChange={setCurrentProperty} />
-            <RevenueSection revenue={currentProperty} onChange={setCurrentProperty} />
+            <RevenueSection
+              revenue={currentProperty}
+              onChange={setCurrentProperty}
+              advancedExpenses={advancedExpenses}
+            />
+            <ExpensesSection
+              expenses={currentProperty}
+              onChange={setCurrentProperty}
+              advancedExpenses={advancedExpenses}
+              lockedFields={lockedFields}
+            />
             <FinancingSection
               financing={currentProperty}
               onChange={setCurrentProperty}

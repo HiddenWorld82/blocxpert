@@ -58,6 +58,8 @@ const RentalPropertyAnalyzer = () => {
           setLockedFields={setLockedFields}
           setCurrentStep={setCurrentStep}
           analysis={analysis}
+          advancedExpenses={advancedExpenses}
+          setAdvancedExpenses={setAdvancedExpenses}
         />
       )}
       {currentStep === 'report' && (
@@ -73,3 +75,4 @@ const RentalPropertyAnalyzer = () => {
 };
 
 export default RentalPropertyAnalyzer;
+
