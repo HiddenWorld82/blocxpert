@@ -18,6 +18,7 @@ export default function RevenueSection({ revenue = {}, onChange, advancedExpense
             onChange={(val) => handleChange("annualRent", val)}
             className="w-full border rounded p-2"
             placeholder="0"
+            type="currency"
           />
         </div>
         <div>
@@ -27,6 +28,7 @@ export default function RevenueSection({ revenue = {}, onChange, advancedExpense
             onChange={(val) => handleChange("otherRevenue", val)}
             className="w-full border rounded p-2"
             placeholder="0"
+            type="currency"
           />
         </div>
       </div>
@@ -50,6 +52,7 @@ export default function RevenueSection({ revenue = {}, onChange, advancedExpense
           onChange={(val) => handleChange("annualRent", val)}
           className="w-full border rounded p-2"
           placeholder="0"
+          type="currency"
         />
       </div>
       <div className="grid grid-cols-2 gap-4">
@@ -61,6 +64,7 @@ export default function RevenueSection({ revenue = {}, onChange, advancedExpense
               onChange={(val) => handleChange(field, val)}
               className="w-full border rounded p-2"
               placeholder="0"
+              type="currency"
             />
           </div>
         ))}
