@@ -39,7 +39,11 @@ const PropertyForm = ({
           </div>
 
           <div className="space-y-8">
-            <BasicInfo property={currentProperty} onChange={setCurrentProperty} />
+            <BasicInfo
+              property={currentProperty}
+              onChange={setCurrentProperty}
+              advancedExpenses={advancedExpenses}
+            />
             <RevenueSection
               revenue={currentProperty}
               onChange={setCurrentProperty}
