@@ -7,6 +7,7 @@ import Recommendations from './sections/Recommendations';
 import ExecutiveSummary from './sections/ExecutiveSummary';
 
 const PropertyReport = ({ currentProperty, setCurrentStep, analysis, onSave }) => {
+  const numberFormatter = new Intl.NumberFormat('fr-CA');
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-6xl mx-auto">
@@ -40,6 +41,22 @@ const PropertyReport = ({ currentProperty, setCurrentStep, analysis, onSave }) =
                   {Number(currentProperty.purchasePrice || 0).toLocaleString('fr-CA')}$
                 </div>
               </div>
+              {currentProperty.askingPrice && (
+                <div>
+                  <span className="text-gray-600">Prix demandé:</span>
+                  <div className="font-semibold">
+                    {numberFormatter.format(Number(currentProperty.askingPrice))}$
+                  </div>
+                </div>
+              )}
+              {currentProperty.municipalEvaluation && (
+                <div>
+                  <span className="text-gray-600">Évaluation municipale:</span>
+                  <div className="font-semibold">
+                    {numberFormatter.format(Number(currentProperty.municipalEvaluation))}$
+                  </div>
+                </div>
+              )}
               <div>
                 <span className="text-gray-600">Nombre d'unités:</span>
                 <div className="font-semibold">{currentProperty.numberOfUnits || 'N/A'}</div>
