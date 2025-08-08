@@ -116,4 +116,4 @@ export default function FinancialSummary({ analysis, advancedExpenses = false })
     </div>
   );
 }
-}
+
