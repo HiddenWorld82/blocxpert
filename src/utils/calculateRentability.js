@@ -75,7 +75,11 @@ const calculateRentability = (property, advancedExpenses) => {
       (totalGrossRevenue * (parseFloat(property.managementRate) || 0) / 100) +
       (numberOfUnits * (parseFloat(property.concierge) || 365)) +
       (parseFloat(property.electricityHeating) || 0) +
-      (parseFloat(property.otherExpenses) || 0)
+      (parseFloat(property.otherExpenses) || 0);
+
+    // Lorsque les dépenses avancées ne sont pas utilisées, les dépenses
+    // totales correspondent aux dépenses SCHL calculées ci-dessus
+    operatingExpensesTotal = operatingExpensesSCHL;
   }
 
   const totalExpenses = operatingExpensesSCHL + vacancyAmount;
@@ -155,7 +159,9 @@ const calculateRentability = (property, advancedExpenses) => {
       (Math.pow(1 + monthlyMortgageRate, totalPayments) - 1)
     : 0;
   const annualDebtService = monthlyPayment * 12;
-  const cashFlow = netOperatingIncome - annualDebtService;
+  // Le cashflow doit refléter toutes les dépenses, on utilise donc le
+  // revenu net effectif plutôt que le NOI SCHL
+  const cashFlow = effectiveNetIncome - annualDebtService;
 
   const acquisitionCosts = (
     advancedExpenses
@@ -187,7 +193,7 @@ const calculateRentability = (property, advancedExpenses) => {
   const pricePerUnit = purchasePrice / numberOfUnits;
   const capRate = purchasePrice > 0 ? (netOperatingIncome / purchasePrice) * 100 : 0;
   const cashOnCashReturn = totalInvestment > 0 ? (cashFlow / totalInvestment) * 100 : 0;
-  const actualDebtCoverageRatio = annualDebtService > 0 ? netOperatingIncome / annualDebtService : 0;
+  const actualDebtCoverageRatio = annualDebtService > 0 ? effectiveNetIncome / annualDebtService : 0;
 
   return {
     totalGrossRevenue,
