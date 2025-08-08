@@ -80,26 +80,14 @@ if (advancedExpenses) {
           <span className="font-medium">{formatMoney(analysis?.effectiveGrossRevenue)}</span>
         </div>
         <div className="flex justify-between">
-          <span className="text-gray-600">Dépenses d'exploitation SCHL:</span>
-          <span className="font-medium text-red-600">
-            {formatMoney(analysis?.operatingExpensesSCHL)}
-          </span>
-        </div>
-        <div className="flex justify-between">
           <span className="text-gray-600">Dépenses totales:</span>
           <span className="font-medium text-red-600">
             {formatMoney(analysis?.operatingExpensesTotal)}
           </span>
         </div>
         <div className="flex justify-between border-t pt-3">
-          <span className="text-gray-600">Revenu net SCHL (NOI):</span>
+          <span className="text-gray-600">Revenu net (NOI):</span>
           <span className="font-semibold text-lg">
-            {formatMoney(analysis?.netOperatingIncome)}
-          </span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-gray-600">Revenu net effectif:</span>
-          <span className="font-semibold">
             {formatMoney(analysis?.effectiveNetIncome)}
           </span>
         </div>
