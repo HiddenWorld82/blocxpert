@@ -10,10 +10,11 @@ const calculateRentability = (property, advancedExpenses) => {
     (parseFloat(property.storageRevenue) || 0) +
     (parseFloat(property.otherRevenue) || 0);
 
-  const vacancyRate = advancedExpenses ? (parseFloat(property.vacancyRate) || 0) / 100 : 0;
+  /**const vacancyRate = advancedExpenses ? (parseFloat(property.vacancyRate) || 0) / 100 : 0;
   const vacancyAmount = advancedExpenses
     ? totalGrossRevenue * vacancyRate
-    : (parseFloat(property.vacancyBadDebt) || 0);
+    : (parseFloat(property.vacancyAmount) || 0);**/
+  const vacancyAmount = totalGrossRevenue * ((parseFloat(property.vacancyRate) || 0) / 100);
   const effectiveGrossRevenue = totalGrossRevenue - vacancyAmount;
 
   let operatingExpenses = 0;
@@ -24,33 +25,33 @@ const calculateRentability = (property, advancedExpenses) => {
       (parseFloat(property.heating) || 0) +
       (parseFloat(property.electricity) || 0) +
       (parseFloat(property.insurance) || 0) +
-      (parseFloat(property.maintenanceTotal) || 0) +
+      (numberOfUnits * (parseFloat(property.maintenance) || 610)) +
       (totalGrossRevenue * (parseFloat(property.managementRate) || 0) / 100) +
-      (parseFloat(property.conciergeTotal) || 0) +
-      (parseFloat(property.landscaping) || 0) +
-      (parseFloat(property.snowRemoval) || 0) +
-      (parseFloat(property.extermination) || 0) +
-      (parseFloat(property.fireInspection) || 0) +
-      (parseFloat(property.advertising) || 0) +
-      (parseFloat(property.legal) || 0) +
-      (parseFloat(property.accounting) || 0) +
-      (parseFloat(property.elevator) || 0) +
-      (parseFloat(property.cableInternet) || 0) +
-      (parseFloat(property.appliances) || 0) +
-      (parseFloat(property.garbage) || 0) +
-      (parseFloat(property.washerDryer) || 0) +
-      (parseFloat(property.hotWater) || 0) +
+      (numberOfUnits * (parseFloat(property.concierge) || 365)) +
+      //(parseFloat(property.landscaping) || 0) +
+      //(parseFloat(property.snowRemoval) || 0) +
+      //(parseFloat(property.extermination) || 0) +
+      //(parseFloat(property.fireInspection) || 0) +
+      //(parseFloat(property.advertising) || 0) +
+      //(parseFloat(property.legal) || 0) +
+      //(parseFloat(property.accounting) || 0) +
+      //(parseFloat(property.elevator) || 0) +
+      //(parseFloat(property.cableInternet) || 0) +
+      //(parseFloat(property.appliances) || 0) +
+      //(parseFloat(property.garbage) || 0) +
+      //(parseFloat(property.washerDryer) || 0) +
+      //(parseFloat(property.hotWater) || 0) +
       (parseFloat(property.otherExpenses) || 0);
   } else {
     operatingExpenses =
       (parseFloat(property.municipalTaxes) || 0) +
       (parseFloat(property.schoolTaxes) || 0) +
       (parseFloat(property.insurance) || 0) +
-      (parseFloat(property.maintenanceTotal) || 0) +
+      (numberOfUnits * (parseFloat(property.maintenance) || 610)) +
       (totalGrossRevenue * (parseFloat(property.managementRate) || 0) / 100) +
-      (parseFloat(property.conciergeTotal) || 0) +
+      (numberOfUnits * (parseFloat(property.concierge) || 365)) +
       (parseFloat(property.electricityHeating) || 0) +
-      (parseFloat(property.otherExpenses) || 0) +
+      (parseFloat(property.otherExpenses) || 0)
   }
 
   const totalExpenses = operatingExpenses + vacancyAmount;
@@ -61,7 +62,7 @@ const calculateRentability = (property, advancedExpenses) => {
   const qualificationRate = (parseFloat(property.qualificationRate) || 6) / 100;
   const mortgageRate = (parseFloat(property.mortgageRate) || 5.5) / 100;
   const amortizationYears = parseInt(property.amortization) || 25;
-  const monthlyQualRate = qualificationRate / 12;
+  const monthlyQualRate = Math.pow(1 + qualificationRate / 2, 1 / 6) - 1; 
   const totalPayments = amortizationYears * 12;
 
   const maxLoanByRCD = monthlyQualRate > 0
@@ -107,7 +108,9 @@ const calculateRentability = (property, advancedExpenses) => {
       premiumRate = bracket?.rate || cmhcPremiums.standard.at(-1).rate;
     }
 
-    if (amortizationYears >= 25) premiumRate += cmhcPremiums.surcharge;
+    if (amortizationYears > 25) {
+      premiumRate += ((amortizationYears - 25) / 5) * cmhcPremiums.surcharge;
+    }
 
     if (property.financingType === 'cmhc_aph') {
       const points = parseInt(property.aphPoints) || 0;
@@ -121,7 +124,7 @@ const calculateRentability = (property, advancedExpenses) => {
 
   const totalLoanAmount = maxLoanAmount + cmhcPremium;
   const downPayment = purchasePrice - maxLoanAmount;
-  const monthlyMortgageRate = mortgageRate / 12;
+  const monthlyMortgageRate = Math.pow(1 + mortgageRate / 2, 1 / 6) - 1;
   const monthlyPayment = totalLoanAmount > 0 && monthlyMortgageRate > 0
     ? totalLoanAmount * (monthlyMortgageRate * Math.pow(1 + monthlyMortgageRate, totalPayments)) /
       (Math.pow(1 + monthlyMortgageRate, totalPayments) - 1)

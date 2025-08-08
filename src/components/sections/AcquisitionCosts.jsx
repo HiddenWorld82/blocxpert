@@ -59,7 +59,7 @@ export default function AcquisitionCosts({ costs = {}, onChange, lockedFields = 
     { field: "environmental1", label: "Env. Phase I" },
     { field: "environmental2", label: "Env. Phase II" },
     { field: "environmental3", label: "Env. Phase III" },
-    { field: "appraiser", label: "Évaluateur" },
+    { field: "appraiser", label: "Évaluateur agréé" },
     { field: "otherFees", label: "Autres frais" },
     { field: "notary", label: "Notaire" },
     { field: "welcomeTax", label: "Taxe de bienvenue", locked: lockedFields?.welcomeTax },

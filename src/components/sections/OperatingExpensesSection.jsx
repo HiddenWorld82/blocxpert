@@ -155,11 +155,11 @@ export default function OperatingExpensesSection({ expenses = {}, onChange, adva
 
   const fields = [
     { field: "vacancyRate", label: "Taux de vacance (%)" },
+    { field: "insurance", label: "Assurances" },
     { field: "municipalTaxes", label: "Taxes municipales" },
     { field: "schoolTaxes", label: "Taxes scolaires" },
     { field: "heating", label: "Chauffage" },
-    { field: "electricity", label: "Électricité/Chauffage" },
-    { field: "insurance", label: "Assurances" },
+    { field: "electricity", label: "Électricité" },
     { field: "maintenance", label: "Entretien (par logement)" },
     { field: "managementRate", label: "Gestion / Administration (%)" },
     { field: "concierge", label: "Conciergerie (par logement)" },

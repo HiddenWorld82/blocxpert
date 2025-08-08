@@ -2,7 +2,7 @@
 import React from "react";
 import { AlertCircle, CheckCircle, XCircle } from "lucide-react";
 
-export default function Recommendations({ analysis, currentProperty }) {
+export default function Recommendations({ analysis }) {
   const recommendations = [];
 
   // Analyse du Cap Rate
