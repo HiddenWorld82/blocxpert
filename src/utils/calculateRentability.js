@@ -61,7 +61,7 @@ const calculateRentability = (property, advancedExpenses) => {
   const qualificationRate = (parseFloat(property.qualificationRate) || 6) / 100;
   const mortgageRate = (parseFloat(property.mortgageRate) || 5.5) / 100;
   const amortizationYears = parseInt(property.amortization) || 25;
-  const monthlyQualRate = Math.pow(1 + qualificationRate / 2, 1 / 6) - 1;
+  const monthlyQualRate = qualificationRate / 12;
   const totalPayments = amortizationYears * 12;
 
   const maxLoanByRCD = monthlyQualRate > 0
@@ -107,9 +107,7 @@ const calculateRentability = (property, advancedExpenses) => {
       premiumRate = bracket?.rate || cmhcPremiums.standard.at(-1).rate;
     }
 
-    if (amortizationYears > 25) {
-      premiumRate += ((amortizationYears - 25) / 5) * cmhcPremiums.surcharge;
-    }
+    if (amortizationYears >= 25) premiumRate += cmhcPremiums.surcharge;
 
     if (property.financingType === 'cmhc_aph') {
       const points = parseInt(property.aphPoints) || 0;
@@ -123,7 +121,7 @@ const calculateRentability = (property, advancedExpenses) => {
 
   const totalLoanAmount = maxLoanAmount + cmhcPremium;
   const downPayment = purchasePrice - maxLoanAmount;
-  const monthlyMortgageRate = Math.pow(1 + mortgageRate / 2, 1 / 6) - 1;
+  const monthlyMortgageRate = mortgageRate / 12;
   const monthlyPayment = totalLoanAmount > 0 && monthlyMortgageRate > 0
     ? totalLoanAmount * (monthlyMortgageRate * Math.pow(1 + monthlyMortgageRate, totalPayments)) /
       (Math.pow(1 + monthlyMortgageRate, totalPayments) - 1)
