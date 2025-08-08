@@ -68,6 +68,7 @@ const RentalPropertyAnalyzer = () => {
           setCurrentStep={setCurrentStep}
           analysis={analysis}
           onSave={handleSave}
+          advancedExpenses={advancedExpenses}
         />
       )}
     </div>

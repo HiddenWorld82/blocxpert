@@ -6,7 +6,7 @@ import FinancingSummary from './sections/FinancingSummary';
 import Recommendations from './sections/Recommendations';
 import ExecutiveSummary from './sections/ExecutiveSummary';
 
-const PropertyReport = ({ currentProperty, setCurrentStep, analysis, onSave }) => {
+const PropertyReport = ({ currentProperty, setCurrentStep, analysis, onSave, advancedExpenses }) => {
   const numberFormatter = new Intl.NumberFormat('fr-CA');
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -82,7 +82,7 @@ const PropertyReport = ({ currentProperty, setCurrentStep, analysis, onSave }) =
           <KeyIndicators analysis={analysis} />
           
           <div className="grid md:grid-cols-2 gap-8 mb-8">
-            <FinancialSummary analysis={analysis} />
+            <FinancialSummary analysis={analysis} advancedExpenses={advancedExpenses} />
             <FinancingSummary analysis={analysis} currentProperty={currentProperty} />
           </div>
 
