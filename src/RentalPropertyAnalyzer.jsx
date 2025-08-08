@@ -75,4 +75,3 @@ const RentalPropertyAnalyzer = () => {
 };
 
 export default RentalPropertyAnalyzer;
-

@@ -82,9 +82,13 @@ const calculateRentability = (property, advancedExpenses) => {
     operatingExpensesTotal = operatingExpensesSCHL;
   }
 
-  const totalExpenses = operatingExpensesSCHL + vacancyAmount;
+  /**const totalExpenses = operatingExpensesSCHL + vacancyAmount;
   const netOperatingIncome = totalGrossRevenue - totalExpenses;
-  const effectiveNetIncome = totalGrossRevenue - operatingExpensesTotal - vacancyAmount;
+  const effectiveNetIncome = totalGrossRevenue - operatingExpensesTotal - vacancyAmount;**/
+  const schlTotalExpenses = operatingExpensesSCHL + vacancyAmount;
+  const totalExpenses = operatingExpensesTotal + vacancyAmount;
+  const netOperatingIncome = totalGrossRevenue - schlTotalExpenses;
+  const effectiveNetIncome = totalGrossRevenue - totalExpenses;
   const debtCoverageRatio = parseFloat(property.debtCoverageRatio) || 1.15;
   const maxDebtService = netOperatingIncome / debtCoverageRatio;
 
@@ -201,6 +205,7 @@ const calculateRentability = (property, advancedExpenses) => {
     vacancyAmount,
     operatingExpensesSCHL,
     operatingExpensesTotal,
+    totalExpenses,
     netOperatingIncome,
     effectiveNetIncome,
     maxLoanAmount,
