@@ -17,9 +17,10 @@ const calculateRentability = (property, advancedExpenses) => {
   const vacancyAmount = totalGrossRevenue * ((parseFloat(property.vacancyRate) || 0) / 100);
   const effectiveGrossRevenue = totalGrossRevenue - vacancyAmount;
 
-  let operatingExpenses = 0;
+  let operatingExpensesSCHL = 0;
+  let operatingExpensesTotal = 0;
   if (advancedExpenses) {
-    operatingExpenses =
+    operatingExpensesSCHL =
       (parseFloat(property.municipalTaxes) || 0) +
       (parseFloat(property.schoolTaxes) || 0) +
       (parseFloat(property.heating) || 0) +
@@ -42,8 +43,31 @@ const calculateRentability = (property, advancedExpenses) => {
       //(parseFloat(property.washerDryer) || 0) +
       //(parseFloat(property.hotWater) || 0) +
       (parseFloat(property.otherExpenses) || 0);
+    operatingExpensesTotal =
+      (parseFloat(property.municipalTaxes) || 0) +
+      (parseFloat(property.schoolTaxes) || 0) +
+      (parseFloat(property.heating) || 0) +
+      (parseFloat(property.electricity) || 0) +
+      (parseFloat(property.insurance) || 0) +
+      (numberOfUnits * (parseFloat(property.maintenance) || 610)) +
+      (totalGrossRevenue * (parseFloat(property.managementRate) || 0) / 100) +
+      (numberOfUnits * (parseFloat(property.concierge) || 365)) +
+      (parseFloat(property.landscaping) || 0) +
+      (parseFloat(property.snowRemoval) || 0) +
+      (parseFloat(property.extermination) || 0) +
+      (parseFloat(property.fireInspection) || 0) +
+      (parseFloat(property.advertising) || 0) +
+      (parseFloat(property.legal) || 0) +
+      (parseFloat(property.accounting) || 0) +
+      (parseFloat(property.elevator) || 0) +
+      (parseFloat(property.cableInternet) || 0) +
+      (parseFloat(property.appliances) || 0) +
+      (parseFloat(property.garbage) || 0) +
+      (parseFloat(property.washerDryer) || 0) +
+      (parseFloat(property.hotWater) || 0) +
+      (parseFloat(property.otherExpenses) || 0);
   } else {
-    operatingExpenses =
+    operatingExpensesSCHL =
       (parseFloat(property.municipalTaxes) || 0) +
       (parseFloat(property.schoolTaxes) || 0) +
       (parseFloat(property.insurance) || 0) +
@@ -54,8 +78,9 @@ const calculateRentability = (property, advancedExpenses) => {
       (parseFloat(property.otherExpenses) || 0)
   }
 
-  const totalExpenses = operatingExpenses + vacancyAmount;
+  const totalExpenses = operatingExpensesSCHL + vacancyAmount;
   const netOperatingIncome = totalGrossRevenue - totalExpenses;
+  const effectiveNetIncome = totalGrossRevenue - operatingExpensesTotal - vacancyAmount;
   const debtCoverageRatio = parseFloat(property.debtCoverageRatio) || 1.15;
   const maxDebtService = netOperatingIncome / debtCoverageRatio;
 
@@ -168,8 +193,10 @@ const calculateRentability = (property, advancedExpenses) => {
     totalGrossRevenue,
     effectiveGrossRevenue,
     vacancyAmount,
-    operatingExpenses: totalExpenses,
+    operatingExpensesSCHL,
+    operatingExpensesTotal,
     netOperatingIncome,
+    effectiveNetIncome,
     maxLoanAmount,
     cmhcPremium,
     cmhcTax,
