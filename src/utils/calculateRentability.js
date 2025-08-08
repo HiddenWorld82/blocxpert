@@ -102,12 +102,18 @@ const calculateRentability = (property, advancedExpenses) => {
     ? maxDebtService / 12 * ((Math.pow(1 + monthlyQualRate, totalPayments) - 1) / (monthlyQualRate * Math.pow(1 + monthlyQualRate, totalPayments)))
     : 0;
 
-  let maxLTVRatio = 0.75;
-  if (property.financingType === 'cmhc') maxLTVRatio = 0.75;
-  else if (property.financingType === 'cmhc_aph') {
+  // Loan-to-value ratio ceiling based on financing type
+  let maxLTVRatio = 0.80; // Conventional financing
+  if (property.financingType === 'cmhc') {
+    maxLTVRatio = 0.85;
+  } else if (property.financingType === 'cmhc_aph') {
     const points = parseInt(property.aphPoints) || 0;
-    if (points >= 70) maxLTVRatio = 0.95;
-    else if (points >= 50) maxLTVRatio = 0.85;
+    if (points >= 70) {
+      maxLTVRatio = 0.95;
+    } else {
+      // APH Select with 50 points or less defaults to the SCHL cap
+      maxLTVRatio = 0.85;
+    }
   }
   const maxLoanByLTV = purchasePrice * maxLTVRatio;
   const maxLoanAmount = Math.min(maxLoanByRCD, maxLoanByLTV);
