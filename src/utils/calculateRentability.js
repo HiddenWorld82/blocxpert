@@ -224,6 +224,10 @@ const calculateRentability = (property, advancedExpenses) => {
   const appreciationRate = 0.03;
   const appreciationReturn = downPayment > 0 ? ((purchasePrice * appreciationRate) / downPayment) * 100 : 0;
 
+  const loanValueRatio = maxLoanAmount > 0 ? purchasePrice / maxLoanAmount : 0;
+  const totalReturn = cashOnCashReturn + loanPaydownReturn + appreciationReturn;
+  const valueGeneratedYear1 = cashFlow + principalPaidYear1 + (purchasePrice * appreciationRate);
+
   return {
     totalGrossRevenue,
     effectiveGrossRevenue,
@@ -251,7 +255,10 @@ const calculateRentability = (property, advancedExpenses) => {
     grossRentMultiplier,
     netIncomeMultiplier,
     loanPaydownReturn,
-    appreciationReturn
+    appreciationReturn,
+    loanValueRatio,
+    totalReturn,
+    valueGeneratedYear1
   };
 };
 
