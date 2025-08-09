@@ -206,6 +206,24 @@ const calculateRentability = (property, advancedExpenses) => {
   const cashOnCashReturn = totalInvestment > 0 ? (cashFlow / totalInvestment) * 100 : 0;
   const actualDebtCoverageRatio = annualDebtService > 0 ? effectiveNetIncome / annualDebtService : 0;
 
+  const grossRentMultiplier = totalGrossRevenue > 0 ? purchasePrice / totalGrossRevenue : 0;
+  const netIncomeMultiplier = netOperatingIncome > 0 ? purchasePrice / netOperatingIncome : 0;
+
+  let principalPaidYear1 = 0;
+  if (monthlyPayment > 0) {
+    let balance = totalLoanAmount;
+    for (let i = 0; i < 12; i++) {
+      const interest = balance * monthlyMortgageRate;
+      const principal = monthlyPayment - interest;
+      principalPaidYear1 += principal;
+      balance -= principal;
+    }
+  }
+  const loanPaydownReturn = downPayment > 0 ? (principalPaidYear1 / downPayment) * 100 : 0;
+
+  const appreciationRate = 0.03;
+  const appreciationReturn = downPayment > 0 ? ((purchasePrice * appreciationRate) / downPayment) * 100 : 0;
+
   return {
     totalGrossRevenue,
     effectiveGrossRevenue,
@@ -229,7 +247,11 @@ const calculateRentability = (property, advancedExpenses) => {
     pricePerUnit,
     capRate,
     cashOnCashReturn,
-    actualDebtCoverageRatio
+    actualDebtCoverageRatio,
+    grossRentMultiplier,
+    netIncomeMultiplier,
+    loanPaydownReturn,
+    appreciationReturn
   };
 };
 
