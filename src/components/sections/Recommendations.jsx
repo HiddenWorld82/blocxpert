@@ -10,13 +10,13 @@ export default function Recommendations({ analysis }) {
     recommendations.push({
       type: "danger",
       icon: <XCircle className="w-5 h-5" />,
-      text: "Le taux de capitalisation est très faible. Considérez négocier le prix ou augmenter les revenus. Si l'immeuble est très récent, le taux de capitalisation peut être acceptable."
+      text: "Le taux de capitalisation est très faible. Considérez négocier le prix ou augmenter les revenus. Si l'immeuble est très récent ou qu'une forte optimisation est possible, le taux de capitalisation peut être acceptable."
     });
   } else if (analysis?.capRate < 5) {
     recommendations.push({
       type: "warning",
       icon: <AlertCircle className="w-5 h-5" />,
-      text: "Le taux de capitalisation est acceptable mais pourrait être amélioré. Considérer une négociation du prix ou une augmentation des loyers. Si l'immeuble est récent (moins de 15 ans), le taux de capitalisation peut être acceptable."
+      text: "Le taux de capitalisation est acceptable mais pourrait être amélioré. Considérer une négociation du prix ou une augmentation des loyers. Si l'immeuble est récent (moins de 15 ans) ou qu'une optimisation est possible, le taux de capitalisation peut être acceptable."
     });
   } else {
     recommendations.push({

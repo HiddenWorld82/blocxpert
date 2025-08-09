@@ -89,11 +89,11 @@ const HomeScreen = ({ properties, onNew, onSelect }) => {
                       </p>
                     </div>
                     <div className="text-right">
-                      <div className={`text-lg font-semibold ${property.cashFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {property.cashFlow >= 0 ? '+' : ''}{Math.round(property.cashFlow).toLocaleString('fr-CA')}$ /an
+                      <div className={`text-lg font-semibold ${property.effectiveNetIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {property.effectiveNetIncome >= 0 ? '+' : ''}{Math.round(property.effectiveNetIncome).toLocaleString('fr-CA')}$ /an
                       </div>
                       <div className="text-sm text-gray-500">
-                        Rendement: {property.cashOnCashReturn?.toFixed(1) || 'N/A'}%
+                        Rendement après 1 an: {property.totalReturn?.toFixed(1) || 'N/A'}%
                       </div>
                     </div>
                   </div>
