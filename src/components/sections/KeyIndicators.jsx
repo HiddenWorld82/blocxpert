@@ -56,10 +56,10 @@ export default function KeyIndicators({ analysis }) {
       color: "text-gray-700"
     },
     {
-      label: "Ratio Prêt Valeur (RPV)",
-      value: analysis.loanValueRatio?.toFixed(2) || "—",
-      icon: <Percent className="w-6 h-6 text-cyan-600" />,
-      color: "text-gray-700",
+      label: "Valeur générée après l'an 1",
+      value: formatMoney(analysis.valueGeneratedYear1),
+      icon: <DollarSign className="w-6 h-6 text-indigo-600" />,
+      color: analysis.valueGeneratedYear1 >= 0 ? "text-green-600" : "text-red-600",
     },
     {
       label: "Rendement global (1 an)",
@@ -68,10 +68,10 @@ export default function KeyIndicators({ analysis }) {
       color: "text-gray-700",
     },
     {
-      label: "Valeur générée après l'an 1",
-      value: formatMoney(analysis.valueGeneratedYear1),
-      icon: <DollarSign className="w-6 h-6 text-indigo-600" />,
-      color: analysis.valueGeneratedYear1 >= 0 ? "text-green-600" : "text-red-600",
+      label: "Ratio Prêt Valeur (RPV)",
+      value: formatPercent(analysis.loanValueRatio),
+      icon: <Percent className="w-6 h-6 text-cyan-600" />,
+      color: "text-gray-700",
     }
   ];
 
