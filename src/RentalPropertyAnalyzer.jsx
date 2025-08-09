@@ -21,17 +21,23 @@ const RentalPropertyAnalyzer = () => {
 
   const analysis = useRentabilityCalculator(currentProperty, advancedExpenses, lockedFields, setCurrentProperty);
 
-  const handleSave = () => {
-    const newProperties = [...properties];
-    const existingIndex = newProperties.findIndex(p => p.address === currentProperty.address);
-    if (existingIndex >= 0) {
-      newProperties[existingIndex] = currentProperty;
-    } else {
-      newProperties.push(currentProperty);
-    }
-    setProperties(newProperties);
-    setCurrentStep('home');
-  };
+    const handleSave = () => {
+      const propertyWithAnalysis = {
+        ...currentProperty,
+        ...analysis,
+      };
+      const newProperties = [...properties];
+      const existingIndex = newProperties.findIndex(
+        (p) => p.address === currentProperty.address
+      );
+      if (existingIndex >= 0) {
+        newProperties[existingIndex] = propertyWithAnalysis;
+      } else {
+        newProperties.push(propertyWithAnalysis);
+      }
+      setProperties(newProperties);
+      setCurrentStep('home');
+    };
 
   const resetProperty = () => {
     setCurrentProperty(defaultProperty);
