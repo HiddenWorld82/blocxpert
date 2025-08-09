@@ -1,11 +1,17 @@
 import React from "react";
 import { Info, Home, DollarSign, TrendingUp, Briefcase, Building, Calculator } from 'lucide-react';
 import FormattedNumberInput from "../FormattedNumberInput";
+import useGooglePlacesAutocomplete from "../../hooks/useGooglePlacesAutocomplete";
 
 export default function BasicInfo({ property = {}, onChange, advancedExpenses }) {
   const handleChange = (field, value) => {
     onChange({ ...property, [field]: value });
   };
+
+  const addressRef = useGooglePlacesAutocomplete(
+    (place) => handleChange("address", place.formatted_address),
+    { componentRestrictions: { country: "fr" } }
+  );
 
   return (
     <div className="border rounded-lg p-6">
@@ -13,6 +19,7 @@ export default function BasicInfo({ property = {}, onChange, advancedExpenses })
       <div>
         <label className="block text-sm font-medium mb-1">Adresse</label>
         <input
+          ref={addressRef}
           type="text"
           value={property.address || ""}
           onChange={(e) => handleChange("address", e.target.value)}
