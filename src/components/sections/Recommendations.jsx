@@ -10,19 +10,19 @@ export default function Recommendations({ analysis }) {
     recommendations.push({
       type: "danger",
       icon: <XCircle className="w-5 h-5" />,
-      text: "Le taux de capitalisation est très faible. Considérez négocier le prix ou augmenter les revenus."
+      text: "Le taux de capitalisation est très faible. Considérez négocier le prix ou augmenter les revenus. Si l'immeuble est très récent, le taux de capitalisation peut être acceptable."
     });
   } else if (analysis?.capRate < 5) {
     recommendations.push({
       type: "warning",
       icon: <AlertCircle className="w-5 h-5" />,
-      text: "Le taux de capitalisation est acceptable mais pourrait être amélioré."
+      text: "Le taux de capitalisation est acceptable mais pourrait être amélioré. Considérer une négociation du prix ou une augmentation des loyers. Si l'immeuble est récent (moins de 15 ans), le taux de capitalisation peut être acceptable."
     });
   } else {
     recommendations.push({
       type: "success",
       icon: <CheckCircle className="w-5 h-5" />,
-      text: "Excellent taux de capitalisation supérieur à 5%."
+      text: "Bon taux de capitalisation supérieur à 5%."
     });
   }
 
@@ -31,55 +31,19 @@ export default function Recommendations({ analysis }) {
     recommendations.push({
       type: "danger",
       icon: <XCircle className="w-5 h-5" />,
-      text: "Cash flow négatif - l'immeuble ne s'autofinance pas. Révisez votre stratégie."
+      text: "Cash flow négatif - l'immeuble ne s'autofinance pas. Révisez votre stratégie ou prévoyez des fonds supplémentaires."
     });
-  } else if (analysis?.cashFlow < 5000) {
+  } else if (analysis?.cashOnCashReturn/100 < 0.02) {
     recommendations.push({
       type: "warning",
       icon: <AlertCircle className="w-5 h-5" />,
-      text: "Cash flow positif mais faible. Prévoyez une réserve pour imprévus."
+      text: "Cash flow positif mais très faible. Prévoyez une réserve pour imprévus."
     });
   } else {
     recommendations.push({
       type: "success",
       icon: <CheckCircle className="w-5 h-5" />,
-      text: "Cash flow solide permettant une bonne marge de manœuvre."
-    });
-  }
-
-  // Analyse du DCR
-  if (analysis?.actualDebtCoverageRatio < 1.1) {
-    recommendations.push({
-      type: "danger",
-      icon: <XCircle className="w-5 h-5" />,
-      text: "Ratio de couverture de dette insuffisant. Le financement pourrait être refusé."
-    });
-  } else if (analysis?.actualDebtCoverageRatio < 1.2) {
-    recommendations.push({
-      type: "warning",
-      icon: <AlertCircle className="w-5 h-5" />,
-      text: "Ratio de couverture de dette limite. Peu de marge pour les imprévus."
-    });
-  } else {
-    recommendations.push({
-      type: "success",
-      icon: <CheckCircle className="w-5 h-5" />,
-      text: "Ratio de couverture de dette confortable pour obtenir le financement."
-    });
-  }
-
-  // Analyse du rendement
-  if (analysis?.cashOnCashReturn < 5) {
-    recommendations.push({
-      type: "warning",
-      icon: <AlertCircle className="w-5 h-5" />,
-      text: "Rendement sur mise de fonds faible. Comparez avec d'autres opportunités d'investissement."
-    });
-  } else if (analysis?.cashOnCashReturn >= 10) {
-    recommendations.push({
-      type: "success",
-      icon: <CheckCircle className="w-5 h-5" />,
-      text: "Excellent rendement sur mise de fonds supérieur à 10%."
+      text: "Cash flow positif permettant une bonne marge de manœuvre."
     });
   }
 
