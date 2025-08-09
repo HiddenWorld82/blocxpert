@@ -7,7 +7,7 @@ import Recommendations from './sections/Recommendations';
 import ExecutiveSummary from './sections/ExecutiveSummary';
 
 const PropertyReport = ({ currentProperty, setCurrentStep, analysis, onSave, advancedExpenses }) => {
-  const numberFormatter = new Intl.NumberFormat('fr-CA');
+  //const numberFormatter = new Intl.NumberFormat('fr-CA');
   const formatMoney = (value) =>
     new Intl.NumberFormat('fr-CA', {
       style: 'currency',
@@ -49,7 +49,6 @@ const PropertyReport = ({ currentProperty, setCurrentStep, analysis, onSave, adv
             {advancedExpenses ? (
               <div className="space-y-4 text-sm">
                 <div>
-                  <h4 className="font-semibold mb-1">Analyse avancée</h4>
                   <div className="grid md:grid-cols-4 gap-4">
                     <div>
                       <span className="text-gray-600">Prix demandé:</span>
@@ -104,7 +103,6 @@ const PropertyReport = ({ currentProperty, setCurrentStep, analysis, onSave, adv
                   </div>
                 </div>
                 <div>
-                  <h4 className="font-semibold mb-1">Financement</h4>
                   <div className="grid md:grid-cols-4 gap-4">
                     <div>
                       <span className="text-gray-600">Financement:</span>

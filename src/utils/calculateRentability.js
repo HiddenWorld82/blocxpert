@@ -219,10 +219,10 @@ const calculateRentability = (property, advancedExpenses) => {
       balance -= principal;
     }
   }
-  const loanPaydownReturn = downPayment > 0 ? (principalPaidYear1 / downPayment) * 100 : 0;
+  const loanPaydownReturn = downPayment > 0 ? (principalPaidYear1 / totalInvestment) * 100 : 0;
 
   const appreciationRate = 0.03;
-  const appreciationReturn = downPayment > 0 ? ((purchasePrice * appreciationRate) / downPayment) * 100 : 0;
+  const appreciationReturn = downPayment > 0 ? ((purchasePrice * appreciationRate) / totalInvestment) * 100 : 0;
 
   const loanValueRatio = purchasePrice > 0 ? maxLoanAmount / purchasePrice * 100 : 0;
   const totalReturn = cashOnCashReturn + loanPaydownReturn + appreciationReturn;
