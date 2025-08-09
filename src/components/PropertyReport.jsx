@@ -130,7 +130,6 @@ const PropertyReport = ({ currentProperty, setCurrentStep, analysis, onSave, adv
             ) : (
               <div className="space-y-4 text-sm">
                 <div>
-                  <h4 className="font-semibold mb-1">Analyse simple</h4>
                   <div className="grid md:grid-cols-4 gap-4">
                     <div>
                       <span className="text-gray-600">Prix d'achat:</span>
@@ -155,7 +154,6 @@ const PropertyReport = ({ currentProperty, setCurrentStep, analysis, onSave, adv
                   </div>
                 </div>
                 <div>
-                  <h4 className="font-semibold mb-1">Financement</h4>
                   <div className="grid md:grid-cols-4 gap-4">
                     <div>
                       <span className="text-gray-600">Financement:</span>

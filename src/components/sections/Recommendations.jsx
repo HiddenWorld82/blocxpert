@@ -33,11 +33,11 @@ export default function Recommendations({ analysis }) {
       icon: <XCircle className="w-5 h-5" />,
       text: "Cash flow négatif - l'immeuble ne s'autofinance pas. Révisez votre stratégie ou prévoyez des fonds supplémentaires."
     });
-  } else if (analysis?.cashOnCashReturn/100 < 0.02) {
+  } else if (analysis?.cashFlow / analysis?.effectiveNetIncome < 0.02) {
     recommendations.push({
       type: "warning",
       icon: <AlertCircle className="w-5 h-5" />,
-      text: "Cash flow positif mais très faible. Prévoyez une réserve pour imprévus."
+      text: "Cash flow de positif mais très faible (inférieur à 2% des revenus net). Prévoyez une réserve pour imprévus."
     });
   } else {
     recommendations.push({
