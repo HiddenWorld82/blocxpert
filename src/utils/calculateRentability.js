@@ -180,7 +180,7 @@ const calculateRentability = (property, advancedExpenses) => {
           "environmental1",
           "environmental2",
           "environmental3",
-          "otherTests",
+          "otherFees",
           "appraiser",
           "notary",
           "renovations",
@@ -194,6 +194,7 @@ const calculateRentability = (property, advancedExpenses) => {
           "renovations",
           "cmhcAnalysis",
           "cmhcTax",
+          "otherFees",
           "welcomeTax",
         ]
   ).reduce((sum, key) => sum + (parseFloat(property[key]) || 0), 0);
