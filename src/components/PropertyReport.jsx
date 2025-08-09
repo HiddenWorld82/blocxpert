@@ -8,6 +8,18 @@ import ExecutiveSummary from './sections/ExecutiveSummary';
 
 const PropertyReport = ({ currentProperty, setCurrentStep, analysis, onSave, advancedExpenses }) => {
   const numberFormatter = new Intl.NumberFormat('fr-CA');
+  const formatMoney = (value) =>
+    new Intl.NumberFormat('fr-CA', {
+      style: 'currency',
+      currency: 'CAD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value || 0);
+
+  const averageRentPerDoor =
+    ((parseFloat(currentProperty.annualRent) || 0) /
+      (parseInt(currentProperty.numberOfUnits) || 1)) /
+    12;
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-6xl mx-auto">
@@ -34,49 +46,143 @@ const PropertyReport = ({ currentProperty, setCurrentStep, analysis, onSave, adv
             <h3 className="text-xl font-semibold mb-2">
               {currentProperty.address || 'Propriété à analyser'}
             </h3>
-            <div className="grid md:grid-cols-4 gap-4 text-sm">
-              <div>
-                <span className="text-gray-600">Prix d'achat:</span>
-                <div className="font-semibold">
-                  {Number(currentProperty.purchasePrice || 0).toLocaleString('fr-CA')}$
-                </div>
-              </div>
-              {currentProperty.askingPrice && (
+            {advancedExpenses ? (
+              <div className="space-y-4 text-sm">
                 <div>
-                  <span className="text-gray-600">Prix demandé:</span>
-                  <div className="font-semibold">
-                    {numberFormatter.format(Number(currentProperty.askingPrice))}$
+                  <h4 className="font-semibold mb-1">Analyse avancée</h4>
+                  <div className="grid md:grid-cols-4 gap-4">
+                    <div>
+                      <span className="text-gray-600">Prix demandé:</span>
+                      <div className="font-semibold">
+                        {formatMoney(parseFloat(currentProperty.askingPrice) || 0)}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Prix d'achat:</span>
+                      <div className="font-semibold">
+                        {formatMoney(parseFloat(currentProperty.purchasePrice) || 0)}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Nb d'unités:</span>
+                      <div className="font-semibold">{currentProperty.numberOfUnits || 'N/A'}</div>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Prix par porte:</span>
+                      <div className="font-semibold">
+                        {formatMoney(Math.round(analysis.pricePerUnit || 0))}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              )}
-              {currentProperty.municipalEvaluation && (
                 <div>
-                  <span className="text-gray-600">Évaluation municipale:</span>
-                  <div className="font-semibold">
-                    {numberFormatter.format(Number(currentProperty.municipalEvaluation))}$
+                  <div className="grid md:grid-cols-4 gap-4">
+                    <div>
+                      <span className="text-gray-600">Revenus totaux:</span>
+                      <div className="font-semibold">
+                        {formatMoney(analysis.totalGrossRevenue)}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Dépenses totales:</span>
+                      <div className="font-semibold text-red-600">
+                        {formatMoney(analysis.totalExpenses)}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Service de la dette an 1:</span>
+                      <div className="font-semibold text-red-600">
+                        {formatMoney(analysis.annualDebtService)}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Cash Flow:</span>
+                      <div className={`font-semibold ${analysis.cashFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {formatMoney(analysis.cashFlow)}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              )}
-              <div>
-                <span className="text-gray-600">Nombre d'unités:</span>
-                <div className="font-semibold">{currentProperty.numberOfUnits || 'N/A'}</div>
-              </div>
-              <div>
-                <span className="text-gray-600">Prix par porte:</span>
-                <div className="font-semibold">
-                  {Math.round(analysis.pricePerUnit || 0).toLocaleString('fr-CA')}$
+                <div>
+                  <h4 className="font-semibold mb-1">Financement</h4>
+                  <div className="grid md:grid-cols-4 gap-4">
+                    <div>
+                      <span className="text-gray-600">Financement:</span>
+                      <div className="font-semibold">
+                        {currentProperty.financingType === 'conventional' && 'Conventionnel'}
+                        {currentProperty.financingType === 'cmhc' && 'SCHL'}
+                        {currentProperty.financingType === 'cmhc_aph' && `SCHL APH (${currentProperty.aphPoints} pts)`}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Prêt maximal:</span>
+                      <div className="font-semibold">{formatMoney(analysis.maxLoanAmount)}</div>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Mise de fonds:</span>
+                      <div className="font-semibold">{formatMoney(analysis.downPayment)}</div>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Investissement total:</span>
+                      <div className="font-semibold">{formatMoney(analysis.totalInvestment)}</div>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div>
-                <span className="text-gray-600">Financement:</span>
-                <div className="font-semibold">
-                  {currentProperty.financingType === 'conventional' && 'Conventionnel'}
-                  {currentProperty.financingType === 'cmhc' && 'SCHL'}
-                  {currentProperty.financingType === 'cmhc_aph' &&
-                    `SCHL APH (${currentProperty.aphPoints} pts)`}
+            ) : (
+              <div className="space-y-4 text-sm">
+                <div>
+                  <h4 className="font-semibold mb-1">Analyse simple</h4>
+                  <div className="grid md:grid-cols-4 gap-4">
+                    <div>
+                      <span className="text-gray-600">Prix d'achat:</span>
+                      <div className="font-semibold">
+                        {formatMoney(parseFloat(currentProperty.purchasePrice) || 0)}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Nom d'unités:</span>
+                      <div className="font-semibold">{currentProperty.numberOfUnits || 'N/A'}</div>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Prix par porte:</span>
+                      <div className="font-semibold">
+                        {formatMoney(Math.round(analysis.pricePerUnit || 0))}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Loyer moyen par porte:</span>
+                      <div className="font-semibold">{formatMoney(averageRentPerDoor)}</div>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-1">Financement</h4>
+                  <div className="grid md:grid-cols-4 gap-4">
+                    <div>
+                      <span className="text-gray-600">Financement:</span>
+                      <div className="font-semibold">
+                        {currentProperty.financingType === 'conventional' && 'Conventionnel'}
+                        {currentProperty.financingType === 'cmhc' && 'SCHL'}
+                        {currentProperty.financingType === 'cmhc_aph' && `SCHL APH (${currentProperty.aphPoints} pts)`}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Prêt maximal:</span>
+                      <div className="font-semibold">{formatMoney(analysis.maxLoanAmount)}</div>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Mise de fonds:</span>
+                      <div className="font-semibold">{formatMoney(analysis.downPayment)}</div>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Investissement total:</span>
+                      <div className="font-semibold">{formatMoney(analysis.totalInvestment)}</div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
           <KeyIndicators analysis={analysis} />
