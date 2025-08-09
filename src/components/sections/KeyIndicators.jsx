@@ -1,12 +1,22 @@
 // src/components/sections/KeyIndicators.jsx
 import React from "react";
-import { DollarSign, TrendingUp, BarChart, PiggyBank } from "lucide-react";
+import { DollarSign, TrendingUp, BarChart, PiggyBank, Percent } from "lucide-react";
 
 export default function KeyIndicators({ analysis }) {
   if (!analysis) return null;
 
   const formatPercent = (value) =>
     value !== null && value !== undefined ? `${value.toFixed(1)}%` : "—";
+
+  const formatMoney = (value) =>
+    value !== null && value !== undefined
+      ? new Intl.NumberFormat("fr-CA", {
+          style: "currency",
+          currency: "CAD",
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0
+        }).format(value)
+      : "—";
 
   const cards = [
     {
@@ -44,6 +54,24 @@ export default function KeyIndicators({ analysis }) {
       value: formatPercent(analysis.appreciationReturn),
       icon: <TrendingUp className="w-6 h-6 text-amber-600" />,
       color: "text-gray-700"
+    },
+    {
+      label: "Ratio Prêt Valeur (RPV)",
+      value: analysis.loanValueRatio?.toFixed(2) || "—",
+      icon: <Percent className="w-6 h-6 text-cyan-600" />,
+      color: "text-gray-700",
+    },
+    {
+      label: "Rendement global (1 an)",
+      value: formatPercent(analysis.totalReturn),
+      icon: <TrendingUp className="w-6 h-6 text-emerald-600" />,
+      color: "text-gray-700",
+    },
+    {
+      label: "Valeur générée après l'an 1",
+      value: formatMoney(analysis.valueGeneratedYear1),
+      icon: <DollarSign className="w-6 h-6 text-indigo-600" />,
+      color: analysis.valueGeneratedYear1 >= 0 ? "text-green-600" : "text-red-600",
     }
   ];
 
