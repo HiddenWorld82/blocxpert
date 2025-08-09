@@ -3,10 +3,12 @@ import React from "react";
 import { Info, Home, DollarSign, TrendingUp, Briefcase, Building, Calculator } from 'lucide-react';
 import FormattedNumberInput from "../FormattedNumberInput";
 
-export default function AcquisitionCosts({ costs = {}, onChange, lockedFields = {}, advancedExpenses }) {
+export default function AcquisitionCosts({ costs = {}, onChange, lockedFields = {}, advancedExpenses, analysis = {} }) {
   const handleChange = (field, value) => {
     onChange({ ...costs, [field]: value });
   };
+
+  const isCMHC = ["cmhc", "cmhc_aph"].includes(costs.financingType);
 
   if (!advancedExpenses) {
     const fields = [
@@ -16,6 +18,12 @@ export default function AcquisitionCosts({ costs = {}, onChange, lockedFields = 
         info: "Inspection, études environnementales, évaluateur, autres tests",
       },
       { field: "notary", label: "Notaire", info: "Frais de notaire" },
+      ...(isCMHC
+        ? [
+            { field: "cmhcAnalysis", label: "Frais d'analyse SCHL", info: "150$ par logement", locked: true },
+            { field: "cmhcTax", label: "Taxe sur la prime SCHL", info: "9% de la prime SCHL", locked: true },
+          ]
+        : []),
       {
         field: "welcomeTax",
         label: "Taxe de bienvenue",
@@ -37,7 +45,7 @@ export default function AcquisitionCosts({ costs = {}, onChange, lockedFields = 
             <div key={field}>
               <label className="block text-sm font-medium mb-1">
                 {label}
-                <Info className="inline w-4 h-4 text-gray-400 ml-1" title={info} />
+                {info && <Info className="inline w-4 h-4 text-gray-400 ml-1" title={info} />}
               </label>
               <FormattedNumberInput
                 value={costs[field] || ""}
@@ -50,6 +58,17 @@ export default function AcquisitionCosts({ costs = {}, onChange, lockedFields = 
             </div>
           ))}
         </div>
+        <div className="mt-4">
+          <label className="block text-sm font-medium mb-1">Total des Frais d'Acquisition</label>
+          <FormattedNumberInput
+            value={analysis.acquisitionCosts?.toString() || ''}
+            onChange={() => {}}
+            className="w-full border rounded p-2 bg-gray-50"
+            placeholder="0"
+            disabled
+            type="currency"
+          />
+        </div>
       </div>
     );
   }
@@ -60,6 +79,12 @@ export default function AcquisitionCosts({ costs = {}, onChange, lockedFields = 
     { field: "environmental2", label: "Env. Phase II" },
     { field: "environmental3", label: "Env. Phase III" },
     { field: "appraiser", label: "Évaluateur agréé" },
+    ...(isCMHC
+      ? [
+          { field: "cmhcAnalysis", label: "Frais d'analyse SCHL", locked: true },
+          { field: "cmhcTax", label: "Taxe sur la prime SCHL", locked: true },
+        ]
+      : []),
     { field: "otherFees", label: "Autres frais" },
     { field: "notary", label: "Notaire" },
     { field: "welcomeTax", label: "Taxe de bienvenue", locked: lockedFields?.welcomeTax },
@@ -84,7 +109,19 @@ export default function AcquisitionCosts({ costs = {}, onChange, lockedFields = 
           </div>
         ))}
       </div>
+      <div className="mt-4">
+        <label className="block text-sm font-medium mb-1">Total des Frais d'Acquisition</label>
+        <FormattedNumberInput
+          value={analysis.acquisitionCosts?.toString() || ''}
+          onChange={() => {}}
+          className="w-full border rounded p-2 bg-gray-50"
+          placeholder="0"
+          disabled
+          type="currency"
+        />
+      </div>
     </div>
   );
 }
+
 

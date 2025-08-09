@@ -34,8 +34,19 @@ const useRentabilityCalculator = (property, advancedExpenses, lockedFields, setC
       if (property.cmhcAnalysis !== analysisAmount) {
         setCurrentProperty(prev => ({ ...prev, cmhcAnalysis: analysisAmount }));
       }
+    } else if (property.cmhcAnalysis || property.cmhcTax) {
+      setCurrentProperty(prev => ({ ...prev, cmhcAnalysis: '', cmhcTax: '' }));
     }
   }, [property, lockedFields, setCurrentProperty]);
+
+  useEffect(() => {
+    if (["cmhc", "cmhc_aph"].includes(property.financingType)) {
+      const taxAmount = analysis.cmhcTax ? Math.round(analysis.cmhcTax).toString() : '';
+      if (property.cmhcTax !== taxAmount) {
+        setCurrentProperty(prev => ({ ...prev, cmhcTax: taxAmount }));
+      }
+    }
+  }, [analysis.cmhcTax, property.financingType, property.cmhcTax, setCurrentProperty]);
 
   useEffect(() => {
     // importer la logique complète du calcul ici si tu le souhaites,
