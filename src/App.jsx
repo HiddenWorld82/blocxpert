@@ -5,10 +5,12 @@ import LoginPage from './components/auth/LoginPage';
 import SignupPage from './components/auth/SignupPage';
 import ResetPassword from './components/auth/ResetPassword';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import NetworkStatusBadge from './components/NetworkStatusBadge';
 
 function App() {
   return (
     <Router>
+      <NetworkStatusBadge />
       <Routes>
         <Route
           path="/"

@@ -1,4 +1,5 @@
 import { firestore } from '../config/firebase';
+import { queueOperation } from '../utils/offlineQueue';
 import {
   collection,
   addDoc,
@@ -13,6 +14,10 @@ import {
 const propertiesCollection = collection(firestore, 'properties');
 
 export const saveProperty = async (property) => {
+  if (!navigator.onLine) {
+    queueOperation({ type: 'add', data: property });
+    return null;
+  }
   const docRef = await addDoc(propertiesCollection, property);
   return docRef.id;
 };
@@ -26,11 +31,19 @@ export const getProperties = (uid, callback) => {
 };
 
 export const updateProperty = async (id, data) => {
+  if (!navigator.onLine) {
+    queueOperation({ type: 'update', id, data });
+    return;
+  }
   const propertyRef = doc(firestore, 'properties', id);
   await updateDoc(propertyRef, data);
 };
 
 export const deleteProperty = async (id) => {
+  if (!navigator.onLine) {
+    queueOperation({ type: 'delete', id });
+    return;
+  }
   const propertyRef = doc(firestore, 'properties', id);
   await deleteDoc(propertyRef);
 };
