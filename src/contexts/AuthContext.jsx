@@ -4,6 +4,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
   signInWithPopup,
+  sendPasswordResetEmail,
   onAuthStateChanged,
   setPersistence,
   browserLocalPersistence,
@@ -46,6 +47,8 @@ export function AuthProvider({ children }) {
 
   const loginWithFacebook = () => signInWithPopup(auth, facebookProvider);
 
+  const resetPassword = (email) => sendPasswordResetEmail(auth, email);
+
   const value = {
     currentUser,
     loading,
@@ -54,6 +57,7 @@ export function AuthProvider({ children }) {
     logout,
     loginWithGoogle,
     loginWithFacebook,
+    resetPassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
