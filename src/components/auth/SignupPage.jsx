@@ -6,7 +6,7 @@ const SignupPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { signup } = useAuth();
+  const { signup, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -17,6 +17,16 @@ const SignupPage = () => {
       navigate('/');
     } catch {
       setError("Impossible de créer le compte");
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setError('');
+    try {
+      await loginWithGoogle();
+      navigate('/');
+    } catch {
+      setError("Impossible de se connecter avec Google");
     }
   };
 
@@ -53,6 +63,13 @@ const SignupPage = () => {
             S'inscrire
           </button>
         </form>
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          className="w-full py-2 text-white bg-red-500 rounded hover:bg-red-600"
+        >
+          Continuer avec Google
+        </button>
         <div className="text-sm text-center">
           Déjà un compte?{' '}
           <Link to="/login" className="text-blue-600 hover:underline">
