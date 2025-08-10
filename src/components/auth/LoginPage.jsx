@@ -6,7 +6,7 @@ const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -17,6 +17,16 @@ const LoginPage = () => {
       navigate('/');
     } catch {
       setError('Impossible de se connecter');
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setError('');
+    try {
+      await loginWithGoogle();
+      navigate('/');
+    } catch {
+      setError('Impossible de se connecter avec Google');
     }
   };
 
@@ -53,6 +63,13 @@ const LoginPage = () => {
             Se connecter
           </button>
         </form>
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          className="w-full py-2 text-white bg-red-500 rounded hover:bg-red-600"
+        >
+          Continuer avec Google
+        </button>
         <div className="flex justify-between text-sm">
           <Link to="/reset-password" className="text-blue-600 hover:underline">
             Mot de passe oublié?
