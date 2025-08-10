@@ -6,6 +6,8 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  query,
+  where,
 } from 'firebase/firestore';
 
 const propertiesCollection = collection(firestore, 'properties');
@@ -15,11 +17,13 @@ export const saveProperty = async (property) => {
   return docRef.id;
 };
 
-export const getProperties = (callback) =>
-  onSnapshot(propertiesCollection, (snapshot) => {
+export const getProperties = (uid, callback) => {
+  const q = query(propertiesCollection, where('uid', '==', uid));
+  return onSnapshot(q, (snapshot) => {
     const properties = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
     callback(properties);
   });
+};
 
 export const updateProperty = async (id, data) => {
   const propertyRef = doc(firestore, 'properties', id);
