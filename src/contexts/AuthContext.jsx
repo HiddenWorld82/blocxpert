@@ -10,6 +10,7 @@ import {
   browserLocalPersistence,
 } from 'firebase/auth';
 import { auth, googleProvider, facebookProvider } from '../config/firebase';
+import { getProperties } from '../services/dataService';
 
 const AuthContext = createContext();
 
@@ -20,6 +21,8 @@ export function useAuth() {
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [properties, setProperties] = useState([]);
+  const [propertiesLoading, setPropertiesLoading] = useState(true);
 
   useEffect(() => {
     // Set auth persistence so the user stays signed in across reloads
@@ -34,6 +37,21 @@ export function AuthProvider({ children }) {
 
     return unsubscribe;
   }, []);
+
+  useEffect(() => {
+    let unsubscribe;
+    if (currentUser) {
+      setPropertiesLoading(true);
+      unsubscribe = getProperties(currentUser.uid, (props) => {
+        setProperties(props);
+        setPropertiesLoading(false);
+      });
+    } else {
+      setProperties([]);
+      setPropertiesLoading(false);
+    }
+    return unsubscribe;
+  }, [currentUser]);
 
   const signup = (email, password) =>
     createUserWithEmailAndPassword(auth, email, password);
@@ -52,6 +70,8 @@ export function AuthProvider({ children }) {
   const value = {
     currentUser,
     loading,
+    properties,
+    propertiesLoading,
     signup,
     login,
     logout,
