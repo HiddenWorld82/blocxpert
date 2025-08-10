@@ -4,6 +4,7 @@ import { Home, Plus } from 'lucide-react';
 import PropertyForm from './components/PropertyForm';
 import PropertyReport from './components/PropertyReport';
 import HomeScreen from './components/HomeScreen';
+import AmortizationPage from './components/AmortizationPage';
 import useRentabilityCalculator from './hooks/useRentabilityCalculator';
 import defaultProperty from './defaults/defaultProperty';
 
@@ -75,6 +76,13 @@ const RentalPropertyAnalyzer = () => {
           analysis={analysis}
           onSave={handleSave}
           advancedExpenses={advancedExpenses}
+        />
+      )}
+      {currentStep === 'amortization' && (
+        <AmortizationPage
+          analysis={analysis}
+          currentProperty={currentProperty}
+          setCurrentStep={setCurrentStep}
         />
       )}
     </div>

@@ -188,6 +188,27 @@ const PropertyReport = ({ currentProperty, setCurrentStep, analysis, onSave, adv
             <FinancingSummary analysis={analysis} currentProperty={currentProperty} />
           </div>
 
+          <div className="flex justify-center gap-4 mb-8">
+            <button
+              onClick={() => setCurrentStep('amortization')}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Amortissement
+            </button>
+            <button
+              disabled
+              className="px-4 py-2 bg-gray-300 text-gray-600 rounded-lg cursor-not-allowed"
+            >
+              Bouton 2
+            </button>
+            <button
+              disabled
+              className="px-4 py-2 bg-gray-300 text-gray-600 rounded-lg cursor-not-allowed"
+            >
+              Bouton 3
+            </button>
+          </div>
+
           <Recommendations
             analysis={analysis}
             currentProperty={currentProperty}
