@@ -10,7 +10,7 @@ export default function BasicInfo({ property = {}, onChange, advancedExpenses })
 
   const addressRef = useGooglePlacesAutocomplete(
     (place) => handleChange("address", place.formatted_address),
-    { componentRestrictions: { country: "fr" } }
+    { componentRestrictions: { country: "ca" } }
   );
 
   return (
