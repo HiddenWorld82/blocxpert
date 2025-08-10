@@ -9,7 +9,7 @@ import {
   setPersistence,
   browserLocalPersistence,
 } from 'firebase/auth';
-import { auth, googleProvider, facebookProvider } from '../config/firebase';
+import { auth, googleProvider } from '../config/firebase';
 import { getProperties } from '../services/dataService';
 
 const AuthContext = createContext();
@@ -63,8 +63,6 @@ export function AuthProvider({ children }) {
 
   const loginWithGoogle = () => signInWithPopup(auth, googleProvider);
 
-  const loginWithFacebook = () => signInWithPopup(auth, facebookProvider);
-
   const resetPassword = (email) => sendPasswordResetEmail(auth, email);
 
   const value = {
@@ -76,7 +74,6 @@ export function AuthProvider({ children }) {
     login,
     logout,
     loginWithGoogle,
-    loginWithFacebook,
     resetPassword,
   };
 
