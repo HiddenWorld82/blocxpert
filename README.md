@@ -35,4 +35,16 @@ git clone https://github.com/ton-utilisateur/blocxpert.git
 cd blocxpert
 npm install
 npm install @rollup/rollup-win32-x64-msvc
+```
+
+### 2. Configurer Firebase
+
+1. Créer un projet sur [Firebase Console](https://console.firebase.google.com/).
+2. Ajouter une application web pour obtenir les clés de configuration.
+3. Copier `.env.example` vers `.env` et y renseigner les clés Firebase et Google Maps.
+
+### 3. Lancer l'application
+
+```bash
 npm run dev
+```
