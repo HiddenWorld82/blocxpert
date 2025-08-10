@@ -12,9 +12,11 @@
   "dependencies": {
     "@rollup/rollup-win32-x64-msvc": "^4.46.2",
     "@tailwindcss/postcss": "^4.1.11",
+    "firebase": "^12.1.0",
     "lucide-react": "^0.536.0",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "react-firebase-hooks": "^5.1.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",
