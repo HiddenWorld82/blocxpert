@@ -18,7 +18,7 @@ const AmortizationPage = ({ analysis, currentProperty, setCurrentStep }) => {
     balance -= principal;
     cumulativePrincipal += principal;
     const propertyValue = purchasePrice * (1 + monthlyAppreciation * month);
-    const equity = propertyValue - balance - analysis.acquisitionCosts - analysis.cmhcPremium;
+    const equity = propertyValue - balance - analysis.acquisitionCosts;
     rows.push({
       month,
       balance,
@@ -52,25 +52,25 @@ const AmortizationPage = ({ analysis, currentProperty, setCurrentStep }) => {
           <table className="min-w-full text-sm">
             <thead>
               <tr className="bg-gray-100">
-                <th className="px-2 py-1 text-right">Période (mois)</th>
-                <th className="px-2 py-1 text-right">Solde du prêt</th>
-                <th className="px-2 py-1 text-right">Versement intérêt</th>
-                <th className="px-2 py-1 text-right">Versement capital</th>
-                <th className="px-2 py-1 text-right">Capital cumulé</th>
-                <th className="px-2 py-1 text-right">Valeur immeuble</th>
-                <th className="px-2 py-1 text-right">Équité</th>
+                <th className="px-2 py-1 text-center">Période (mois)</th>
+                <th className="px-2 py-1 text-center">Solde du prêt</th>
+                <th className="px-2 py-1 text-center">Versement intérêt</th>
+                <th className="px-2 py-1 text-center">Versement capital</th>
+                <th className="px-2 py-1 text-center">Capital cumulé</th>
+                <th className="px-2 py-1 text-center">Valeur immeuble</th>
+                <th className="px-2 py-1 text-center">Équité</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.month} className="border-t">
-                  <td className="px-2 py-1 text-right">{r.month}</td>
-                  <td className="px-2 py-1 text-right">{formatMoney(r.balance)}</td>
-                  <td className="px-2 py-1 text-right">{formatMoney(r.interest)}</td>
-                  <td className="px-2 py-1 text-right">{formatMoney(r.principal)}</td>
-                  <td className="px-2 py-1 text-right">{formatMoney(r.cumulativePrincipal)}</td>
-                  <td className="px-2 py-1 text-right">{formatMoney(r.propertyValue)}</td>
-                  <td className="px-2 py-1 text-right">{formatMoney(r.equity)}</td>
+                <tr key={r.month} className={r.month % 12 === 0 ? "border-t bg-gray-200" : "border-t"}>
+                  <td className="px-2 py-1 text-center">{r.month}</td>
+                  <td className="px-2 py-1 text-center">{formatMoney(r.balance)}</td>
+                  <td className="px-2 py-1 text-center">{formatMoney(r.interest)}</td>
+                  <td className="px-2 py-1 text-center">{formatMoney(r.principal)}</td>
+                  <td className="px-2 py-1 text-center">{formatMoney(r.cumulativePrincipal)}</td>
+                  <td className="px-2 py-1 text-center">{formatMoney(r.propertyValue)}</td>
+                  <td className="px-2 py-1 text-center">{formatMoney(r.equity)}</td>
                 </tr>
               ))}
             </tbody>
