@@ -5,12 +5,15 @@ import useBuilding from '../hooks/useBuilding';
 import useScenarios from '../hooks/useScenarios';
 import ScenarioManager from './ScenarioManager';
 import TimelineView from './TimelineView';
+import ScenarioComparison from './ScenarioComparison';
 
 const BuildingDashboard = ({ buildingId }) => {
   const building = useBuilding(buildingId);
   const { scenarios, addScenario, cloneScenario } = useScenarios(buildingId);
   const [managerOpen, setManagerOpen] = useState(false);
   const [duplicateId, setDuplicateId] = useState(null);
+  const [comparisonOpen, setComparisonOpen] = useState(false);
+  const [comparisonInitial, setComparisonInitial] = useState([]);
 
   const handleSave = async (data) => {
     if (duplicateId) {
@@ -20,6 +23,11 @@ const BuildingDashboard = ({ buildingId }) => {
     }
     setManagerOpen(false);
     setDuplicateId(null);
+  };
+
+  const openComparison = (ids = []) => {
+    setComparisonInitial(ids);
+    setComparisonOpen(true);
   };
 
   if (!building) {
@@ -41,6 +49,12 @@ const BuildingDashboard = ({ buildingId }) => {
         >
           <Plus className="w-4 h-4 mr-1" /> Nouveau scénario
         </button>
+        <button
+          className="bg-gray-100 px-4 py-2 rounded flex items-center"
+          onClick={() => openComparison()}
+        >
+          <Scale className="w-4 h-4 mr-1" />Comparer
+        </button>
       </div>
 
       <TimelineView scenarios={scenarios} />
@@ -57,7 +71,7 @@ const BuildingDashboard = ({ buildingId }) => {
             <div className="flex gap-2">
               <button
                 className="text-sm text-blue-600 flex items-center"
-                onClick={() => console.log('Compare', s.id)}
+                onClick={() => openComparison([s.id])}
               >
                 <Scale className="w-4 h-4 mr-1" />Comparer
               </button>
@@ -86,8 +100,20 @@ const BuildingDashboard = ({ buildingId }) => {
           parentId={duplicateId}
         />
       )}
+
+      {comparisonOpen && (
+        <ScenarioComparison
+          scenarios={scenarios}
+          initialSelected={comparisonInitial}
+          onClose={() => {
+            setComparisonOpen(false);
+            setComparisonInitial([]);
+          }}
+        />
+      )}
     </div>
   );
 };
 
 export default BuildingDashboard;
+
