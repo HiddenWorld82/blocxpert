@@ -6,11 +6,18 @@ service cloud.firestore {
       allow read, delete: if request.auth != null && request.auth.uid == userId;
     }
 
-    match /properties/{propertyId} {
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId && validProperty(request.resource.data);
-      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
-      allow update: if request.auth != null && request.auth.uid == resource.data.userId && request.auth.uid == request.resource.data.userId && validProperty(request.resource.data);
-      allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+    match /buildings/{buildingId} {
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.uid;
+      allow read: if request.auth != null && request.auth.uid == resource.data.uid;
+      allow update: if request.auth != null && request.auth.uid == resource.data.uid && request.auth.uid == request.resource.data.uid;
+      allow delete: if request.auth != null && request.auth.uid == resource.data.uid;
+
+      match /scenarios/{scenarioId} {
+        allow create: if request.auth != null && request.auth.uid == request.resource.data.uid;
+        allow read: if request.auth != null && request.auth.uid == resource.data.uid;
+        allow update: if request.auth != null && request.auth.uid == resource.data.uid && request.auth.uid == request.resource.data.uid;
+        allow delete: if request.auth != null && request.auth.uid == resource.data.uid;
+      }
     }
 
     function validUser(data) {
@@ -19,13 +26,6 @@ service cloud.firestore {
              data.displayName is string &&
              data.photoURL is string &&
              data.createdAt is timestamp;
-    }
-
-    function validProperty(data) {
-      return data.keys().hasAll(['userId', 'createdAt', 'updatedAt']) &&
-             data.userId is string &&
-             data.createdAt is timestamp &&
-             data.updatedAt is timestamp;
     }
   }
 }
