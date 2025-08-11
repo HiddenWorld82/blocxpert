@@ -1,6 +1,8 @@
 // defaults/defaultProperty.js
 
 const defaultProperty = {
+  type: 'achat initial',
+  year: new Date().getFullYear(),
   address: '',
   askingPrice: '',
   purchasePrice: '',
@@ -66,6 +68,8 @@ const defaultProperty = {
   cmhcAnalysis: '150',
   cmhcTax: '',
   welcomeTax: '',
+
+  renovationImpact: '',
 
   // Paramètres futurs
   appreciationRate: 2.5,

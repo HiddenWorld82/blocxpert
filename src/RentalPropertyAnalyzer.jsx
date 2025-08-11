@@ -1,6 +1,6 @@
 // Nouveau fichier principal : RentalPropertyAnalyzer.jsx
 import React, { useEffect, useState } from 'react';
-import PropertyForm from './components/PropertyForm';
+import ScenarioEditor from './components/ScenarioEditor';
 import PropertyReport from './components/PropertyReport';
 import HomeScreen from './components/HomeScreen';
 import AmortizationPage from './components/AmortizationPage';
@@ -108,9 +108,9 @@ const RentalPropertyAnalyzer = () => {
             />
           )}
           {currentStep === 'form' && (
-            <PropertyForm
-              currentProperty={currentScenario}
-              setCurrentProperty={setCurrentScenario}
+            <ScenarioEditor
+              currentScenario={currentScenario}
+              setCurrentScenario={setCurrentScenario}
               lockedFields={lockedFields}
               setLockedFields={setLockedFields}
               setCurrentStep={setCurrentStep}

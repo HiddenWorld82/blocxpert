@@ -3,26 +3,56 @@ import React, { useState } from 'react';
 import { Plus, Copy, Scale } from 'lucide-react';
 import useBuilding from '../hooks/useBuilding';
 import useScenarios from '../hooks/useScenarios';
-import ScenarioManager from './ScenarioManager';
+import useRentabilityCalculator from '../hooks/useRentabilityCalculator';
+import defaultProperty from '../defaults/defaultProperty';
+import ScenarioEditor from './ScenarioEditor';
 import TimelineView from './TimelineView';
 import ScenarioComparison from './ScenarioComparison';
 
 const BuildingDashboard = ({ buildingId }) => {
   const building = useBuilding(buildingId);
   const { scenarios, addScenario, cloneScenario } = useScenarios(buildingId);
-  const [managerOpen, setManagerOpen] = useState(false);
+  const [editorOpen, setEditorOpen] = useState(false);
   const [duplicateId, setDuplicateId] = useState(null);
+  const [parentScenario, setParentScenario] = useState(null);
+  const [currentScenario, setCurrentScenario] = useState(defaultProperty);
+  const [advancedExpenses, setAdvancedExpenses] = useState(false);
+  const [lockedFields, setLockedFields] = useState({
+    debtCoverage: true,
+    welcomeTax: true
+  });
+  const analysis = useRentabilityCalculator(
+    currentScenario,
+    advancedExpenses,
+    lockedFields,
+    setCurrentScenario
+  );
   const [comparisonOpen, setComparisonOpen] = useState(false);
   const [comparisonInitial, setComparisonInitial] = useState([]);
 
-  const handleSave = async (data) => {
+  const handleSave = async () => {
+    const scenarioWithAnalysis = { ...currentScenario, ...analysis };
     if (duplicateId) {
-      await cloneScenario(duplicateId, data);
+      await cloneScenario(duplicateId, scenarioWithAnalysis);
     } else {
-      await addScenario(data);
+      await addScenario(scenarioWithAnalysis);
     }
-    setManagerOpen(false);
+    setEditorOpen(false);
     setDuplicateId(null);
+    setParentScenario(null);
+  };
+
+  const openEditor = (parent = null) => {
+    setParentScenario(parent);
+    if (parent) {
+      const { id, ...rest } = parent;
+      setCurrentScenario({ ...rest });
+      setDuplicateId(parent.id);
+    } else {
+      setCurrentScenario(defaultProperty);
+      setDuplicateId(null);
+    }
+    setEditorOpen(true);
   };
 
   const openComparison = (ids = []) => {
@@ -45,7 +75,7 @@ const BuildingDashboard = ({ buildingId }) => {
       <div className="flex gap-2">
         <button
           className="bg-blue-600 text-white px-4 py-2 rounded flex items-center"
-          onClick={() => setManagerOpen(true)}
+          onClick={() => openEditor()}
         >
           <Plus className="w-4 h-4 mr-1" /> Nouveau scénario
         </button>
@@ -77,10 +107,7 @@ const BuildingDashboard = ({ buildingId }) => {
               </button>
               <button
                 className="text-sm text-green-600 flex items-center"
-                onClick={() => {
-                  setDuplicateId(s.id);
-                  setManagerOpen(true);
-                }}
+                onClick={() => openEditor(s)}
               >
                 <Copy className="w-4 h-4 mr-1" />Dupliquer
               </button>
@@ -89,15 +116,22 @@ const BuildingDashboard = ({ buildingId }) => {
         ))}
       </ul>
 
-      {managerOpen && (
-        <ScenarioManager
-          onClose={() => {
-            setManagerOpen(false);
+      {editorOpen && (
+        <ScenarioEditor
+          currentScenario={currentScenario}
+          setCurrentScenario={setCurrentScenario}
+          lockedFields={lockedFields}
+          setLockedFields={setLockedFields}
+          analysis={analysis}
+          advancedExpenses={advancedExpenses}
+          setAdvancedExpenses={setAdvancedExpenses}
+          parentScenario={parentScenario}
+          onCancel={() => {
+            setEditorOpen(false);
             setDuplicateId(null);
+            setParentScenario(null);
           }}
           onSave={handleSave}
-          scenarios={scenarios}
-          parentId={duplicateId}
         />
       )}
 
