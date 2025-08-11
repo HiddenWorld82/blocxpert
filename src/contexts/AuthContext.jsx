@@ -10,7 +10,7 @@ import {
   browserLocalPersistence,
 } from 'firebase/auth';
 import { auth, googleProvider } from '../config/firebase';
-import { getProperties } from '../services/dataService';
+import { getAllBuildings } from '../services/buildingService';
 
 const AuthContext = createContext();
 
@@ -21,8 +21,8 @@ export function useAuth() {
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [properties, setProperties] = useState([]);
-  const [propertiesLoading, setPropertiesLoading] = useState(true);
+  const [buildings, setBuildings] = useState([]);
+  const [buildingsLoading, setBuildingsLoading] = useState(true);
 
   useEffect(() => {
     // Set auth persistence so the user stays signed in across reloads
@@ -41,14 +41,14 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let unsubscribe;
     if (currentUser) {
-      setPropertiesLoading(true);
-      unsubscribe = getProperties(currentUser.uid, (props) => {
-        setProperties(props);
-        setPropertiesLoading(false);
+      setBuildingsLoading(true);
+      unsubscribe = getAllBuildings(currentUser.uid, (blds) => {
+        setBuildings(blds);
+        setBuildingsLoading(false);
       });
     } else {
-      setProperties([]);
-      setPropertiesLoading(false);
+      setBuildings([]);
+      setBuildingsLoading(false);
     }
     return unsubscribe;
   }, [currentUser]);
@@ -68,8 +68,8 @@ export function AuthProvider({ children }) {
   const value = {
     currentUser,
     loading,
-    properties,
-    propertiesLoading,
+    buildings,
+    buildingsLoading,
     signup,
     login,
     logout,
