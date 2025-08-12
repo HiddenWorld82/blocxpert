@@ -3,7 +3,12 @@ import React from "react";
 import { Info, Home, DollarSign, TrendingUp, Briefcase, Building, Calculator } from 'lucide-react';
 import FormattedNumberInput from "../FormattedNumberInput";
 
-export default function RevenueSection({ revenue = {}, onChange, advancedExpenses }) {
+export default function RevenueSection({
+  revenue = {},
+  onChange,
+  advancedExpenses,
+  readOnly = false,
+}) {
   const handleChange = (field, value) => {
     onChange({ ...revenue, [field]: value });
   };
@@ -17,9 +22,11 @@ export default function RevenueSection({ revenue = {}, onChange, advancedExpense
           <FormattedNumberInput
             value={revenue.annualRent || ""}
             onChange={(val) => handleChange("annualRent", val)}
-            className="w-full border rounded p-2"
+            className={`w-full border rounded p-2 ${readOnly ? 'bg-gray-100' : ''}`}
             placeholder="0"
             type="currency"
+            disabled={readOnly}
+            readOnly={readOnly}
           />
         </div>
         <div className="mt-4">
@@ -27,9 +34,11 @@ export default function RevenueSection({ revenue = {}, onChange, advancedExpense
           <FormattedNumberInput
             value={revenue.otherRevenue || ""}
             onChange={(val) => handleChange("otherRevenue", val)}
-            className="w-full border rounded p-2"
+            className={`w-full border rounded p-2 ${readOnly ? 'bg-gray-100' : ''}`}
             placeholder="0"
             type="currency"
+            disabled={readOnly}
+            readOnly={readOnly}
           />
         </div>
       </div>
@@ -51,9 +60,11 @@ export default function RevenueSection({ revenue = {}, onChange, advancedExpense
         <FormattedNumberInput
           value={revenue.annualRent || ""}
           onChange={(val) => handleChange("annualRent", val)}
-          className="w-full border rounded p-2"
+          className={`w-full border rounded p-2 ${readOnly ? 'bg-gray-100' : ''}`}
           placeholder="0"
           type="currency"
+          disabled={readOnly}
+          readOnly={readOnly}
         />
       </div>
       <div className="grid grid-cols-2 gap-4 mt-4">
@@ -63,9 +74,11 @@ export default function RevenueSection({ revenue = {}, onChange, advancedExpense
             <FormattedNumberInput
               value={revenue[field] || ""}
               onChange={(val) => handleChange(field, val)}
-              className="w-full border rounded p-2"
+              className={`w-full border rounded p-2 ${readOnly ? 'bg-gray-100' : ''}`}
               placeholder="0"
               type="currency"
+              disabled={readOnly}
+              readOnly={readOnly}
             />
           </div>
         ))}

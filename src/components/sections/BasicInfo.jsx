@@ -3,7 +3,12 @@ import { Info, Home, DollarSign, TrendingUp, Briefcase, Building, Calculator } f
 import FormattedNumberInput from "../FormattedNumberInput";
 import useGooglePlacesAutocomplete from "../../hooks/useGooglePlacesAutocomplete";
 
-export default function BasicInfo({ property = {}, onChange, advancedExpenses }) {
+export default function BasicInfo({
+  property = {},
+  onChange,
+  advancedExpenses,
+  readOnly = false,
+}) {
   const handleChange = (field, value) => {
     onChange({ ...property, [field]: value });
   };
@@ -23,8 +28,10 @@ export default function BasicInfo({ property = {}, onChange, advancedExpenses })
           type="text"
           value={property.address || ""}
           onChange={(e) => handleChange("address", e.target.value)}
-          className="w-full border rounded p-2"
+          className={`w-full border rounded p-2 ${readOnly ? 'bg-gray-100' : ''}`}
           placeholder="123 rue Example, Montréal"
+          disabled={readOnly}
+          readOnly={readOnly}
         />
       </div>
       <div className="grid grid-cols-2 gap-4 mt-4">
@@ -34,9 +41,11 @@ export default function BasicInfo({ property = {}, onChange, advancedExpenses })
             <FormattedNumberInput
               value={property.askingPrice || ""}
               onChange={(val) => handleChange("askingPrice", val)}
-              className="w-full border rounded p-2"
+              className={`w-full border rounded p-2 ${readOnly ? 'bg-gray-100' : ''}`}
               placeholder="0"
               type="currency"
+              disabled={readOnly}
+              readOnly={readOnly}
             />
           </div>
         )}
@@ -45,9 +54,11 @@ export default function BasicInfo({ property = {}, onChange, advancedExpenses })
           <FormattedNumberInput
             value={property.purchasePrice || ""}
             onChange={(val) => handleChange("purchasePrice", val)}
-            className="w-full border rounded p-2"
+            className={`w-full border rounded p-2 ${readOnly ? 'bg-gray-100' : ''}`}
             placeholder="0"
             type="currency"
+            disabled={readOnly}
+            readOnly={readOnly}
           />
         </div>
         {advancedExpenses && (
@@ -56,9 +67,11 @@ export default function BasicInfo({ property = {}, onChange, advancedExpenses })
             <FormattedNumberInput
               value={property.municipalEvaluation || ""}
               onChange={(val) => handleChange("municipalEvaluation", val)}
-              className="w-full border rounded p-2"
+              className={`w-full border rounded p-2 ${readOnly ? 'bg-gray-100' : ''}`}
               placeholder="0"
               type="currency"
+              disabled={readOnly}
+              readOnly={readOnly}
             />
           </div>
         )}
@@ -67,8 +80,10 @@ export default function BasicInfo({ property = {}, onChange, advancedExpenses })
           <FormattedNumberInput
             value={property.numberOfUnits || ""}
             onChange={(val) => handleChange("numberOfUnits", val)}
-            className="w-full border rounded p-2"
+            className={`w-full border rounded p-2 ${readOnly ? 'bg-gray-100' : ''}`}
             placeholder="0"
+            disabled={readOnly}
+            readOnly={readOnly}
           />
         </div>
       </div>

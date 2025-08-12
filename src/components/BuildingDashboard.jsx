@@ -1,8 +1,14 @@
 // components/BuildingDashboard.jsx
 import React from 'react';
 import { DollarSign, TrendingUp, BarChart, Building } from 'lucide-react';
+import ScenarioList from './ScenarioList';
 
-const BuildingDashboard = ({ property, onCreateScenario, onBack }) => {
+const BuildingDashboard = ({
+  property,
+  onCreateScenario,
+  onEditScenario,
+  onBack,
+}) => {
   const formatMoney = (value) =>
     new Intl.NumberFormat('fr-CA', {
       style: 'currency',
@@ -105,7 +111,7 @@ const BuildingDashboard = ({ property, onCreateScenario, onBack }) => {
             ))}
           </div>
 
-          <div className="flex justify-center">
+          <div className="flex justify-center mb-6">
             <button
               onClick={onCreateScenario}
               className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
@@ -113,6 +119,8 @@ const BuildingDashboard = ({ property, onCreateScenario, onBack }) => {
               Créer un scénario
             </button>
           </div>
+
+          <ScenarioList propertyId={property.id} onEdit={onEditScenario} />
         </div>
       </div>
     </div>
