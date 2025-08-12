@@ -1,5 +1,6 @@
 // hooks/useComparison.js
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { compareScenarios } from '../services/scenarioService';
 
 const useComparison = (scenarios = [], initialSelected = []) => {
   const [selected, setSelected] = useState(initialSelected);
@@ -14,7 +15,19 @@ const useComparison = (scenarios = [], initialSelected = []) => {
     });
   };
 
-  const selectedScenarios = scenarios.filter((s) => selected.includes(s.id));
+  const selectedScenarios = useMemo(
+    () => scenarios.filter((s) => selected.includes(s.id)),
+    [scenarios, selected]
+  );
+
+  const metrics = useMemo(() => {
+    if (selectedScenarios.length < 2) return {};
+    const base = selectedScenarios[0];
+    return selectedScenarios.slice(1).reduce((acc, scenario) => {
+      acc[scenario.id] = compareScenarios(scenario, base);
+      return acc;
+    }, {});
+  }, [selectedScenarios]);
 
   const exportPDF = () => {
     window.print();
@@ -24,6 +37,7 @@ const useComparison = (scenarios = [], initialSelected = []) => {
     selected,
     selectedScenarios,
     toggleScenario,
+    metrics,
     exportPDF,
   };
 };

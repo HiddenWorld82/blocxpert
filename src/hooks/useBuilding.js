@@ -1,6 +1,10 @@
 // hooks/useBuilding.js
-import { useEffect, useState } from 'react';
-import { getAllBuildings } from '../services/buildingService';
+import { useCallback, useEffect, useState } from 'react';
+import {
+  getAllBuildings,
+  updateBuilding as updateBuildingService,
+  deleteBuilding as deleteBuildingService
+} from '../services/buildingService';
 import { useAuth } from '../contexts/AuthContext';
 
 const useBuilding = (buildingId) => {
@@ -20,7 +24,20 @@ const useBuilding = (buildingId) => {
     return () => unsubscribe && unsubscribe();
   }, [buildingId, currentUser]);
 
-  return building;
+  const updateBuilding = useCallback(
+    async (data) => {
+      if (!buildingId) return;
+      await updateBuildingService(buildingId, data);
+    },
+    [buildingId]
+  );
+
+  const deleteBuilding = useCallback(async () => {
+    if (!buildingId) return;
+    await deleteBuildingService(buildingId);
+  }, [buildingId]);
+
+  return { building, updateBuilding, deleteBuilding };
 };
 
 export default useBuilding;

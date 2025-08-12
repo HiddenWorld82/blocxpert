@@ -12,11 +12,12 @@ const ScenarioComparison = ({ scenarios = [], onClose, initialSelected = [] }) =
   const {
     selected,
     selectedScenarios,
+    metrics,
     toggleScenario,
     exportPDF,
   } = useComparison(scenarios, initialSelected);
 
-  const metrics = Object.keys(labels);
+  const metricKeys = Object.keys(labels);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
@@ -43,7 +44,7 @@ const ScenarioComparison = ({ scenarios = [], onClose, initialSelected = [] }) =
               <thead>
                 <tr className="border-b">
                   <th className="text-left p-2">Scénario</th>
-                  {metrics.map((m) => (
+                  {metricKeys.map((m) => (
                     <th key={m} className="text-left p-2">{labels[m]}</th>
                   ))}
                 </tr>
@@ -52,7 +53,7 @@ const ScenarioComparison = ({ scenarios = [], onClose, initialSelected = [] }) =
                 {selectedScenarios.map((s) => (
                   <tr key={s.id} className="border-b">
                     <td className="p-2 font-medium">{s.name || s.id}</td>
-                    {metrics.map((m) => (
+                    {metricKeys.map((m) => (
                       <td key={m} className="p-2">
                         {s[m] !== undefined ? s[m] : 'N/A'}
                       </td>
@@ -62,8 +63,36 @@ const ScenarioComparison = ({ scenarios = [], onClose, initialSelected = [] }) =
               </tbody>
             </table>
 
+            <h3 className="font-semibold mb-2">
+              Différences vs {selectedScenarios[0].name || selectedScenarios[0].id}
+            </h3>
+            <table className="w-full text-sm mb-6">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-2">Scénario</th>
+                  {metricKeys.map((m) => (
+                    <th key={m} className="text-left p-2">{labels[m]}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {selectedScenarios.slice(1).map((s) => (
+                  <tr key={s.id} className="border-b">
+                    <td className="p-2 font-medium">{s.name || s.id}</td>
+                    {metricKeys.map((m) => (
+                      <td key={m} className="p-2">
+                        {metrics[s.id]?.[m] !== undefined
+                          ? metrics[s.id][m]
+                          : 'N/A'}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              {metrics.map((metric) => {
+              {metricKeys.map((metric) => {
                 const max = Math.max(
                   ...selectedScenarios.map((s) => Number(s[metric]) || 0),
                   1

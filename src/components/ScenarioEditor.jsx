@@ -1,5 +1,6 @@
 // components/ScenarioEditor.jsx
 import React, { useEffect, useState } from 'react';
+import useScenarios from '../hooks/useScenarios';
 import FinancingSection from './sections/FinancingSection';
 import AcquisitionCosts from './sections/AcquisitionCosts';
 import BasicInfo from './sections/BasicInfo';
@@ -7,6 +8,7 @@ import RevenueSection from './sections/RevenueSection';
 import OperatingExpensesSection from './sections/OperatingExpensesSection';
 
 const ScenarioEditor = ({
+  buildingId,
   currentScenario,
   setCurrentScenario,
   lockedFields = {},
@@ -19,6 +21,7 @@ const ScenarioEditor = ({
   onSave,
   onCancel
 }) => {
+  const { addScenario, cloneScenario } = useScenarios(buildingId);
   const [scenarioType, setScenarioType] = useState(
     currentScenario.type || 'achat initial'
   );
@@ -50,7 +53,13 @@ const ScenarioEditor = ({
     else setCurrentStep && setCurrentStep('home');
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    const scenarioWithAnalysis = { ...currentScenario, ...analysis };
+    if (parentScenario?.id) {
+      await cloneScenario(parentScenario.id, scenarioWithAnalysis);
+    } else {
+      await addScenario(scenarioWithAnalysis);
+    }
     if (onSave) onSave();
     else setCurrentStep && setCurrentStep('report');
   };
