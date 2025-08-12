@@ -18,7 +18,8 @@ export default function ScenarioList({ propertyId, onEdit }) {
   }, [propertyId]);
 
   const handleDuplicate = async (scenario) => {
-    await duplicateScenario(propertyId, scenario);
+    const newScenario = await duplicateScenario(propertyId, scenario);
+    setScenarios((prev) => [...prev, newScenario]);
   };
 
   const grouped = scenarios.reduce((acc, sc) => {

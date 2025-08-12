@@ -1,5 +1,6 @@
 import { firestore } from '../config/firebase';
 import { queueOperation } from '../utils/offlineQueue';
+import { cloneScenario } from '../utils/cloneScenario';
 import {
   collection,
   addDoc,
@@ -87,10 +88,8 @@ export const updateScenario = async (propertyId, id, data) => {
 };
 
 export const duplicateScenario = async (propertyId, scenario) => {
-  const { id, title, ...rest } = scenario;
-  return saveScenario(propertyId, {
-    ...rest,
-    title: title ? `${title} (copie)` : 'Copie',
-  });
+  const cloned = cloneScenario(scenario);
+  const newId = await saveScenario(propertyId, cloned);
+  return { id: newId, ...cloned };
 };
 
