@@ -2,7 +2,12 @@ import React, { useEffect } from "react";
 import { TrendingUp } from 'lucide-react';
 import FormattedNumberInput, { formatCurrency } from "../FormattedNumberInput";
 
-export default function OperatingExpensesSection({ expenses = {}, onChange, advancedExpenses }) {
+export default function OperatingExpensesSection({
+  expenses = {},
+  onChange,
+  advancedExpenses,
+  readOnly = false,
+}) {
   const handleChange = (field, value) => {
     onChange({ ...expenses, [field]: value });
   };
@@ -103,9 +108,11 @@ export default function OperatingExpensesSection({ expenses = {}, onChange, adva
               <FormattedNumberInput
                 value={expenses[field] || ""}
                 onChange={(val) => handleChange(field, val)}
-                className="w-full border rounded p-2"
+                className={`w-full border rounded p-2 ${readOnly ? 'bg-gray-100' : ''}`}
                 placeholder="0"
                 type={field === "vacancyRate" || field=== "managementRate" ? "percentage" : "currency"}
+                disabled={readOnly}
+                readOnly={readOnly}
               />
               {field === "vacancyRate" && (
               <p className="text-xs text-gray-500 mt-1">
@@ -189,9 +196,11 @@ export default function OperatingExpensesSection({ expenses = {}, onChange, adva
             <FormattedNumberInput
               value={expenses[field] || ""}
               onChange={(val) => handleChange(field, val)}
-              className="w-full border rounded p-2"
+              className={`w-full border rounded p-2 ${readOnly ? 'bg-gray-100' : ''}`}
               placeholder="0"
               type={field === "vacancyRate" || field === "managementRate" ? "percentage" : "currency"}
+              disabled={readOnly}
+              readOnly={readOnly}
             />
             {field === "vacancyRate" && (
               <p className="text-xs text-gray-500 mt-1">

@@ -5,6 +5,7 @@ import PropertyReport from './components/PropertyReport';
 import HomeScreen from './components/HomeScreen';
 import AmortizationPage from './components/AmortizationPage';
 import BuildingDashboard from './components/BuildingDashboard';
+import FinancingScenarioForm from './components/FinancingScenarioForm';
 import useRentabilityCalculator from './hooks/useRentabilityCalculator';
 import defaultProperty from './defaults/defaultProperty';
 import { useAuth } from './contexts/AuthContext';
@@ -16,6 +17,7 @@ const RentalPropertyAnalyzer = () => {
   const [currentStep, setCurrentStep] = useState('home');
   const [currentProperty, setCurrentProperty] = useState(defaultProperty);
   const [advancedExpenses, setAdvancedExpenses] = useState(false);
+  const [currentScenario, setCurrentScenario] = useState(null);
   const [lockedFields] = useState({
     //maintenance: false,
     //concierge: false,
@@ -124,8 +126,27 @@ const RentalPropertyAnalyzer = () => {
           {currentStep === 'dashboard' && (
             <BuildingDashboard
               property={currentProperty}
-              onCreateScenario={() => setCurrentStep('form')}
+              onCreateScenario={() => {
+                setCurrentScenario(null);
+                setCurrentStep('scenario');
+              }}
+              onEditScenario={(sc) => {
+                setCurrentScenario(sc);
+                setCurrentStep('scenario');
+              }}
               onBack={() => setCurrentStep('home')}
+            />
+          )}
+          {currentStep === 'scenario' && (
+            <FinancingScenarioForm
+              propertyId={currentProperty.id}
+              property={currentProperty}
+              advancedExpenses={advancedExpenses}
+              initialScenario={currentScenario || {}}
+              onSaved={() => {
+                setCurrentScenario(null);
+                setCurrentStep('report');
+              }}
             />
           )}
           {currentStep === 'report' && (

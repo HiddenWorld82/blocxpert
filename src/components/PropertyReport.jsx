@@ -31,6 +31,8 @@ const PropertyReport = ({ currentProperty, setCurrentStep, analysis, onSave, adv
     if (!editingScenario) return null;
     const formProps = {
       propertyId: currentProperty.id,
+      property: currentProperty,
+      advancedExpenses,
       onSaved: () => setEditingScenario(null),
       initialScenario: editingScenario.id ? editingScenario : undefined,
     };

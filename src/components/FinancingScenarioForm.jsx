@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import FinancingSection from "./sections/FinancingSection";
 import AcquisitionCosts from "./sections/AcquisitionCosts";
+import BasicInfo from "./sections/BasicInfo";
+import RevenueSection from "./sections/RevenueSection";
+import OperatingExpensesSection from "./sections/OperatingExpensesSection";
 import { parseLocaleNumber } from "./FormattedNumberInput";
 import { saveScenario, updateScenario } from "../services/dataService";
 
@@ -9,6 +12,8 @@ export default function FinancingScenarioForm({
   onSaved,
   initialScenario = {},
   type = "initialFinancing",
+  property,
+  advancedExpenses,
 }) {
   const [scenario, setScenario] = useState({
     title: "",
@@ -63,6 +68,29 @@ export default function FinancingScenarioForm({
 
   return (
     <div className="space-y-6">
+      {property && (
+        <>
+          <BasicInfo
+            property={property}
+            onChange={() => {}}
+            advancedExpenses={advancedExpenses}
+            readOnly
+          />
+          <RevenueSection
+            revenue={property}
+            onChange={() => {}}
+            advancedExpenses={advancedExpenses}
+            readOnly
+          />
+          <OperatingExpensesSection
+            expenses={property}
+            onChange={() => {}}
+            advancedExpenses={advancedExpenses}
+            readOnly
+          />
+        </>
+      )}
+
       <div>
         <label className="block text-sm font-medium mb-1">
           Nom du scénario
