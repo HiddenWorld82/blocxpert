@@ -92,6 +92,7 @@ const RentalPropertyAnalyzer = () => {
 
   const resetProperty = () => {
     setCurrentProperty(defaultProperty);
+    setAdvancedExpenses(false);
     setCurrentStep('form');
   };
 
@@ -110,6 +111,7 @@ const RentalPropertyAnalyzer = () => {
               onNew={resetProperty}
               onSelect={(property) => {
                 setCurrentProperty(property);
+                setAdvancedExpenses(property.advancedExpenses || false);
                 setCurrentStep('dashboard');
               }}
             />
@@ -147,6 +149,7 @@ const RentalPropertyAnalyzer = () => {
                 setCurrentScenario(null);
                 setCurrentStep('report');
               }}
+              onBack={() => setCurrentStep('dashboard')}
             />
           )}
           {currentStep === 'report' && (
