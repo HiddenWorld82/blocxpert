@@ -1,8 +1,38 @@
 // components/HomeScreen.jsx
-import React from 'react';
-import { Calculator, Plus, Home, TrendingUp, FileText } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import {
+  Calculator,
+  Plus,
+  Home,
+  TrendingUp,
+  FileText,
+  Eye,
+  Trash2,
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { getScenarios } from '../services/scenarioService';
+import { deleteBuilding } from '../services/buildingService';
 
-const HomeScreen = ({ properties, onNew, onSelect }) => {
+const HomeScreen = ({ buildings, onNew, onNewScenario }) => {
+  const navigate = useNavigate();
+  const [criterion, setCriterion] = useState('totalReturn');
+  const [scenariosByBuilding, setScenariosByBuilding] = useState({});
+
+  useEffect(() => {
+    const unsubscribes = buildings.map((b) =>
+      getScenarios(b.id, (scs) => {
+        setScenariosByBuilding((prev) => ({ ...prev, [b.id]: scs }));
+      })
+    );
+    return () => unsubscribes.forEach((u) => u && u());
+  }, [buildings]);
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Supprimer cet immeuble ?')) {
+      await deleteBuilding(id);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4">
       <div className="max-w-6xl mx-auto">
@@ -16,7 +46,7 @@ const HomeScreen = ({ properties, onNew, onSelect }) => {
           </p>
         </div>
 
-        {properties.length === 0 ? (
+        {buildings.length === 0 ? (
           <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
             <h2 className="text-2xl font-semibold mb-6 text-center">🚀 Commencez votre première analyse</h2>
             <div className="grid md:grid-cols-3 gap-6 mb-8">
@@ -61,44 +91,87 @@ const HomeScreen = ({ properties, onNew, onSelect }) => {
         ) : (
           <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold">Mes Analyses</h2>
-              <button
-                onClick={onNew}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                <Plus className="inline-block mr-1" />
-                Nouvelle analyse
-              </button>
+              <h2 className="text-2xl font-semibold">Mes Immeubles</h2>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center text-sm">
+                  <label className="mr-2">Critère</label>
+                  <select
+                    value={criterion}
+                    onChange={(e) => setCriterion(e.target.value)}
+                    className="border rounded p-1"
+                  >
+                    <option value="totalReturn">Rendement total</option>
+                    <option value="effectiveNetIncome">ENI</option>
+                  </select>
+                </div>
+                <button
+                  onClick={onNew}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <Plus className="inline-block mr-1" />
+                  Nouvelle analyse
+                </button>
+              </div>
             </div>
             <div className="grid gap-4">
-              {properties.map((property, index) => (
-                <div
-                  key={index}
-                  className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
-                  onClick={() => onSelect(property)}
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
+              {buildings.map((b) => {
+                const scs = scenariosByBuilding[b.id] || [];
+                const count = scs.length;
+                const best = scs.reduce((best, s) => {
+                  const val = Number(s[criterion] || 0);
+                  const bestVal = best ? Number(best[criterion] || 0) : -Infinity;
+                  return val > bestVal ? s : best;
+                }, null);
+                const last = scs.reduce((latest, s) => {
+                  const d = s.updatedAt || s.createdAt;
+                  if (!d) return latest;
+                  const dDate = d.toDate ? d.toDate() : new Date(d);
+                  const lDate = latest ? (latest.toDate ? latest.toDate() : new Date(latest)) : null;
+                  return !lDate || dDate > lDate ? d : latest;
+                }, b.updatedAt);
+                const formatDate = (ts) => {
+                  if (!ts) return 'N/A';
+                  const date = ts.toDate ? ts.toDate() : new Date(ts);
+                  return date.toLocaleDateString('fr-CA');
+                };
+                return (
+                  <div key={b.id} className="border rounded-lg p-4">
+                    <div className="flex justify-between items-start mb-2">
                       <h3 className="font-semibold text-lg">
-                        {property.address || 'Adresse non spécifiée'}
+                        {b.address || 'Adresse non spécifiée'}
                       </h3>
-                      <p className="text-gray-600">
-                        {property.numberOfUnits} unités •
-                        {Number(property.purchasePrice).toLocaleString('fr-CA')}$ •
-                        {(property.purchasePrice / property.numberOfUnits).toLocaleString('fr-CA')}$/porte
-                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          className="text-blue-600 flex items-center text-sm"
+                          onClick={() => navigate(`/buildings/${b.id}`)}
+                        >
+                          <Eye className="w-4 h-4 mr-1" /> Voir
+                        </button>
+                        <button
+                          className="text-green-600 flex items-center text-sm"
+                          onClick={() => onNewScenario(b)}
+                        >
+                          <Plus className="w-4 h-4 mr-1" /> Nouveau scénario
+                        </button>
+                        <button
+                          className="text-red-600 flex items-center text-sm"
+                          onClick={() => handleDelete(b.id)}
+                        >
+                          <Trash2 className="w-4 h-4 mr-1" /> Supprimer
+                        </button>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <div className={`text-lg font-semibold ${property.effectiveNetIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {property.effectiveNetIncome >= 0 ? '+' : ''}{Math.round(property.effectiveNetIncome).toLocaleString('fr-CA')}$ /an
+                    <div className="text-sm text-gray-600 space-y-1">
+                      <div>Scénarios : {count}</div>
+                      <div>
+                        Meilleur ({criterion}) :{' '}
+                        {best ? best.name || best.type || 'Scénario' : 'N/A'}
                       </div>
-                      <div className="text-sm text-gray-500">
-                        Rendement après 1 an: {property.totalReturn?.toFixed(1) || 'N/A'}%
-                      </div>
+                      <div>Dernière modification : {formatDate(last)}</div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

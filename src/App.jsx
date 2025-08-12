@@ -6,6 +6,7 @@ import SignupPage from './components/auth/SignupPage';
 import ResetPassword from './components/auth/ResetPassword';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import NetworkStatusBadge from './components/NetworkStatusBadge';
+import BuildingDashboard from './components/BuildingDashboard';
 
 function App() {
   return (
@@ -17,6 +18,14 @@ function App() {
           element={
             <ProtectedRoute>
               <RentalPropertyAnalyzer />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/buildings/:buildingId"
+          element={
+            <ProtectedRoute>
+              <BuildingDashboard />
             </ProtectedRoute>
           }
         />

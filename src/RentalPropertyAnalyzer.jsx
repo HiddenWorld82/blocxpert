@@ -98,12 +98,12 @@ const RentalPropertyAnalyzer = () => {
         <>
           {currentStep === 'home' && (
             <HomeScreen
-              properties={buildings}
+              buildings={buildings}
               onNew={resetScenario}
-              onSelect={(building) => {
+              onNewScenario={(building) => {
                 setCurrentBuilding(building);
-                setCurrentScenario(building);
-                setCurrentStep('report');
+                setCurrentScenario({ ...defaultProperty, address: building.address });
+                setCurrentStep('form');
               }}
             />
           )}
