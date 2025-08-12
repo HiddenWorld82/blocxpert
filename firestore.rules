@@ -1,31 +1,22 @@
 rules_version = '2';
 service cloud.firestore {
+  function isOwner(propertyId) {
+    return request.auth != null &&
+      get(/databases/$(database)/documents/properties/$(propertyId)).data.uid == request.auth.uid;
+  }
+
   match /databases/{database}/documents {
     match /users/{userId} {
-      allow create, update: if request.auth != null && request.auth.uid == userId && validUser(request.resource.data);
-      allow read, delete: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
     match /properties/{propertyId} {
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId && validProperty(request.resource.data);
-      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
-      allow update: if request.auth != null && request.auth.uid == resource.data.userId && request.auth.uid == request.resource.data.userId && validProperty(request.resource.data);
-      allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
-    }
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.uid;
+      allow read, update, delete: if request.auth != null && request.auth.uid == resource.data.uid;
 
-    function validUser(data) {
-      return data.keys().hasOnly(['email', 'displayName', 'photoURL', 'createdAt']) &&
-             data.email is string &&
-             data.displayName is string &&
-             data.photoURL is string &&
-             data.createdAt is timestamp;
-    }
-
-    function validProperty(data) {
-      return data.keys().hasAll(['userId', 'createdAt', 'updatedAt']) &&
-             data.userId is string &&
-             data.createdAt is timestamp &&
-             data.updatedAt is timestamp;
+      match /scenarios/{scenarioId} {
+        allow create, read, update, delete: if isOwner(propertyId);
+      }
     }
   }
 }

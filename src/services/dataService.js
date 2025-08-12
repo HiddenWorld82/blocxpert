@@ -93,3 +93,14 @@ export const duplicateScenario = async (propertyId, scenario) => {
   return { id: newId, ...cloned };
 };
 
+export const deleteScenario = async (propertyId, id) => {
+  const scenarioRef = doc(
+    firestore,
+    'properties',
+    propertyId,
+    'scenarios',
+    id
+  );
+  await deleteDoc(scenarioRef);
+};
+
