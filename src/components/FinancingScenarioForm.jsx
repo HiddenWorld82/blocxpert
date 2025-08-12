@@ -10,6 +10,7 @@ import { saveScenario, updateScenario } from "../services/dataService";
 export default function FinancingScenarioForm({
   propertyId,
   onSaved,
+  onBack,
   initialScenario = {},
   type = "initialFinancing",
   property,
@@ -66,63 +67,84 @@ export default function FinancingScenarioForm({
     if (onSaved) onSaved();
   };
 
+  const titleText =
+    type === "renovation" ? "Scénario de rénovation" : "Scénario de financement";
+
   return (
-    <div className="space-y-6">
-      {property && (
-        <>
-          <BasicInfo
-            property={property}
-            onChange={() => {}}
-            advancedExpenses={advancedExpenses}
-            readOnly
-          />
-          <RevenueSection
-            revenue={property}
-            onChange={() => {}}
-            advancedExpenses={advancedExpenses}
-            readOnly
-          />
-          <OperatingExpensesSection
-            expenses={property}
-            onChange={() => {}}
-            advancedExpenses={advancedExpenses}
-            readOnly
-          />
-        </>
-      )}
+    <div className="min-h-screen bg-gray-50 p-4">
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-semibold">{titleText}</h2>
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="text-gray-600 hover:text-gray-800"
+              >
+                ← Retour
+              </button>
+            )}
+          </div>
 
-      <div>
-        <label className="block text-sm font-medium mb-1">
-          Nom du scénario
-        </label>
-        <input
-          type="text"
-          value={scenario.title}
-          onChange={(e) => handleChange("title", e.target.value)}
-          className="w-full border rounded p-2"
-          placeholder="Scénario"
-        />
-      </div>
+          <div className="space-y-8">
+            {property && (
+              <>
+                <BasicInfo
+                  property={property}
+                  onChange={() => {}}
+                  advancedExpenses={advancedExpenses}
+                  readOnly
+                />
+                <RevenueSection
+                  revenue={property}
+                  onChange={() => {}}
+                  advancedExpenses={advancedExpenses}
+                  readOnly
+                />
+                <OperatingExpensesSection
+                  expenses={property}
+                  onChange={() => {}}
+                  advancedExpenses={advancedExpenses}
+                  readOnly
+                />
+              </>
+            )}
 
-      <FinancingSection
-        financing={scenario.financing}
-        onChange={handleFinancingChange}
-      />
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Nom du scénario
+              </label>
+              <input
+                type="text"
+                value={scenario.title}
+                onChange={(e) => handleChange("title", e.target.value)}
+                className="w-full border rounded p-2"
+                placeholder="Scénario"
+              />
+            </div>
 
-      <AcquisitionCosts
-        costs={scenario.acquisitionCosts}
-        onChange={handleCostsChange}
-        advancedExpenses={false}
-        analysis={{ acquisitionCosts: computeTotalCosts() }}
-      />
+            <FinancingSection
+              financing={scenario.financing}
+              onChange={handleFinancingChange}
+            />
 
-      <div className="flex justify-end">
-        <button
-          onClick={handleSave}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          Sauvegarder
-        </button>
+            <AcquisitionCosts
+              costs={scenario.acquisitionCosts}
+              onChange={handleCostsChange}
+              advancedExpenses={advancedExpenses}
+              analysis={{ acquisitionCosts: computeTotalCosts() }}
+            />
+
+            <div className="flex justify-end">
+              <button
+                onClick={handleSave}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Sauvegarder
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
