@@ -15,7 +15,7 @@ const RentalPropertyAnalyzer = () => {
   const [currentStep, setCurrentStep] = useState('home');
   const [currentProperty, setCurrentProperty] = useState(defaultProperty);
   const [advancedExpenses, setAdvancedExpenses] = useState(false);
-  const [lockedFields, setLockedFields] = useState({
+  const [lockedFields] = useState({
     //maintenance: false,
     //concierge: false,
     debtCoverage: true,
@@ -30,8 +30,50 @@ const RentalPropertyAnalyzer = () => {
   );
 
   const handleSave = async () => {
+    const fieldsToSave = [
+      'address',
+      'askingPrice',
+      'purchasePrice',
+      'municipalEvaluation',
+      'numberOfUnits',
+      'annualRent',
+      'parkingRevenue',
+      'internetRevenue',
+      'storageRevenue',
+      'otherRevenue',
+      'vacancyRate',
+      'insurance',
+      'municipalTaxes',
+      'schoolTaxes',
+      'electricityHeating',
+      'heating',
+      'electricity',
+      'maintenance',
+      'managementRate',
+      'concierge',
+      'landscaping',
+      'snowRemoval',
+      'extermination',
+      'fireInspection',
+      'advertising',
+      'legal',
+      'accounting',
+      'elevator',
+      'cableInternet',
+      'appliances',
+      'garbage',
+      'washerDryer',
+      'hotWater',
+      'operatingExpenses',
+      'otherExpenses',
+    ];
+    const propertyData = fieldsToSave.reduce((acc, key) => ({
+      ...acc,
+      [key]: currentProperty[key],
+    }), {});
     const propertyWithAnalysis = {
-      ...currentProperty,
+      ...propertyData,
+      advancedExpenses,
       ...analysis,
       uid: currentUser.uid,
     };
@@ -71,10 +113,7 @@ const RentalPropertyAnalyzer = () => {
             <PropertyForm
               currentProperty={currentProperty}
               setCurrentProperty={setCurrentProperty}
-              lockedFields={lockedFields}
-              setLockedFields={setLockedFields}
               setCurrentStep={setCurrentStep}
-              analysis={analysis}
               advancedExpenses={advancedExpenses}
               setAdvancedExpenses={setAdvancedExpenses}
             />

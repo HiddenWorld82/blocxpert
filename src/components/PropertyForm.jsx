@@ -1,8 +1,5 @@
 // components/PropertyForm.jsx
 import React from 'react';
-import FinancingSection from './sections/FinancingSection';
-import { Info, Home, DollarSign, TrendingUp, Briefcase, Building, Calculator } from 'lucide-react';
-import AcquisitionCosts from './sections/AcquisitionCosts';
 import BasicInfo from './sections/BasicInfo';
 import RevenueSection from './sections/RevenueSection';
 import OperatingExpensesSection from './sections/OperatingExpensesSection';
@@ -10,10 +7,7 @@ import OperatingExpensesSection from './sections/OperatingExpensesSection';
 const PropertyForm = ({
   currentProperty,
   setCurrentProperty,
-  lockedFields,
-  setLockedFields,
   setCurrentStep,
-  analysis,
   advancedExpenses,
   setAdvancedExpenses
 }) => {
@@ -53,21 +47,6 @@ const PropertyForm = ({
             <OperatingExpensesSection
               expenses={currentProperty}
               onChange={setCurrentProperty}
-              advancedExpenses={advancedExpenses}
-              //lockedFields={lockedFields}
-            />
-            <FinancingSection
-              financing={currentProperty}
-              onChange={setCurrentProperty}
-              lockedFields={lockedFields}
-              setLockedFields={setLockedFields}
-              analysis={analysis}
-            />
-            <AcquisitionCosts
-              costs={currentProperty}
-              onChange={setCurrentProperty}
-              lockedFields={lockedFields}
-              analysis={analysis}
               advancedExpenses={advancedExpenses}
             />
 
