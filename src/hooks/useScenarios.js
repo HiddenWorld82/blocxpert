@@ -1,6 +1,12 @@
 // hooks/useScenarios.js
 import { useEffect, useState } from 'react';
-import { createScenario, duplicateScenario, getScenarios } from '../services/scenarioService';
+import {
+  createScenario,
+  duplicateScenario,
+  getScenarios,
+  updateScenario as updateScenarioService,
+  deleteScenario as deleteScenarioService
+} from '../services/scenarioService';
 
 const useScenarios = (buildingId) => {
   const [scenarios, setScenarios] = useState([]);
@@ -25,7 +31,17 @@ const useScenarios = (buildingId) => {
     return duplicateScenario(buildingId, scenarioId, overrides);
   };
 
-  return { scenarios, addScenario, cloneScenario };
+  const updateScenario = async (scenarioId, data) => {
+    if (!buildingId || !scenarioId) return;
+    await updateScenarioService(buildingId, scenarioId, data);
+  };
+
+  const deleteScenario = async (scenarioId) => {
+    if (!buildingId || !scenarioId) return;
+    await deleteScenarioService(buildingId, scenarioId);
+  };
+
+  return { scenarios, addScenario, updateScenario, deleteScenario, cloneScenario };
 };
 
 export default useScenarios;

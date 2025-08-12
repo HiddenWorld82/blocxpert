@@ -1,7 +1,7 @@
 // components/BuildingDashboard.jsx
 import React, { useState } from 'react';
-import { Plus, Copy, Scale } from 'lucide-react';
-import { useParams } from 'react-router-dom';
+import { Plus, Copy, Scale, Trash } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
 import useBuilding from '../hooks/useBuilding';
 import useScenarios from '../hooks/useScenarios';
 import useRentabilityCalculator from '../hooks/useRentabilityCalculator';
@@ -12,10 +12,10 @@ import ScenarioComparison from './ScenarioComparison';
 
 const BuildingDashboard = () => {
   const { buildingId } = useParams();
-  const building = useBuilding(buildingId);
-  const { scenarios, addScenario, cloneScenario } = useScenarios(buildingId);
+  const navigate = useNavigate();
+  const { building, deleteBuilding } = useBuilding(buildingId);
+  const { scenarios, deleteScenario } = useScenarios(buildingId);
   const [editorOpen, setEditorOpen] = useState(false);
-  const [duplicateId, setDuplicateId] = useState(null);
   const [parentScenario, setParentScenario] = useState(null);
   const [currentScenario, setCurrentScenario] = useState(defaultProperty);
   const [advancedExpenses, setAdvancedExpenses] = useState(false);
@@ -32,27 +32,13 @@ const BuildingDashboard = () => {
   const [comparisonOpen, setComparisonOpen] = useState(false);
   const [comparisonInitial, setComparisonInitial] = useState([]);
 
-  const handleSave = async () => {
-    const scenarioWithAnalysis = { ...currentScenario, ...analysis };
-    if (duplicateId) {
-      await cloneScenario(duplicateId, scenarioWithAnalysis);
-    } else {
-      await addScenario(scenarioWithAnalysis);
-    }
-    setEditorOpen(false);
-    setDuplicateId(null);
-    setParentScenario(null);
-  };
-
   const openEditor = (parent = null) => {
     setParentScenario(parent);
     if (parent) {
       const { id, ...rest } = parent;
       setCurrentScenario({ ...rest });
-      setDuplicateId(parent.id);
     } else {
       setCurrentScenario(defaultProperty);
-      setDuplicateId(null);
     }
     setEditorOpen(true);
   };
@@ -66,9 +52,22 @@ const BuildingDashboard = () => {
     return <div className="p-4">Chargement...</div>;
   }
 
+  const handleDeleteBuilding = async () => {
+    await deleteBuilding();
+    navigate('/');
+  };
+
   return (
     <div className="p-4 space-y-4">
-      <h1 className="text-2xl font-bold">{building.address}</h1>
+      <h1 className="text-2xl font-bold flex justify-between items-center">
+        {building.address}
+        <button
+          className="text-red-600 p-1"
+          onClick={handleDeleteBuilding}
+        >
+          <Trash className="w-4 h-4" />
+        </button>
+      </h1>
       <div className="text-gray-700">
         <div>Revenus initiaux: {Number(building.annualRent || 0).toLocaleString('fr-CA')} $</div>
         <div>Dépenses initiales: {Number(building.operatingExpenses || 0).toLocaleString('fr-CA')} $</div>
@@ -113,6 +112,12 @@ const BuildingDashboard = () => {
               >
                 <Copy className="w-4 h-4 mr-1" />Dupliquer
               </button>
+              <button
+                className="text-sm text-red-600 flex items-center"
+                onClick={() => deleteScenario(s.id)}
+              >
+                <Trash className="w-4 h-4 mr-1" />Supprimer
+              </button>
             </div>
           </li>
         ))}
@@ -120,6 +125,7 @@ const BuildingDashboard = () => {
 
       {editorOpen && (
         <ScenarioEditor
+          buildingId={buildingId}
           currentScenario={currentScenario}
           setCurrentScenario={setCurrentScenario}
           lockedFields={lockedFields}
@@ -130,10 +136,12 @@ const BuildingDashboard = () => {
           parentScenario={parentScenario}
           onCancel={() => {
             setEditorOpen(false);
-            setDuplicateId(null);
             setParentScenario(null);
           }}
-          onSave={handleSave}
+          onSave={() => {
+            setEditorOpen(false);
+            setParentScenario(null);
+          }}
         />
       )}
 
