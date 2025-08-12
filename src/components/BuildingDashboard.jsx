@@ -1,8 +1,8 @@
 // components/BuildingDashboard.jsx
 import React from 'react';
-import { DollarSign, TrendingUp, BarChart, Percent } from 'lucide-react';
+import { DollarSign, TrendingUp, BarChart, Building } from 'lucide-react';
 
-const BuildingDashboard = ({ property, onCreateScenario }) => {
+const BuildingDashboard = ({ property, onCreateScenario, onBack }) => {
   const formatMoney = (value) =>
     new Intl.NumberFormat('fr-CA', {
       style: 'currency',
@@ -14,54 +14,60 @@ const BuildingDashboard = ({ property, onCreateScenario }) => {
   const formatPercent = (value) =>
     value || value === 0 ? `${value.toFixed(1)}%` : '—';
 
-  const pricePerDoor = property.numberOfUnits
-    ? (property.purchasePrice / property.numberOfUnits).toLocaleString('fr-CA')
-    : 'N/A';
+  const pricePerDoorValue =
+    property.numberOfUnits && property.purchasePrice
+      ? Number(property.purchasePrice) / Number(property.numberOfUnits)
+      : null;
 
   const stats = [
     {
-      label: 'Revenus totaux',
-      value: formatMoney(property.totalGrossRevenue),
+      label: "Prix d'Achat",
+      value: formatMoney(Number(property.purchasePrice)),
       icon: <DollarSign className="w-6 h-6 text-emerald-600" />,
     },
     {
-      label: 'Dépenses totales',
+      label: "Nombre d'unités",
+      value: property.numberOfUnits || '—',
+      icon: <Building className="w-6 h-6 text-gray-600" />,
+    },
+    {
+      label: 'Prix par porte',
+      value: pricePerDoorValue ? formatMoney(pricePerDoorValue) : 'N/A',
+      icon: <DollarSign className="w-6 h-6 text-indigo-600" />,
+    },
+    {
+      label: 'Revenu brut',
+      value: formatMoney(property.totalGrossRevenue),
+      icon: <DollarSign className="w-6 h-6 text-green-600" />,
+    },
+    {
+      label: "Dépenses d'exploitation",
       value: formatMoney(property.totalExpenses),
       icon: <DollarSign className="w-6 h-6 text-red-600" />,
     },
     {
-      label: "Revenu net d'exploitation (NOI)",
+      label: 'Revenu net (NOI)',
       value: formatMoney(property.netOperatingIncome),
-      icon: <DollarSign className="w-6 h-6 text-indigo-600" />,
+      icon: <DollarSign className="w-6 h-6 text-purple-600" />,
     },
     {
-      label: 'Cashflow annuel',
-      value: formatMoney(property.cashFlow),
-      icon: <TrendingUp className="w-6 h-6 text-green-600" />,
-    },
-    {
-      label: 'Multiplicateur de revenu brut (MRB)',
+      label: 'MRB',
       value: property.grossRentMultiplier
         ? property.grossRentMultiplier.toFixed(1)
         : '—',
       icon: <BarChart className="w-6 h-6 text-blue-600" />,
     },
     {
-      label: 'Multiplicateur de revenu net (MRN)',
+      label: 'MRN',
       value: property.netIncomeMultiplier
         ? property.netIncomeMultiplier.toFixed(1)
         : '—',
       icon: <BarChart className="w-6 h-6 text-purple-600" />,
     },
     {
-      label: 'TGA (Cap Rate)',
+      label: 'TGA',
       value: formatPercent(property.capRate),
       icon: <TrendingUp className="w-6 h-6 text-orange-600" />,
-    },
-    {
-      label: 'Rendement Cash on Cash',
-      value: formatPercent(property.cashOnCashReturn),
-      icon: <Percent className="w-6 h-6 text-cyan-600" />,
     },
   ];
 
@@ -69,19 +75,22 @@ const BuildingDashboard = ({ property, onCreateScenario }) => {
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-5xl mx-auto">
         <div className="bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-2xl font-semibold mb-6">Tableau de bord de l'immeuble</h2>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-semibold">Tableau de bord de l'immeuble</h2>
+            <button
+              onClick={onBack}
+              className="text-gray-600 hover:text-gray-800"
+            >
+              ← Retour
+            </button>
+          </div>
           <div className="mb-6">
             <h3 className="text-xl font-semibold">
               {property.address || 'Adresse non spécifiée'}
             </h3>
-            <p className="text-gray-600">
-              {property.numberOfUnits} unités •{' '}
-              {Number(property.purchasePrice).toLocaleString('fr-CA')}$ •{' '}
-              {pricePerDoor}$/porte
-            </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
             {stats.map(({ label, value, icon }) => (
               <div
                 key={label}
