@@ -30,7 +30,7 @@ export default function FinancingScenarioForm({
       acquisitionCosts: {},
       ...initialScenario,
     });
-  }, [initialScenario]);
+  }, [initialScenario.id]);
 
   const handleFinancingChange = (financing) => {
     setScenario((prev) => ({ ...prev, financing }));
@@ -87,6 +87,19 @@ export default function FinancingScenarioForm({
           </div>
 
           <div className="space-y-8">
+            <div className="border rounded-lg p-6">
+              <h2 className="text-lg font-semibold mb-4 text-gray-700">
+                Titre du scénario
+              </h2>
+              <input
+                type="text"
+                value={scenario.title}
+                onChange={(e) => handleChange("title", e.target.value)}
+                className="w-full border rounded p-2"
+                placeholder="Scénario"
+              />
+            </div>
+
             {property && (
               <>
                 <BasicInfo
@@ -109,19 +122,6 @@ export default function FinancingScenarioForm({
                 />
               </>
             )}
-
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Nom du scénario
-              </label>
-              <input
-                type="text"
-                value={scenario.title}
-                onChange={(e) => handleChange("title", e.target.value)}
-                className="w-full border rounded p-2"
-                placeholder="Scénario"
-              />
-            </div>
 
             <FinancingSection
               financing={scenario.financing}
