@@ -1,15 +1,30 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import FinancingSection from "./sections/FinancingSection";
 import AcquisitionCosts from "./sections/AcquisitionCosts";
 import { parseLocaleNumber } from "./FormattedNumberInput";
-import { saveFinancingScenario } from "../services/dataService";
+import { saveScenario, updateScenario } from "../services/dataService";
 
-export default function FinancingScenarioForm({ propertyId, onSaved }) {
+export default function FinancingScenarioForm({
+  propertyId,
+  onSaved,
+  initialScenario = {},
+  type = "initialFinancing",
+}) {
   const [scenario, setScenario] = useState({
     title: "",
     financing: {},
     acquisitionCosts: {},
+    ...initialScenario,
   });
+
+  useEffect(() => {
+    setScenario({
+      title: "",
+      financing: {},
+      acquisitionCosts: {},
+      ...initialScenario,
+    });
+  }, [initialScenario]);
 
   const handleFinancingChange = (financing) => {
     setScenario((prev) => ({ ...prev, financing }));
@@ -36,8 +51,13 @@ export default function FinancingScenarioForm({ propertyId, onSaved }) {
       title: scenario.title,
       financing: scenario.financing,
       acquisitionCosts: scenario.acquisitionCosts,
+      type,
     };
-    await saveFinancingScenario(propertyId, data);
+    if (initialScenario.id) {
+      await updateScenario(propertyId, initialScenario.id, data);
+    } else {
+      await saveScenario(propertyId, data);
+    }
     if (onSaved) onSaved();
   };
 
