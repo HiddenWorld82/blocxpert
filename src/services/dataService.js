@@ -48,3 +48,17 @@ export const deleteProperty = async (id) => {
   await deleteDoc(propertyRef);
 };
 
+export const saveFinancingScenario = async (propertyId, scenario) => {
+  const scenariosCollection = collection(
+    firestore,
+    'properties',
+    propertyId,
+    'scenarios'
+  );
+  const docRef = await addDoc(scenariosCollection, {
+    ...scenario,
+    type: 'initialFinancing',
+  });
+  return docRef.id;
+};
+
