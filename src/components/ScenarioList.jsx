@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { getScenarios, duplicateScenario } from "../services/dataService";
+import {
+  getScenarios,
+  duplicateScenario,
+  deleteScenario,
+} from "../services/dataService";
 
 const typeLabels = {
   initialFinancing: "Financement initial",
@@ -8,7 +12,7 @@ const typeLabels = {
   other: "Autres",
 };
 
-export default function ScenarioList({ propertyId, onEdit }) {
+export default function ScenarioList({ propertyId, onEdit, onView }) {
   const [scenarios, setScenarios] = useState([]);
 
   useEffect(() => {
@@ -20,6 +24,11 @@ export default function ScenarioList({ propertyId, onEdit }) {
   const handleDuplicate = async (scenario) => {
     const newScenario = await duplicateScenario(propertyId, scenario);
     setScenarios((prev) => [...prev, newScenario]);
+  };
+
+  const handleDelete = async (id) => {
+    await deleteScenario(propertyId, id);
+    setScenarios((prev) => prev.filter((s) => s.id !== id));
   };
 
   const grouped = scenarios.reduce((acc, sc) => {
@@ -42,6 +51,14 @@ export default function ScenarioList({ propertyId, onEdit }) {
               >
                 <span>{s.title || "Sans titre"}</span>
                 <div className="flex gap-2">
+                  {onView && (
+                    <button
+                      onClick={() => onView(s)}
+                      className="text-indigo-600 hover:underline"
+                    >
+                      Voir le rapport
+                    </button>
+                  )}
                   <button
                     onClick={() => onEdit && onEdit(s)}
                     className="text-blue-600 hover:underline"
@@ -53,6 +70,12 @@ export default function ScenarioList({ propertyId, onEdit }) {
                     className="text-green-600 hover:underline"
                   >
                     Dupliquer
+                  </button>
+                  <button
+                    onClick={() => handleDelete(s.id)}
+                    className="text-red-600 hover:underline"
+                  >
+                    Supprimer
                   </button>
                 </div>
               </div>

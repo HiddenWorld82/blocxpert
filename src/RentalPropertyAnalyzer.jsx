@@ -136,6 +136,10 @@ const RentalPropertyAnalyzer = () => {
                 setCurrentScenario(sc);
                 setCurrentStep('scenario');
               }}
+              onViewScenario={(sc) => {
+                setCurrentScenario(sc);
+                setCurrentStep('report');
+              }}
               onBack={() => setCurrentStep('home')}
             />
           )}
