@@ -4,6 +4,7 @@ import PropertyForm from './components/PropertyForm';
 import PropertyReport from './components/PropertyReport';
 import HomeScreen from './components/HomeScreen';
 import AmortizationPage from './components/AmortizationPage';
+import BuildingDashboard from './components/BuildingDashboard';
 import useRentabilityCalculator from './hooks/useRentabilityCalculator';
 import defaultProperty from './defaults/defaultProperty';
 import { useAuth } from './contexts/AuthContext';
@@ -79,10 +80,12 @@ const RentalPropertyAnalyzer = () => {
     };
     if (currentProperty.id) {
       await updateProperty(currentProperty.id, propertyWithAnalysis);
+      setCurrentProperty({ ...currentProperty, ...propertyWithAnalysis });
     } else {
-      await saveProperty(propertyWithAnalysis);
+      const newId = await saveProperty(propertyWithAnalysis);
+      setCurrentProperty({ ...propertyWithAnalysis, id: newId });
     }
-    setCurrentStep('home');
+    setCurrentStep('dashboard');
   };
 
   const resetProperty = () => {
@@ -105,7 +108,7 @@ const RentalPropertyAnalyzer = () => {
               onNew={resetProperty}
               onSelect={(property) => {
                 setCurrentProperty(property);
-                setCurrentStep('report');
+                setCurrentStep('dashboard');
               }}
             />
           )}
@@ -116,6 +119,12 @@ const RentalPropertyAnalyzer = () => {
               setCurrentStep={setCurrentStep}
               advancedExpenses={advancedExpenses}
               setAdvancedExpenses={setAdvancedExpenses}
+            />
+          )}
+          {currentStep === 'dashboard' && (
+            <BuildingDashboard
+              property={currentProperty}
+              onCreateScenario={() => setCurrentStep('form')}
             />
           )}
           {currentStep === 'report' && (
