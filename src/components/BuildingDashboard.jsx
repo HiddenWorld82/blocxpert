@@ -7,6 +7,7 @@ const BuildingDashboard = ({
   property,
   onCreateScenario,
   onEditScenario,
+  onViewScenario,
   onBack,
 }) => {
   const formatMoney = (value) =>
@@ -120,7 +121,11 @@ const BuildingDashboard = ({
             </button>
           </div>
 
-          <ScenarioList propertyId={property.id} onEdit={onEditScenario} />
+          <ScenarioList
+            propertyId={property.id}
+            onEdit={onEditScenario}
+            onView={onViewScenario}
+          />
         </div>
       </div>
     </div>
