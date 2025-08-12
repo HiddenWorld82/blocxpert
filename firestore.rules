@@ -1,31 +1,12 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /users/{userId} {
-      allow create, update: if request.auth != null && request.auth.uid == userId && validUser(request.resource.data);
-      allow read, delete: if request.auth != null && request.auth.uid == userId;
-    }
-
+    // Seul le propriétaire peut voir/modifier ses immeubles et scénarios.
     match /buildings/{buildingId} {
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.uid;
-      allow read: if request.auth != null && request.auth.uid == resource.data.uid;
-      allow update: if request.auth != null && request.auth.uid == resource.data.uid && request.auth.uid == request.resource.data.uid;
-      allow delete: if request.auth != null && request.auth.uid == resource.data.uid;
-
+      allow read, write: if request.auth.uid == resource.data.userId;
       match /scenarios/{scenarioId} {
-        allow create: if request.auth != null && request.auth.uid == request.resource.data.uid;
-        allow read: if request.auth != null && request.auth.uid == resource.data.uid;
-        allow update: if request.auth != null && request.auth.uid == resource.data.uid && request.auth.uid == request.resource.data.uid;
-        allow delete: if request.auth != null && request.auth.uid == resource.data.uid;
+        allow read, write: if request.auth.uid == get(/databases/$(database)/documents/buildings/$(buildingId)).data.userId;
       }
-    }
-
-    function validUser(data) {
-      return data.keys().hasOnly(['email', 'displayName', 'photoURL', 'createdAt']) &&
-             data.email is string &&
-             data.displayName is string &&
-             data.photoURL is string &&
-             data.createdAt is timestamp;
     }
   }
 }
