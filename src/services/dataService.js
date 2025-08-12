@@ -47,18 +47,50 @@ export const deleteProperty = async (id) => {
   const propertyRef = doc(firestore, 'properties', id);
   await deleteDoc(propertyRef);
 };
-
-export const saveFinancingScenario = async (propertyId, scenario) => {
+export const saveScenario = async (propertyId, scenario) => {
   const scenariosCollection = collection(
     firestore,
     'properties',
     propertyId,
     'scenarios'
   );
-  const docRef = await addDoc(scenariosCollection, {
-    ...scenario,
-    type: 'initialFinancing',
-  });
+  const docRef = await addDoc(scenariosCollection, scenario);
   return docRef.id;
+};
+
+export const saveFinancingScenario = async (propertyId, scenario) => {
+  return saveScenario(propertyId, { ...scenario, type: 'initialFinancing' });
+};
+
+export const getScenarios = (propertyId, callback) => {
+  const scenariosCollection = collection(
+    firestore,
+    'properties',
+    propertyId,
+    'scenarios'
+  );
+  return onSnapshot(scenariosCollection, (snapshot) => {
+    const scenarios = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    callback(scenarios);
+  });
+};
+
+export const updateScenario = async (propertyId, id, data) => {
+  const scenarioRef = doc(
+    firestore,
+    'properties',
+    propertyId,
+    'scenarios',
+    id
+  );
+  await updateDoc(scenarioRef, data);
+};
+
+export const duplicateScenario = async (propertyId, scenario) => {
+  const { id, title, ...rest } = scenario;
+  return saveScenario(propertyId, {
+    ...rest,
+    title: title ? `${title} (copie)` : 'Copie',
+  });
 };
 

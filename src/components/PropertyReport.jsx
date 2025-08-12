@@ -1,10 +1,14 @@
 // components/PropertyReport.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import KeyIndicators from './sections/KeyIndicators';
 import FinancialSummary from './sections/FinancialSummary';
 import FinancingSummary from './sections/FinancingSummary';
 import Recommendations from './sections/Recommendations';
 import ExecutiveSummary from './sections/ExecutiveSummary';
+import ScenarioList from './ScenarioList';
+import FinancingScenarioForm from './FinancingScenarioForm';
+import RefinancingScenarioForm from './RefinancingScenarioForm';
+import RenovationScenarioForm from './RenovationScenarioForm';
 
 const PropertyReport = ({ currentProperty, setCurrentStep, analysis, onSave, advancedExpenses }) => {
   //const numberFormatter = new Intl.NumberFormat('fr-CA');
@@ -20,6 +24,31 @@ const PropertyReport = ({ currentProperty, setCurrentStep, analysis, onSave, adv
     ((parseFloat(currentProperty.annualRent) || 0) /
       (parseInt(currentProperty.numberOfUnits) || 1)) /
     12;
+
+  const [editingScenario, setEditingScenario] = useState(null);
+
+  const renderScenarioForm = () => {
+    if (!editingScenario) return null;
+    const formProps = {
+      propertyId: currentProperty.id,
+      onSaved: () => setEditingScenario(null),
+      initialScenario: editingScenario.id ? editingScenario : undefined,
+    };
+    switch (editingScenario.type) {
+      case 'refinancing':
+        return <RefinancingScenarioForm {...formProps} />;
+      case 'renovation':
+        return <RenovationScenarioForm {...formProps} />;
+      default:
+        return (
+          <FinancingScenarioForm
+            {...formProps}
+            type={editingScenario.type || 'initialFinancing'}
+          />
+        );
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-6xl mx-auto">
@@ -196,10 +225,10 @@ const PropertyReport = ({ currentProperty, setCurrentStep, analysis, onSave, adv
               Amortissement
             </button>
             <button
-              disabled
-              className="px-4 py-2 bg-gray-300 text-gray-600 rounded-lg cursor-not-allowed"
+              onClick={() => setEditingScenario({ type: 'refinancing' })}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
-              Bouton 2
+              Nouveau scénario
             </button>
             <button
               disabled
@@ -209,11 +238,20 @@ const PropertyReport = ({ currentProperty, setCurrentStep, analysis, onSave, adv
             </button>
           </div>
 
+          <div className="mb-8">
+            <ScenarioList
+              propertyId={currentProperty.id}
+              onEdit={(sc) => setEditingScenario(sc)}
+            />
+          </div>
+
+          {renderScenarioForm()}
+
           <Recommendations
             analysis={analysis}
             currentProperty={currentProperty}
           />
-          
+
           <ExecutiveSummary
             analysis={analysis}
             currentProperty={currentProperty}
