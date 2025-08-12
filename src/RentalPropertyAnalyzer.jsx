@@ -125,6 +125,7 @@ const RentalPropertyAnalyzer = () => {
             <BuildingDashboard
               property={currentProperty}
               onCreateScenario={() => setCurrentStep('form')}
+              onBack={() => setCurrentStep('home')}
             />
           )}
           {currentStep === 'report' && (
