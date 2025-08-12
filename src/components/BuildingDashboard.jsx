@@ -1,6 +1,7 @@
 // components/BuildingDashboard.jsx
 import React, { useState } from 'react';
 import { Plus, Copy, Scale } from 'lucide-react';
+import { useParams } from 'react-router-dom';
 import useBuilding from '../hooks/useBuilding';
 import useScenarios from '../hooks/useScenarios';
 import useRentabilityCalculator from '../hooks/useRentabilityCalculator';
@@ -9,7 +10,8 @@ import ScenarioEditor from './ScenarioEditor';
 import TimelineView from './TimelineView';
 import ScenarioComparison from './ScenarioComparison';
 
-const BuildingDashboard = ({ buildingId }) => {
+const BuildingDashboard = () => {
+  const { buildingId } = useParams();
   const building = useBuilding(buildingId);
   const { scenarios, addScenario, cloneScenario } = useScenarios(buildingId);
   const [editorOpen, setEditorOpen] = useState(false);
