@@ -107,6 +107,7 @@ export default function FinancingScenarioForm({
                   onChange={() => {}}
                   advancedExpenses={advancedExpenses}
                   readOnly
+                  disablePlaceAutocomplete
                 />
                 <RevenueSection
                   revenue={property}
