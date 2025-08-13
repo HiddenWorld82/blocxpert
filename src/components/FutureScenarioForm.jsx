@@ -1,14 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import FinancingSection from "./sections/FinancingSection";
-import AcquisitionCosts from "./sections/AcquisitionCosts";
-import BasicInfo from "./sections/BasicInfo";
-import RevenueSection from "./sections/RevenueSection";
-import OperatingExpensesSection from "./sections/OperatingExpensesSection";
+import FinancingFeesSection from "./sections/FinancingFeesSection";
 import FormattedNumberInput, { parseLocaleNumber } from "./FormattedNumberInput";
 import KeyIndicators from "./sections/KeyIndicators";
 import FinancialSummary from "./sections/FinancialSummary";
 import FinancingSummary from "./sections/FinancingSummary";
-import calculateWelcomeTax from "../utils/calculateWelcomeTax";
 import calculateRentability from "../utils/calculateRentability";
 import { saveScenario, updateScenario } from "../services/dataService";
 
@@ -27,15 +23,12 @@ export default function FutureScenarioForm({
     marketValue: "",
     netIncomeIncreasePct: "",
     financing: {},
-    acquisitionCosts: {},
-    revenue: {},
-    expenses: {},
+    financingFees: {},
     ...initialScenario,
   });
 
   const [lockedFields] = useState({
     debtCoverage: true,
-    welcomeTax: true,
   });
 
   useEffect(() => {
@@ -45,9 +38,7 @@ export default function FutureScenarioForm({
       marketValue: "",
       netIncomeIncreasePct: "",
       financing: {},
-      acquisitionCosts: {},
-      revenue: {},
-      expenses: {},
+      financingFees: {},
       ...initialScenario,
     });
   }, [initialScenario.id]);
@@ -56,24 +47,16 @@ export default function FutureScenarioForm({
     setScenario((prev) => ({ ...prev, financing }));
   };
 
-  const handleCostsChange = (costs) => {
-    setScenario((prev) => ({ ...prev, acquisitionCosts: costs }));
-  };
-
-  const handleRevenueChange = (revenue) => {
-    setScenario((prev) => ({ ...prev, revenue }));
-  };
-
-  const handleExpensesChange = (expenses) => {
-    setScenario((prev) => ({ ...prev, expenses }));
+  const handleFeesChange = (fees) => {
+    setScenario((prev) => ({ ...prev, financingFees: fees }));
   };
 
   const handleChange = (field, value) => {
     setScenario((prev) => ({ ...prev, [field]: value }));
   };
 
-  const computeTotalCosts = () => {
-    return Object.values(scenario.acquisitionCosts).reduce(
+  const computeTotalFees = () => {
+    return Object.values(scenario.financingFees).reduce(
       (sum, val) => sum + Number(parseLocaleNumber(val) || 0),
       0
     );
@@ -115,32 +98,15 @@ export default function FutureScenarioForm({
     return {
       ...analysisProperty,
       ...scenario.financing,
-      ...scenario.acquisitionCosts,
+      ...scenario.financingFees,
     };
-  }, [analysisProperty, scenario.financing, scenario.acquisitionCosts]);
+  }, [analysisProperty, scenario.financing, scenario.financingFees]);
 
   const analysis = useMemo(() => {
     if (!combinedProperty) return null;
     return calculateRentability(combinedProperty, advancedExpenses);
   }, [combinedProperty, advancedExpenses]);
 
-  useEffect(() => {
-    if (!lockedFields.welcomeTax) return;
-    const purchasePrice = parseFloat(property?.purchasePrice) || 0;
-    if (purchasePrice > 0) {
-      const welcomeTax = Math.round(calculateWelcomeTax(purchasePrice)).toString();
-      if (scenario.acquisitionCosts.welcomeTax !== welcomeTax) {
-        setScenario((prev) => ({
-          ...prev,
-          acquisitionCosts: { ...prev.acquisitionCosts, welcomeTax },
-        }));
-      }
-    }
-  }, [
-    property?.purchasePrice,
-    lockedFields.welcomeTax,
-    scenario.acquisitionCosts.welcomeTax,
-  ]);
 
   useEffect(() => {
     if (!lockedFields.debtCoverage) return;
@@ -183,42 +149,20 @@ export default function FutureScenarioForm({
     renovation: "Scénario optimisation rénovation",
   }[type] || "Scénario";
 
-  const renderScenarioSections = () => {
-    switch (type) {
-      case "incomeOptimization":
-        return (
-          <>
-            <RevenueSection
-              revenue={scenario.revenue}
-              onChange={handleRevenueChange}
-              advancedExpenses={advancedExpenses}
-            />
-            <OperatingExpensesSection
-              expenses={scenario.expenses}
-              onChange={handleExpensesChange}
-              advancedExpenses={advancedExpenses}
-            />
-          </>
-        );
-      default:
-        return (
-          <>
-            <FinancingSection
-              financing={scenario.financing}
-              onChange={handleFinancingChange}
-              lockedFields={lockedFields}
-            />
-            <AcquisitionCosts
-              costs={scenario.acquisitionCosts}
-              onChange={handleCostsChange}
-              advancedExpenses={advancedExpenses}
-              analysis={{ acquisitionCosts: computeTotalCosts() }}
-              lockedFields={lockedFields}
-            />
-          </>
-        );
-    }
-  };
+  const renderScenarioSections = () => (
+    <>
+      <FinancingSection
+        financing={scenario.financing}
+        onChange={handleFinancingChange}
+        lockedFields={lockedFields}
+      />
+      <FinancingFeesSection
+        fees={scenario.financingFees}
+        onChange={handleFeesChange}
+        analysis={{ financingFees: computeTotalFees() }}
+      />
+    </>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -237,30 +181,6 @@ export default function FutureScenarioForm({
           </div>
 
           <div className="space-y-8">
-            {property && (
-              <>
-                <BasicInfo
-                  property={property}
-                  onChange={() => {}}
-                  advancedExpenses={advancedExpenses}
-                  readOnly
-                  disablePlaceAutocomplete
-                />
-                <RevenueSection
-                  revenue={property}
-                  onChange={() => {}}
-                  advancedExpenses={advancedExpenses}
-                  readOnly
-                />
-                <OperatingExpensesSection
-                  expenses={property}
-                  onChange={() => {}}
-                  advancedExpenses={advancedExpenses}
-                  readOnly
-                />
-              </>
-            )}
-
             <div className="border rounded-lg p-6">
               <h2 className="text-lg font-semibold mb-4 text-gray-700">
                 Paramètres du scénario
