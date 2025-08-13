@@ -1,9 +1,11 @@
 // hooks/useRentabilityCalculator.js
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import calculateWelcomeTax from '../utils/calculateWelcomeTax';
 
 const useRentabilityCalculator = (property, advancedExpenses, lockedFields, setCurrentProperty) => {
   const [analysis, setAnalysis] = useState({});
+  const propertyKey = useMemo(() => JSON.stringify(property), [property]);
+  const expensesKey = useMemo(() => JSON.stringify(advancedExpenses), [advancedExpenses]);
 
   useEffect(() => {
     const purchasePrice = parseFloat(property.purchasePrice) || 0;
@@ -54,10 +56,11 @@ const useRentabilityCalculator = (property, advancedExpenses, lockedFields, setC
     const runAnalysis = async () => {
       const calculate = (await import('../utils/calculateRentability')).default;
       const result = calculate(property, advancedExpenses);
-      setAnalysis(result);
+      setAnalysis(prev => (JSON.stringify(prev) === JSON.stringify(result) ? prev : result));
     };
     runAnalysis();
-  }, [property, advancedExpenses]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [propertyKey, expensesKey]);
 
   return analysis;
 };
