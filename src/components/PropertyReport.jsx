@@ -105,12 +105,21 @@ const PropertyReport = ({
               >
                 Modifier
               </button>
-              <button
-                onClick={onSave}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-              >
-                Sauvegarder
-              </button>
+              {scenario ? (
+                <button
+                  onClick={() => setCurrentStep('dashboard')}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Retour
+                </button>
+              ) : (
+                <button
+                  onClick={onSave}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                >
+                  Sauvegarder
+                </button>
+              )}
             </div>
           </div>
 

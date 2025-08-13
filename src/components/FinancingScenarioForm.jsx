@@ -6,9 +6,12 @@ import RevenueSection from "./sections/RevenueSection";
 import OperatingExpensesSection from "./sections/OperatingExpensesSection";
 import { parseLocaleNumber } from "./FormattedNumberInput";
 import calculateWelcomeTax from "../utils/calculateWelcomeTax";
+import { saveScenario, updateScenario } from "../services/dataService";
 
 export default function FinancingScenarioForm({
   onBack,
+  onSaved,
+  propertyId,
   initialScenario = {},
   type = "initialFinancing",
   property,
@@ -95,6 +98,18 @@ export default function FinancingScenarioForm({
     scenario.financing.debtCoverageRatio,
   ]);
 
+  const handleSave = async () => {
+    const { id, ...dataWithoutId } = scenario;
+    const data = { ...dataWithoutId, type };
+    if (id) {
+      await updateScenario(propertyId, id, data);
+      onSaved && onSaved({ id, ...data });
+    } else {
+      const newId = await saveScenario(propertyId, data);
+      onSaved && onSaved({ id: newId, ...data });
+    }
+  };
+
   const titleText =
     type === "renovation" ? "Scénario de rénovation" : "Scénario de financement";
 
@@ -167,12 +182,12 @@ export default function FinancingScenarioForm({
             />
 
             <div className="flex justify-end">
-              {onBack && (
+              {onSaved && (
                 <button
-                  onClick={onBack}
-                  className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+                  onClick={handleSave}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                 >
-                  Retour
+                  Sauvegarder
                 </button>
               )}
             </div>
