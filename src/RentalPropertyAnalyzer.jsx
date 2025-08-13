@@ -151,8 +151,8 @@ const RentalPropertyAnalyzer = () => {
               property={currentProperty}
               advancedExpenses={advancedExpenses}
               initialScenario={currentScenario || {}}
-              onSaved={() => {
-                setCurrentScenario(null);
+              onSaved={(sc) => {
+                setCurrentScenario(sc);
                 setCurrentStep('report');
               }}
               onBack={() => setCurrentStep('dashboard')}
@@ -165,6 +165,7 @@ const RentalPropertyAnalyzer = () => {
               analysis={analysis}
               onSave={handleSave}
               advancedExpenses={advancedExpenses}
+              scenario={currentScenario}
             />
           )}
           {currentStep === 'amortization' && (
