@@ -76,7 +76,7 @@ const PropertyReport = ({ currentProperty, setCurrentStep, analysis: baseAnalysi
             <h2 className="text-2xl font-semibold">Rapport d'Analyse de Rentabilité</h2>
             <div className="flex gap-2">
               <button
-                onClick={() => setCurrentStep('form')}
+                onClick={() => setCurrentStep('scenario')}
                 className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
               >
                 Modifier
