@@ -1,9 +1,21 @@
 // src/components/sections/FinancingSection.jsx
 import React from "react";
-import { Info, Home, DollarSign, TrendingUp, Briefcase, Building, Calculator } from 'lucide-react';
+import {
+  Info,
+  Home,
+  DollarSign,
+  TrendingUp,
+  Briefcase,
+  Building,
+  Calculator,
+} from "lucide-react";
 import FormattedNumberInput from "../FormattedNumberInput";
 
-export default function FinancingSection({ financing = {}, onChange/*, lockedFields = {}, setLockedFields*/ }) {
+export default function FinancingSection({
+  financing = {},
+  onChange,
+  lockedFields = {},
+}) {
   const handleChange = (field, value) => {
     onChange({ ...financing, [field]: value });
   };
@@ -90,7 +102,7 @@ export default function FinancingSection({ financing = {}, onChange/*, lockedFie
             onChange={(val) => handleChange("debtCoverageRatio", val)}
             className="w-full border rounded p-2"
             placeholder="1.15"
-            /*disabled={lockedFields?.debtCoverage}*/
+            disabled={lockedFields?.debtCoverage}
           />
         </div>
       </div>
