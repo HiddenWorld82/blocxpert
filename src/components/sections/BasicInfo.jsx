@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useRef } from "react";
 import { Info, Home, DollarSign, TrendingUp, Briefcase, Building, Calculator } from 'lucide-react';
 import FormattedNumberInput from "../FormattedNumberInput";
 import useGooglePlacesAutocomplete from "../../hooks/useGooglePlacesAutocomplete";
@@ -8,6 +8,7 @@ export default function BasicInfo({
   onChange,
   advancedExpenses,
   readOnly = false,
+  disablePlaceAutocomplete = false,
 }) {
   const handleChange = (field, value) => {
     onChange({ ...property, [field]: value });
@@ -18,10 +19,12 @@ export default function BasicInfo({
     []
   );
 
-  const addressRef = useGooglePlacesAutocomplete(
-    (place) => handleChange("address", place.formatted_address),
-    autocompleteOptions
-  );
+  const addressRef = disablePlaceAutocomplete
+    ? useRef(null)
+    : useGooglePlacesAutocomplete(
+        (place) => handleChange("address", place.formatted_address),
+        autocompleteOptions
+      );
 
   return (
     <div className="border rounded-lg p-6">
