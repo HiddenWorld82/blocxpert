@@ -4,46 +4,46 @@ const useGooglePlacesAutocomplete = (onPlaceSelected, options = {}) => {
   const inputRef = useRef(null);
 
   useEffect(() => {
+    let autocomplete;
+
     const initAutocomplete = () => {
-      if (!inputRef.current || !window.google) return;
+      if (!inputRef.current || !window.google?.maps?.places) return;
 
-      const { maps } = window.google;
+      autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
+        types: ['address'],
+        ...options,
+      });
 
-      // Prefer the new PlaceAutocompleteElement when available
-      if (maps.places?.PlaceAutocompleteElement) {
-        const element = new maps.places.PlaceAutocompleteElement();
-        // Attach the web component to the existing input element
-        element.inputElement = inputRef.current;
-        // Apply options such as componentRestrictions
-        Object.assign(element, { types: ['address'], ...options });
-
-        element.addEventListener('gmpx-placechange', () => {
-          const place = element.getPlace();
-          onPlaceSelected && onPlaceSelected(place);
-        });
-      } else if (maps.places?.Autocomplete) {
-        // Fallback to the older Autocomplete API
-        const autocomplete = new maps.places.Autocomplete(inputRef.current, {
-          types: ['address'],
-          ...options,
-        });
+      if (onPlaceSelected) {
         autocomplete.addListener('place_changed', () => {
           const place = autocomplete.getPlace();
-          onPlaceSelected && onPlaceSelected(place);
+          onPlaceSelected(place);
         });
       }
     };
 
-    if (!window.google) {
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places&v=beta`;
-      script.async = true;
-      script.onload = initAutocomplete;
-      document.head.appendChild(script);
+    const scriptId = 'google-maps-script';
+
+    if (!window.google?.maps?.places) {
+      let script = document.getElementById(scriptId);
+      if (!script) {
+        script = document.createElement('script');
+        script.id = scriptId;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places&v=beta`;
+        script.async = true;
+        document.head.appendChild(script);
+      }
+      script.addEventListener('load', initAutocomplete);
     } else {
       initAutocomplete();
     }
-  }, [onPlaceSelected, options]);
+
+    return () => {
+      if (autocomplete) {
+        window.google.maps.event.clearInstanceListeners(autocomplete);
+      }
+    };
+  }, [onPlaceSelected]);
 
   return inputRef;
 };
