@@ -11,7 +11,15 @@ import RefinancingScenarioForm from './RefinancingScenarioForm';
 import RenovationScenarioForm from './RenovationScenarioForm';
 import calculateRentability from '../utils/calculateRentability';
 
-const PropertyReport = ({ currentProperty, setCurrentStep, analysis: baseAnalysis, onSave, advancedExpenses, scenario }) => {
+const PropertyReport = ({
+  currentProperty,
+  setCurrentStep,
+  analysis: baseAnalysis,
+  onSave,
+  advancedExpenses,
+  scenario,
+  onViewAmortization,
+}) => {
   //const numberFormatter = new Intl.NumberFormat('fr-CA');
   const formatMoney = (value) =>
     new Intl.NumberFormat('fr-CA', {
@@ -254,7 +262,7 @@ const PropertyReport = ({ currentProperty, setCurrentStep, analysis: baseAnalysi
 
           <div className="flex justify-center gap-4 mb-8">
             <button
-              onClick={() => setCurrentStep('amortization')}
+              onClick={() => onViewAmortization(reportProperty, reportAnalysis)}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
               Amortissement
