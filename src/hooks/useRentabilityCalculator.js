@@ -13,8 +13,10 @@ const useRentabilityCalculator = (property, advancedExpenses, lockedFields, setC
 
     // Calcul taxe de bienvenue
     if (lockedFields.welcomeTax && purchasePrice > 0) {
-      const welcomeTax = calculateWelcomeTax(purchasePrice);
-      setCurrentProperty(prev => ({ ...prev, welcomeTax: Math.round(welcomeTax).toString() }));
+      const welcomeTax = Math.round(calculateWelcomeTax(purchasePrice)).toString();
+      if (property.welcomeTax !== welcomeTax) {
+        setCurrentProperty(prev => ({ ...prev, welcomeTax }));
+      }
     }
 
     // Calcul du RCD automatique
