@@ -108,9 +108,9 @@ const PropertyReport = ({
               {scenario ? (
                 <button
                   onClick={() => setCurrentStep('dashboard')}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="text-gray-600 hover:text-gray-800"
                 >
-                  Retour
+                  ← Retour
                 </button>
               ) : (
                 <button
