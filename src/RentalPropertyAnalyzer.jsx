@@ -18,6 +18,7 @@ const RentalPropertyAnalyzer = () => {
   const [currentProperty, setCurrentProperty] = useState(defaultProperty);
   const [advancedExpenses, setAdvancedExpenses] = useState(false);
   const [currentScenario, setCurrentScenario] = useState(null);
+  const [amortizationData, setAmortizationData] = useState(null);
   const [lockedFields] = useState({
     //maintenance: false,
     //concierge: false,
@@ -88,6 +89,11 @@ const RentalPropertyAnalyzer = () => {
       setCurrentProperty({ ...propertyWithAnalysis, id: newId });
     }
     setCurrentStep('dashboard');
+  };
+
+  const handleViewAmortization = (property, analysisData) => {
+    setAmortizationData({ property, analysis: analysisData });
+    setCurrentStep('amortization');
   };
 
   const resetProperty = () => {
@@ -166,12 +172,13 @@ const RentalPropertyAnalyzer = () => {
               onSave={handleSave}
               advancedExpenses={advancedExpenses}
               scenario={currentScenario}
+              onViewAmortization={handleViewAmortization}
             />
           )}
           {currentStep === 'amortization' && (
             <AmortizationPage
-              analysis={analysis}
-              currentProperty={currentProperty}
+              analysis={amortizationData?.analysis || analysis}
+              currentProperty={amortizationData?.property || currentProperty}
               setCurrentStep={setCurrentStep}
             />
           )}
