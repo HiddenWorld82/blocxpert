@@ -102,7 +102,7 @@ export default function FinancingSection({
             onChange={(val) => handleChange("debtCoverageRatio", val)}
             className="w-full border rounded p-2"
             placeholder="1.15"
-            disabled={lockedFields?.debtCoverage}
+            //disabled={lockedFields?.debtCoverage}
           />
         </div>
       </div>
