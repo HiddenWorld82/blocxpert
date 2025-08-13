@@ -123,6 +123,7 @@ const RentalPropertyAnalyzer = () => {
               setCurrentStep={setCurrentStep}
               advancedExpenses={advancedExpenses}
               setAdvancedExpenses={setAdvancedExpenses}
+              onSave={handleSave}
             />
           )}
           {currentStep === 'dashboard' && (
