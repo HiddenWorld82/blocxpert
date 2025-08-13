@@ -6,6 +6,7 @@ import RevenueSection from "./sections/RevenueSection";
 import OperatingExpensesSection from "./sections/OperatingExpensesSection";
 import { parseLocaleNumber } from "./FormattedNumberInput";
 import { saveScenario, updateScenario } from "../services/dataService";
+import calculateWelcomeTax from "../utils/calculateWelcomeTax";
 
 export default function FinancingScenarioForm({
   propertyId,
@@ -21,6 +22,11 @@ export default function FinancingScenarioForm({
     financing: {},
     acquisitionCosts: {},
     ...initialScenario,
+  });
+
+  const [lockedFields] = useState({
+    debtCoverage: true,
+    welcomeTax: true,
   });
 
   useEffect(() => {
@@ -50,6 +56,47 @@ export default function FinancingScenarioForm({
       0
     );
   };
+
+  useEffect(() => {
+    if (!lockedFields.welcomeTax) return;
+    const purchasePrice = parseFloat(property?.purchasePrice) || 0;
+    if (purchasePrice > 0) {
+      const welcomeTax = Math.round(calculateWelcomeTax(purchasePrice)).toString();
+      if (scenario.acquisitionCosts.welcomeTax !== welcomeTax) {
+        setScenario((prev) => ({
+          ...prev,
+          acquisitionCosts: { ...prev.acquisitionCosts, welcomeTax },
+        }));
+      }
+    }
+  }, [
+    property?.purchasePrice,
+    lockedFields.welcomeTax,
+    scenario.acquisitionCosts.welcomeTax,
+  ]);
+
+  useEffect(() => {
+    if (!lockedFields.debtCoverage) return;
+    const financingType = scenario.financing.financingType;
+    const units = parseInt(property?.numberOfUnits) || 1;
+    let newRatio = "1.15";
+    if (financingType === "cmhc") {
+      newRatio = units >= 7 ? "1.3" : "1.1";
+    } else if (financingType === "cmhc_aph") {
+      newRatio = "1.1";
+    }
+    if (scenario.financing.debtCoverageRatio !== newRatio) {
+      setScenario((prev) => ({
+        ...prev,
+        financing: { ...prev.financing, debtCoverageRatio: newRatio },
+      }));
+    }
+  }, [
+    scenario.financing.financingType,
+    property?.numberOfUnits,
+    lockedFields.debtCoverage,
+    scenario.financing.debtCoverageRatio,
+  ]);
 
   const handleSave = async () => {
     if (!propertyId) return;
@@ -127,6 +174,7 @@ export default function FinancingScenarioForm({
             <FinancingSection
               financing={scenario.financing}
               onChange={handleFinancingChange}
+              lockedFields={lockedFields}
             />
 
             <AcquisitionCosts
@@ -134,6 +182,7 @@ export default function FinancingScenarioForm({
               onChange={handleCostsChange}
               advancedExpenses={advancedExpenses}
               analysis={{ acquisitionCosts: computeTotalCosts() }}
+              lockedFields={lockedFields}
             />
 
             <div className="flex justify-end">
