@@ -12,7 +12,7 @@ const typeLabels = {
   other: "Autres",
 };
 
-export default function ScenarioList({ propertyId, onEdit, onView }) {
+export default function ScenarioList({ propertyId, onEdit, onView, excludeTypes = [] }) {
   const [scenarios, setScenarios] = useState([]);
 
   useEffect(() => {
@@ -31,7 +31,10 @@ export default function ScenarioList({ propertyId, onEdit, onView }) {
     setScenarios((prev) => prev.filter((s) => s.id !== id));
   };
 
-  const grouped = scenarios.reduce((acc, sc) => {
+  const filtered = scenarios.filter(
+    (s) => !excludeTypes.includes(s.type || "other")
+  );
+  const grouped = filtered.reduce((acc, sc) => {
     const type = sc.type || "other";
     if (!acc[type]) acc[type] = [];
     acc[type].push(sc);

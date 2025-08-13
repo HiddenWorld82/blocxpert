@@ -1,5 +1,5 @@
 // components/PropertyReport.jsx
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import KeyIndicators from './sections/KeyIndicators';
 import FinancialSummary from './sections/FinancialSummary';
 import FinancingSummary from './sections/FinancingSummary';
@@ -9,8 +9,9 @@ import ScenarioList from './ScenarioList';
 import FinancingScenarioForm from './FinancingScenarioForm';
 import RefinancingScenarioForm from './RefinancingScenarioForm';
 import RenovationScenarioForm from './RenovationScenarioForm';
+import calculateRentability from '../utils/calculateRentability';
 
-const PropertyReport = ({ currentProperty, setCurrentStep, analysis, onSave, advancedExpenses }) => {
+const PropertyReport = ({ currentProperty, setCurrentStep, analysis: baseAnalysis, onSave, advancedExpenses, scenario }) => {
   //const numberFormatter = new Intl.NumberFormat('fr-CA');
   const formatMoney = (value) =>
     new Intl.NumberFormat('fr-CA', {
@@ -20,9 +21,25 @@ const PropertyReport = ({ currentProperty, setCurrentStep, analysis, onSave, adv
       maximumFractionDigits: 0,
     }).format(value || 0);
 
+  const reportProperty = useMemo(
+    () =>
+      scenario
+        ? { ...currentProperty, ...scenario.financing, ...scenario.acquisitionCosts }
+        : currentProperty,
+    [currentProperty, scenario]
+  );
+
+  const reportAnalysis = useMemo(
+    () =>
+      scenario
+        ? calculateRentability(reportProperty, advancedExpenses)
+        : baseAnalysis,
+    [scenario, reportProperty, advancedExpenses, baseAnalysis]
+  );
+
   const averageRentPerDoor =
-    ((parseFloat(currentProperty.annualRent) || 0) /
-      (parseInt(currentProperty.numberOfUnits) || 1)) /
+    ((parseFloat(reportProperty.annualRent) || 0) /
+      (parseInt(reportProperty.numberOfUnits) || 1)) /
     12;
 
   const [editingScenario, setEditingScenario] = useState(null);
@@ -75,7 +92,7 @@ const PropertyReport = ({ currentProperty, setCurrentStep, analysis, onSave, adv
 
           <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-6 mb-6">
             <h3 className="text-xl font-semibold mb-2">
-              {currentProperty.address || 'Propriété à analyser'}
+              {reportProperty.address || 'Propriété à analyser'}
             </h3>
             {advancedExpenses ? (
               <div className="space-y-4 text-sm">
@@ -84,23 +101,23 @@ const PropertyReport = ({ currentProperty, setCurrentStep, analysis, onSave, adv
                     <div>
                       <span className="text-gray-600">Prix demandé:</span>
                       <div className="font-semibold">
-                        {formatMoney(parseFloat(currentProperty.askingPrice) || 0)}
+                        {formatMoney(parseFloat(reportProperty.askingPrice) || 0)}
                       </div>
                     </div>
                     <div>
                       <span className="text-gray-600">Prix d'achat:</span>
                       <div className="font-semibold">
-                        {formatMoney(parseFloat(currentProperty.purchasePrice) || 0)}
+                        {formatMoney(parseFloat(reportProperty.purchasePrice) || 0)}
                       </div>
                     </div>
                     <div>
                       <span className="text-gray-600">Nb d'unités:</span>
-                      <div className="font-semibold">{currentProperty.numberOfUnits || 'N/A'}</div>
+                      <div className="font-semibold">{reportProperty.numberOfUnits || 'N/A'}</div>
                     </div>
                     <div>
                       <span className="text-gray-600">Prix par porte:</span>
                       <div className="font-semibold">
-                        {formatMoney(Math.round(analysis.pricePerUnit || 0))}
+                        {formatMoney(Math.round(reportAnalysis.pricePerUnit || 0))}
                       </div>
                     </div>
                   </div>
@@ -110,25 +127,25 @@ const PropertyReport = ({ currentProperty, setCurrentStep, analysis, onSave, adv
                     <div>
                       <span className="text-gray-600">Revenus totaux:</span>
                       <div className="font-semibold">
-                        {formatMoney(analysis.totalGrossRevenue)}
+                        {formatMoney(reportAnalysis.totalGrossRevenue)}
                       </div>
                     </div>
                     <div>
                       <span className="text-gray-600">Dépenses totales:</span>
                       <div className="font-semibold text-red-600">
-                        {formatMoney(analysis.totalExpenses)}
+                        {formatMoney(reportAnalysis.totalExpenses)}
                       </div>
                     </div>
                     <div>
                       <span className="text-gray-600">Service de la dette an 1:</span>
                       <div className="font-semibold text-red-600">
-                        {formatMoney(analysis.annualDebtService)}
+                        {formatMoney(reportAnalysis.annualDebtService)}
                       </div>
                     </div>
                     <div>
                       <span className="text-gray-600">Cash Flow:</span>
-                      <div className={`font-semibold ${analysis.cashFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {formatMoney(analysis.cashFlow)}
+                      <div className={`font-semibold ${reportAnalysis.cashFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {formatMoney(reportAnalysis.cashFlow)}
                       </div>
                     </div>
                   </div>
@@ -138,22 +155,22 @@ const PropertyReport = ({ currentProperty, setCurrentStep, analysis, onSave, adv
                     <div>
                       <span className="text-gray-600">Financement:</span>
                       <div className="font-semibold">
-                        {currentProperty.financingType === 'conventional' && 'Conventionnel'}
-                        {currentProperty.financingType === 'cmhc' && 'SCHL'}
-                        {currentProperty.financingType === 'cmhc_aph' && `SCHL APH (${currentProperty.aphPoints} pts)`}
+                        {reportProperty.financingType === 'conventional' && 'Conventionnel'}
+                        {reportProperty.financingType === 'cmhc' && 'SCHL'}
+                        {reportProperty.financingType === 'cmhc_aph' && `SCHL APH (${reportProperty.aphPoints} pts)`}
                       </div>
                     </div>
                     <div>
                       <span className="text-gray-600">Prêt maximal:</span>
-                      <div className="font-semibold">{formatMoney(analysis.maxLoanAmount)}</div>
+                      <div className="font-semibold">{formatMoney(reportAnalysis.maxLoanAmount)}</div>
                     </div>
                     <div>
                       <span className="text-gray-600">Mise de fonds:</span>
-                      <div className="font-semibold">{formatMoney(analysis.downPayment)}</div>
+                      <div className="font-semibold">{formatMoney(reportAnalysis.downPayment)}</div>
                     </div>
                     <div>
                       <span className="text-gray-600">Investissement total:</span>
-                      <div className="font-semibold">{formatMoney(analysis.totalInvestment)}</div>
+                      <div className="font-semibold">{formatMoney(reportAnalysis.totalInvestment)}</div>
                     </div>
                   </div>
                 </div>
@@ -165,17 +182,17 @@ const PropertyReport = ({ currentProperty, setCurrentStep, analysis, onSave, adv
                     <div>
                       <span className="text-gray-600">Prix d'achat:</span>
                       <div className="font-semibold">
-                        {formatMoney(parseFloat(currentProperty.purchasePrice) || 0)}
+                        {formatMoney(parseFloat(reportProperty.purchasePrice) || 0)}
                       </div>
                     </div>
                     <div>
                       <span className="text-gray-600">Nom d'unités:</span>
-                      <div className="font-semibold">{currentProperty.numberOfUnits || 'N/A'}</div>
+                      <div className="font-semibold">{reportProperty.numberOfUnits || 'N/A'}</div>
                     </div>
                     <div>
                       <span className="text-gray-600">Prix par porte:</span>
                       <div className="font-semibold">
-                        {formatMoney(Math.round(analysis.pricePerUnit || 0))}
+                        {formatMoney(Math.round(reportAnalysis.pricePerUnit || 0))}
                       </div>
                     </div>
                     <div>
@@ -189,22 +206,22 @@ const PropertyReport = ({ currentProperty, setCurrentStep, analysis, onSave, adv
                     <div>
                       <span className="text-gray-600">Financement:</span>
                       <div className="font-semibold">
-                        {currentProperty.financingType === 'conventional' && 'Conventionnel'}
-                        {currentProperty.financingType === 'cmhc' && 'SCHL'}
-                        {currentProperty.financingType === 'cmhc_aph' && `SCHL APH (${currentProperty.aphPoints} pts)`}
+                        {reportProperty.financingType === 'conventional' && 'Conventionnel'}
+                        {reportProperty.financingType === 'cmhc' && 'SCHL'}
+                        {reportProperty.financingType === 'cmhc_aph' && `SCHL APH (${reportProperty.aphPoints} pts)`}
                       </div>
                     </div>
                     <div>
                       <span className="text-gray-600">Prêt maximal:</span>
-                      <div className="font-semibold">{formatMoney(analysis.maxLoanAmount)}</div>
+                      <div className="font-semibold">{formatMoney(reportAnalysis.maxLoanAmount)}</div>
                     </div>
                     <div>
                       <span className="text-gray-600">Mise de fonds:</span>
-                      <div className="font-semibold">{formatMoney(analysis.downPayment)}</div>
+                      <div className="font-semibold">{formatMoney(reportAnalysis.downPayment)}</div>
                     </div>
                     <div>
                       <span className="text-gray-600">Investissement total:</span>
-                      <div className="font-semibold">{formatMoney(analysis.totalInvestment)}</div>
+                      <div className="font-semibold">{formatMoney(reportAnalysis.totalInvestment)}</div>
                     </div>
                   </div>
                 </div>
@@ -212,11 +229,11 @@ const PropertyReport = ({ currentProperty, setCurrentStep, analysis, onSave, adv
             )}
           </div>
 
-          <KeyIndicators analysis={analysis} />
-          
+          <KeyIndicators analysis={reportAnalysis} />
+
           <div className="grid md:grid-cols-2 gap-8 mb-8">
-            <FinancialSummary analysis={analysis} advancedExpenses={advancedExpenses} />
-            <FinancingSummary analysis={analysis} currentProperty={currentProperty} />
+            <FinancialSummary analysis={reportAnalysis} advancedExpenses={advancedExpenses} />
+            <FinancingSummary analysis={reportAnalysis} currentProperty={reportProperty} />
           </div>
 
           <div className="flex justify-center gap-4 mb-8">
@@ -244,19 +261,20 @@ const PropertyReport = ({ currentProperty, setCurrentStep, analysis, onSave, adv
             <ScenarioList
               propertyId={currentProperty.id}
               onEdit={(sc) => setEditingScenario(sc)}
+              excludeTypes={['initialFinancing']}
             />
           </div>
 
           {renderScenarioForm()}
 
           <Recommendations
-            analysis={analysis}
-            currentProperty={currentProperty}
+            analysis={reportAnalysis}
+            currentProperty={reportProperty}
           />
 
           <ExecutiveSummary
-            analysis={analysis}
-            currentProperty={currentProperty}
+            analysis={reportAnalysis}
+            currentProperty={reportProperty}
           />
         </div>
       </div>

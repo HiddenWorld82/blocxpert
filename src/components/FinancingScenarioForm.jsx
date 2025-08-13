@@ -106,12 +106,13 @@ export default function FinancingScenarioForm({
       acquisitionCosts: scenario.acquisitionCosts,
       type,
     };
+    let id = initialScenario.id;
     if (initialScenario.id) {
       await updateScenario(propertyId, initialScenario.id, data);
     } else {
-      await saveScenario(propertyId, data);
+      id = await saveScenario(propertyId, data);
     }
-    if (onSaved) onSaved();
+    if (onSaved) onSaved({ id, ...data });
   };
 
   const titleText =
