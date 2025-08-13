@@ -21,12 +21,6 @@ export default function FinancingScenarioForm({
     title: "",
     financing: {},
     acquisitionCosts: {},
-    refinanceDate: "",
-    newMarketValue: "",
-    netIncomeGrowth: "",
-    cashOut: false,
-    refinancingCosts: "",
-    newDownPayment: "",
     ...initialScenario,
   });
 
@@ -40,12 +34,6 @@ export default function FinancingScenarioForm({
       title: "",
       financing: {},
       acquisitionCosts: {},
-      refinanceDate: "",
-      newMarketValue: "",
-      netIncomeGrowth: "",
-      cashOut: false,
-      refinancingCosts: "",
-      newDownPayment: "",
       ...initialScenario,
     });
   }, [initialScenario.id]);
@@ -110,15 +98,6 @@ export default function FinancingScenarioForm({
     scenario.financing.debtCoverageRatio,
   ]);
 
-  useEffect(() => {
-    if (type !== "refinancing") return;
-    const value = Number(parseLocaleNumber(scenario.newMarketValue)) || 0;
-    const newDown = Math.round(value * 0.2).toString();
-    if (scenario.newDownPayment !== newDown) {
-      setScenario((prev) => ({ ...prev, newDownPayment: newDown }));
-    }
-  }, [type, scenario.newMarketValue, scenario.newDownPayment]);
-
   const handleSave = async () => {
     const { id, ...dataWithoutId } = scenario;
     const data = { ...dataWithoutId, type };
@@ -173,104 +152,19 @@ export default function FinancingScenarioForm({
                   readOnly
                   disablePlaceAutocomplete
                 />
-                {type !== "refinancing" && (
-                  <>
-                    <RevenueSection
-                      revenue={property}
-                      onChange={() => {}}
-                      advancedExpenses={advancedExpenses}
-                      readOnly
-                    />
-                    <OperatingExpensesSection
-                      expenses={property}
-                      onChange={() => {}}
-                      advancedExpenses={advancedExpenses}
-                      readOnly
-                    />
-                  </>
-                )}
+                <RevenueSection
+                  revenue={property}
+                  onChange={() => {}}
+                  advancedExpenses={advancedExpenses}
+                  readOnly
+                />
+                <OperatingExpensesSection
+                  expenses={property}
+                  onChange={() => {}}
+                  advancedExpenses={advancedExpenses}
+                  readOnly
+                />
               </>
-            )}
-
-            {type === "refinancing" && (
-              <div className="border rounded-lg p-6">
-                <h2 className="text-lg font-semibold mb-4 text-gray-700">
-                  Paramètres de refinancement
-                </h2>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Date de refinancement
-                    </label>
-                    <input
-                      type="date"
-                      value={scenario.refinanceDate}
-                      onChange={(e) =>
-                        handleChange("refinanceDate", e.target.value)
-                      }
-                      className="w-full border rounded p-2"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Nouvelle valeur marchande estimée
-                    </label>
-                    <FormattedNumberInput
-                      value={scenario.newMarketValue}
-                      onChange={(val) => handleChange("newMarketValue", val)}
-                      className="w-full border rounded p-2"
-                      placeholder="0"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Augmentation annuelle du revenu net (%)
-                    </label>
-                    <FormattedNumberInput
-                      value={scenario.netIncomeGrowth}
-                      onChange={(val) => handleChange("netIncomeGrowth", val)}
-                      className="w-full border rounded p-2"
-                      type="percentage"
-                      placeholder="0"
-                    />
-                  </div>
-                  <div className="flex items-center mt-6">
-                    <input
-                      id="cashOut"
-                      type="checkbox"
-                      checked={scenario.cashOut}
-                      onChange={(e) => handleChange("cashOut", e.target.checked)}
-                      className="mr-2"
-                    />
-                    <label htmlFor="cashOut" className="text-sm font-medium">
-                      Retirer de l'équité (cash-out)
-                    </label>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Frais de refinancement ($)
-                    </label>
-                    <FormattedNumberInput
-                      value={scenario.refinancingCosts}
-                      onChange={(val) => handleChange("refinancingCosts", val)}
-                      className="w-full border rounded p-2"
-                      placeholder="0"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Nouvelle mise de fonds
-                    </label>
-                    <FormattedNumberInput
-                      value={scenario.newDownPayment}
-                      onChange={() => {}}
-                      className="w-full border rounded p-2"
-                      placeholder="0"
-                      readOnly
-                    />
-                  </div>
-                </div>
-              </div>
             )}
 
             <FinancingSection
