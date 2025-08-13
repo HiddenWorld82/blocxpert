@@ -8,6 +8,7 @@ const BuildingDashboard = ({
   onCreateScenario,
   onEditScenario,
   onViewScenario,
+  onEditProperty,
   onBack,
 }) => {
   const formatMoney = (value) =>
@@ -84,12 +85,20 @@ const BuildingDashboard = ({
         <div className="bg-white rounded-lg shadow-lg p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-semibold">Tableau de bord de l'immeuble</h2>
-            <button
-              onClick={onBack}
-              className="text-gray-600 hover:text-gray-800"
-            >
-              ← Retour
-            </button>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={onEditProperty}
+                className="text-blue-600 hover:text-blue-800"
+              >
+                Modifier
+              </button>
+              <button
+                onClick={onBack}
+                className="text-gray-600 hover:text-gray-800"
+              >
+                ← Retour
+              </button>
+            </div>
           </div>
           <div className="mb-6">
             <h3 className="text-xl font-semibold">
