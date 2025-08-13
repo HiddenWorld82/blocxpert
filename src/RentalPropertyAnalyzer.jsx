@@ -148,6 +148,7 @@ const RentalPropertyAnalyzer = () => {
                 setCurrentScenario(sc);
                 setCurrentStep('report');
               }}
+              onEditProperty={() => setCurrentStep('form')}
               onBack={() => setCurrentStep('home')}
             />
           )}
