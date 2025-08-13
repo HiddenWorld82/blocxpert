@@ -9,7 +9,7 @@ import FinancingScenarioForm from './components/FinancingScenarioForm';
 import useRentabilityCalculator from './hooks/useRentabilityCalculator';
 import defaultProperty from './defaults/defaultProperty';
 import { useAuth } from './contexts/AuthContext';
-import { saveProperty, updateProperty } from './services/dataService';
+import { saveProperty, updateProperty, deleteProperty } from './services/dataService';
 import Header from './components/Header';
 
 const RentalPropertyAnalyzer = () => {
@@ -114,6 +114,7 @@ const RentalPropertyAnalyzer = () => {
                 setAdvancedExpenses(property.advancedExpenses || false);
                 setCurrentStep('dashboard');
               }}
+              onDelete={deleteProperty}
             />
           )}
           {currentStep === 'form' && (

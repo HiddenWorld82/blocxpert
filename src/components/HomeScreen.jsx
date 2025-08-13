@@ -1,8 +1,8 @@
 // components/HomeScreen.jsx
 import React from 'react';
-import { Calculator, Plus, Home, TrendingUp, FileText } from 'lucide-react';
+import { Calculator, Plus, Home, TrendingUp, FileText, X } from 'lucide-react';
 
-const HomeScreen = ({ properties, onNew, onSelect }) => {
+const HomeScreen = ({ properties, onNew, onSelect, onDelete }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4">
       <div className="max-w-6xl mx-auto">
@@ -74,9 +74,19 @@ const HomeScreen = ({ properties, onNew, onSelect }) => {
               {properties.map((property, index) => (
                 <div
                   key={index}
-                  className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                  className="relative border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
                   onClick={() => onSelect(property)}
                 >
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete?.(property.id);
+                    }}
+                    className="absolute top-2 right-2 text-red-600 hover:text-red-800"
+                    aria-label="Supprimer"
+                  >
+                    <X size={16} />
+                  </button>
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="font-semibold text-lg">
