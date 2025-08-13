@@ -6,9 +6,7 @@ import FinancingSummary from './sections/FinancingSummary';
 import Recommendations from './sections/Recommendations';
 import ExecutiveSummary from './sections/ExecutiveSummary';
 import ScenarioList from './ScenarioList';
-import FinancingScenarioForm from './FinancingScenarioForm';
-import RefinancingScenarioForm from './RefinancingScenarioForm';
-import RenovationScenarioForm from './RenovationScenarioForm';
+import FutureScenarioForm from './FutureScenarioForm';
 import calculateRentability from '../utils/calculateRentability';
 
 const PropertyReport = ({
@@ -70,6 +68,37 @@ const PropertyReport = ({
 
   const renderScenarioForm = () => {
     if (!editingScenario) return null;
+    if (!editingScenario.type) {
+      return (
+        <div className="mt-8">
+          <h3 className="text-lg font-semibold mb-4">
+            Choisir le type de scénario
+          </h3>
+          <div className="flex gap-4">
+            <button
+              onClick={() => setEditingScenario({ ...editingScenario, type: 'refinancing' })}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Refinancement
+            </button>
+            <button
+              onClick={() =>
+                setEditingScenario({ ...editingScenario, type: 'incomeOptimization' })
+              }
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Optimisation Revenus
+            </button>
+            <button
+              onClick={() => setEditingScenario({ ...editingScenario, type: 'renovation' })}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Optimisation Rénovation
+            </button>
+          </div>
+        </div>
+      );
+    }
     const formProps = {
       propertyId: currentProperty.id,
       property: currentProperty,
@@ -77,19 +106,7 @@ const PropertyReport = ({
       onSaved: () => setEditingScenario(null),
       initialScenario: editingScenario.id ? editingScenario : undefined,
     };
-    switch (editingScenario.type) {
-      case 'refinancing':
-        return <RefinancingScenarioForm {...formProps} />;
-      case 'renovation':
-        return <RenovationScenarioForm {...formProps} />;
-      default:
-        return (
-          <FinancingScenarioForm
-            {...formProps}
-            type={editingScenario.type || 'initialFinancing'}
-          />
-        );
-    }
+    return <FutureScenarioForm {...formProps} type={editingScenario.type} />;
   };
 
   return (
@@ -277,7 +294,7 @@ const PropertyReport = ({
               Amortissement
             </button>
             <button
-              onClick={() => setEditingScenario({ type: 'refinancing' })}
+              onClick={() => setEditingScenario({})}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
               Nouveau scénario
