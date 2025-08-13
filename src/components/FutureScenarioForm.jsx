@@ -1,14 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import FinancingSection from "./sections/FinancingSection";
-import AcquisitionCosts from "./sections/AcquisitionCosts";
-import BasicInfo from "./sections/BasicInfo";
-import RevenueSection from "./sections/RevenueSection";
-import OperatingExpensesSection from "./sections/OperatingExpensesSection";
-import FormattedNumberInput, { parseLocaleNumber } from "./FormattedNumberInput";
+import FinancingFeesSection from "./sections/FinancingFeesSection";
+import FormattedNumberInput, {
+  parseLocaleNumber,
+} from "./FormattedNumberInput";
 import KeyIndicators from "./sections/KeyIndicators";
 import FinancialSummary from "./sections/FinancialSummary";
 import FinancingSummary from "./sections/FinancingSummary";
-import calculateWelcomeTax from "../utils/calculateWelcomeTax";
 import calculateRentability from "../utils/calculateRentability";
 import { saveScenario, updateScenario } from "../services/dataService";
 
@@ -27,15 +25,12 @@ export default function FutureScenarioForm({
     marketValue: "",
     netIncomeIncreasePct: "",
     financing: {},
-    acquisitionCosts: {},
-    revenue: {},
-    expenses: {},
+    financingFees: {},
     ...initialScenario,
   });
 
   const [lockedFields] = useState({
     debtCoverage: true,
-    welcomeTax: true,
   });
 
   useEffect(() => {
@@ -45,9 +40,7 @@ export default function FutureScenarioForm({
       marketValue: "",
       netIncomeIncreasePct: "",
       financing: {},
-      acquisitionCosts: {},
-      revenue: {},
-      expenses: {},
+      financingFees: {},
       ...initialScenario,
     });
   }, [initialScenario.id]);
@@ -56,26 +49,18 @@ export default function FutureScenarioForm({
     setScenario((prev) => ({ ...prev, financing }));
   };
 
-  const handleCostsChange = (costs) => {
-    setScenario((prev) => ({ ...prev, acquisitionCosts: costs }));
-  };
-
-  const handleRevenueChange = (revenue) => {
-    setScenario((prev) => ({ ...prev, revenue }));
-  };
-
-  const handleExpensesChange = (expenses) => {
-    setScenario((prev) => ({ ...prev, expenses }));
+  const handleFeesChange = (fees) => {
+    setScenario((prev) => ({ ...prev, financingFees: fees }));
   };
 
   const handleChange = (field, value) => {
     setScenario((prev) => ({ ...prev, [field]: value }));
   };
 
-  const computeTotalCosts = () => {
-    return Object.values(scenario.acquisitionCosts).reduce(
+  const computeTotalFees = () => {
+    return Object.values(scenario.financingFees).reduce(
       (sum, val) => sum + Number(parseLocaleNumber(val) || 0),
-      0
+      0,
     );
   };
 
@@ -86,7 +71,7 @@ export default function FutureScenarioForm({
     const currentYear = new Date().getFullYear();
     const years = Math.max(refDate.getFullYear() - currentYear, 0);
     const estimated = Math.round(
-      purchasePrice * Math.pow(1 + 0.03, years)
+      purchasePrice * Math.pow(1 + 0.03, years),
     ).toString();
     setScenario((prev) => ({
       ...prev,
@@ -97,50 +82,80 @@ export default function FutureScenarioForm({
   const analysisProperty = useMemo(() => {
     if (!property) return null;
     const pct =
-      (parseFloat(parseLocaleNumber(scenario.netIncomeIncreasePct)) || 0) /
-      100;
+      (parseFloat(parseLocaleNumber(scenario.netIncomeIncreasePct)) || 0) / 100;
     const marketValue =
       parseFloat(parseLocaleNumber(scenario.marketValue)) ||
       parseFloat(property.purchasePrice) ||
       0;
+    const years = scenario.refinanceDate
+      ? new Date(scenario.refinanceDate).getFullYear() -
+        new Date().getFullYear()
+      : 0;
+    const growthFactor = Math.pow(1 + pct, Math.max(years, 0));
+    const revenueFields = [
+      "annualRent",
+      "parkingRevenue",
+      "internetRevenue",
+      "storageRevenue",
+      "otherRevenue",
+    ];
+    const expenseFields = [
+      "municipalTaxes",
+      "schoolTaxes",
+      "insurance",
+      "electricityHeating",
+      "maintenance",
+      "concierge",
+      "operatingExpenses",
+      "otherExpenses",
+      "heating",
+      "electricity",
+      "landscaping",
+      "snowRemoval",
+      "extermination",
+      "fireInspection",
+      "advertising",
+      "legal",
+      "accounting",
+      "elevator",
+      "cableInternet",
+      "appliances",
+      "garbage",
+      "washerDryer",
+      "hotWater",
+    ];
+    const scaled = {};
+    [...revenueFields, ...expenseFields].forEach((field) => {
+      const value = parseFloat(property[field]);
+      if (!isNaN(value)) {
+        scaled[field] = value * growthFactor;
+      }
+    });
     return {
       ...property,
+      ...scaled,
       purchasePrice: marketValue,
-      annualRent: (parseFloat(property.annualRent) || 0) * (1 + pct),
     };
-  }, [property, scenario.marketValue, scenario.netIncomeIncreasePct]);
+  }, [
+    property,
+    scenario.marketValue,
+    scenario.netIncomeIncreasePct,
+    scenario.refinanceDate,
+  ]);
 
   const combinedProperty = useMemo(() => {
     if (!analysisProperty) return null;
     return {
       ...analysisProperty,
       ...scenario.financing,
-      ...scenario.acquisitionCosts,
+      ...scenario.financingFees,
     };
-  }, [analysisProperty, scenario.financing, scenario.acquisitionCosts]);
+  }, [analysisProperty, scenario.financing, scenario.financingFees]);
 
   const analysis = useMemo(() => {
     if (!combinedProperty) return null;
     return calculateRentability(combinedProperty, advancedExpenses);
   }, [combinedProperty, advancedExpenses]);
-
-  useEffect(() => {
-    if (!lockedFields.welcomeTax) return;
-    const purchasePrice = parseFloat(property?.purchasePrice) || 0;
-    if (purchasePrice > 0) {
-      const welcomeTax = Math.round(calculateWelcomeTax(purchasePrice)).toString();
-      if (scenario.acquisitionCosts.welcomeTax !== welcomeTax) {
-        setScenario((prev) => ({
-          ...prev,
-          acquisitionCosts: { ...prev.acquisitionCosts, welcomeTax },
-        }));
-      }
-    }
-  }, [
-    property?.purchasePrice,
-    lockedFields.welcomeTax,
-    scenario.acquisitionCosts.welcomeTax,
-  ]);
 
   useEffect(() => {
     if (!lockedFields.debtCoverage) return;
@@ -177,48 +192,27 @@ export default function FutureScenarioForm({
     }
   };
 
-  const titleText = {
-    refinancing: "Scénario de refinancement",
-    incomeOptimization: "Scénario optimisation revenus",
-    renovation: "Scénario optimisation rénovation",
-  }[type] || "Scénario";
+  const titleText =
+    {
+      refinancing: "Scénario de refinancement",
+      incomeOptimization: "Scénario optimisation revenus",
+      renovation: "Scénario optimisation rénovation",
+    }[type] || "Scénario";
 
-  const renderScenarioSections = () => {
-    switch (type) {
-      case "incomeOptimization":
-        return (
-          <>
-            <RevenueSection
-              revenue={scenario.revenue}
-              onChange={handleRevenueChange}
-              advancedExpenses={advancedExpenses}
-            />
-            <OperatingExpensesSection
-              expenses={scenario.expenses}
-              onChange={handleExpensesChange}
-              advancedExpenses={advancedExpenses}
-            />
-          </>
-        );
-      default:
-        return (
-          <>
-            <FinancingSection
-              financing={scenario.financing}
-              onChange={handleFinancingChange}
-              lockedFields={lockedFields}
-            />
-            <AcquisitionCosts
-              costs={scenario.acquisitionCosts}
-              onChange={handleCostsChange}
-              advancedExpenses={advancedExpenses}
-              analysis={{ acquisitionCosts: computeTotalCosts() }}
-              lockedFields={lockedFields}
-            />
-          </>
-        );
-    }
-  };
+  const renderScenarioSections = () => (
+    <>
+      <FinancingSection
+        financing={scenario.financing}
+        onChange={handleFinancingChange}
+        lockedFields={lockedFields}
+      />
+      <FinancingFeesSection
+        fees={scenario.financingFees}
+        onChange={handleFeesChange}
+        analysis={{ financingFees: computeTotalFees() }}
+      />
+    </>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -237,37 +231,15 @@ export default function FutureScenarioForm({
           </div>
 
           <div className="space-y-8">
-            {property && (
-              <>
-                <BasicInfo
-                  property={property}
-                  onChange={() => {}}
-                  advancedExpenses={advancedExpenses}
-                  readOnly
-                  disablePlaceAutocomplete
-                />
-                <RevenueSection
-                  revenue={property}
-                  onChange={() => {}}
-                  advancedExpenses={advancedExpenses}
-                  readOnly
-                />
-                <OperatingExpensesSection
-                  expenses={property}
-                  onChange={() => {}}
-                  advancedExpenses={advancedExpenses}
-                  readOnly
-                />
-              </>
-            )}
-
             <div className="border rounded-lg p-6">
               <h2 className="text-lg font-semibold mb-4 text-gray-700">
                 Paramètres du scénario
               </h2>
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Titre</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Titre
+                  </label>
                   <input
                     type="text"
                     value={scenario.title}
@@ -277,16 +249,22 @@ export default function FutureScenarioForm({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Date de refinancement</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Date de refinancement
+                  </label>
                   <input
                     type="date"
                     value={scenario.refinanceDate || ""}
-                    onChange={(e) => handleChange("refinanceDate", e.target.value)}
+                    onChange={(e) =>
+                      handleChange("refinanceDate", e.target.value)
+                    }
                     className="w-full border rounded p-2"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Nouvelle valeur marchande</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Nouvelle valeur marchande
+                  </label>
                   <FormattedNumberInput
                     value={scenario.marketValue || ""}
                     onChange={(val) => handleChange("marketValue", val)}
@@ -295,10 +273,14 @@ export default function FutureScenarioForm({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">% augmentation revenus net</label>
+                  <label className="block text-sm font-medium mb-1">
+                    % augmentation revenus net
+                  </label>
                   <FormattedNumberInput
                     value={scenario.netIncomeIncreasePct || ""}
-                    onChange={(val) => handleChange("netIncomeIncreasePct", val)}
+                    onChange={(val) =>
+                      handleChange("netIncomeIncreasePct", val)
+                    }
                     className="w-full border rounded p-2"
                     type="percentage"
                   />
@@ -310,15 +292,17 @@ export default function FutureScenarioForm({
 
             {analysis && (
               <>
-                <KeyIndicators analysis={analysis} />
-                <FinancialSummary
-                  analysis={analysis}
-                  advancedExpenses={advancedExpenses}
-                />
-                <FinancingSummary
-                  analysis={analysis}
-                  currentProperty={analysisProperty}
-                />
+                <KeyIndicators analysis={analysis} variant="future" />
+                <div className="grid md:grid-cols-2 gap-4">
+                  <FinancialSummary
+                    analysis={analysis}
+                    advancedExpenses={advancedExpenses}
+                  />
+                  <FinancingSummary
+                    analysis={analysis}
+                    currentProperty={analysisProperty}
+                  />
+                </div>
               </>
             )}
 
@@ -338,4 +322,3 @@ export default function FutureScenarioForm({
     </div>
   );
 }
-
