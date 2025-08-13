@@ -22,8 +22,12 @@ export default function ScenarioList({ propertyId, onEdit, onView, excludeTypes 
   }, [propertyId]);
 
   const handleDuplicate = async (scenario) => {
-    const newScenario = await duplicateScenario(propertyId, scenario);
-    setScenarios((prev) => [...prev, newScenario]);
+    // Firestore's onSnapshot listener in `getScenarios` already updates the
+    // state when a new scenario is created. Adding the duplicated scenario to
+    // the local state here caused it to appear twice and produced React's
+    // "Encountered two children with the same key" warning. We only trigger
+    // the duplication in the database and let the listener refresh the list.
+    await duplicateScenario(propertyId, scenario);
   };
 
   const handleDelete = async (id) => {
