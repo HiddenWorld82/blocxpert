@@ -26,7 +26,9 @@ const PropertyForm = ({
                 {advancedExpenses ? 'Mode simplifié' : 'Mode avancé'}
               </button>
               <button
-                onClick={() => setCurrentStep('home')}
+                onClick={() =>
+                  setCurrentStep(currentProperty.id ? 'dashboard' : 'home')
+                }
                 className="text-gray-600 hover:text-gray-800"
               >
                 ← Retour
@@ -51,13 +53,19 @@ const PropertyForm = ({
               advancedExpenses={advancedExpenses}
             />
 
-            <div className="flex justify-between">
-              <button
-                onClick={() => setCurrentStep('home')}
-                className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                Annuler
-              </button>
+            <div
+              className={`flex ${
+                currentProperty.id ? 'justify-end' : 'justify-between'
+              }`}
+            >
+              {!currentProperty.id && (
+                <button
+                  onClick={() => setCurrentStep('home')}
+                  className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Annuler
+                </button>
+              )}
               <button
                 onClick={onSave}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
