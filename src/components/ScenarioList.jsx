@@ -8,7 +8,8 @@ import {
 const typeLabels = {
   initialFinancing: "Financement initial",
   refinancing: "Refinancement",
-  renovation: "Rénovation",
+  incomeOptimization: "Optimisation Revenus",
+  renovation: "Optimisation Rénovation",
   other: "Autres",
 };
 
