@@ -36,6 +36,24 @@ const AmortizationPage = ({ analysis, currentProperty, setCurrentStep }) => {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value || 0);
+  if (rows.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-4">
+        <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-semibold">Tableau d'Amortissement</h2>
+            <button
+              onClick={() => setCurrentStep('report')}
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+            >
+              Retour
+            </button>
+          </div>
+          <p className="text-center text-gray-600">Données d'amortissement indisponibles.</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6">

@@ -1,5 +1,5 @@
 // components/PropertyReport.jsx
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import KeyIndicators from './sections/KeyIndicators';
 import FinancialSummary from './sections/FinancialSummary';
 import FinancingSummary from './sections/FinancingSummary';
@@ -44,6 +44,22 @@ const PropertyReport = ({ currentProperty, setCurrentStep, analysis: baseAnalysi
 
   const [editingScenario, setEditingScenario] = useState(null);
 
+  const reportRef = useRef(null);
+
+  const handleGeneratePDF = () => {
+    if (!reportRef.current) return;
+    const printContents = reportRef.current.innerHTML;
+    const printWindow = window.open('', '', 'height=800,width=600');
+    if (!printWindow) return;
+    printWindow.document.write('<html><head><title>Rapport</title>');
+    printWindow.document.write('</head><body>');
+    printWindow.document.write(printContents);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+  };
+
   const renderScenarioForm = () => {
     if (!editingScenario) return null;
     const formProps = {
@@ -71,7 +87,7 @@ const PropertyReport = ({ currentProperty, setCurrentStep, analysis: baseAnalysi
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-6xl mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-6">
+        <div ref={reportRef} className="bg-white rounded-lg shadow-lg p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-semibold">Rapport d'Analyse de Rentabilité</h2>
             <div className="flex gap-2">
@@ -250,10 +266,10 @@ const PropertyReport = ({ currentProperty, setCurrentStep, analysis: baseAnalysi
               Nouveau scénario
             </button>
             <button
-              disabled
-              className="px-4 py-2 bg-gray-300 text-gray-600 rounded-lg cursor-not-allowed"
+              onClick={handleGeneratePDF}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
             >
-              Bouton 3
+              Générer PDF
             </button>
           </div>
 
