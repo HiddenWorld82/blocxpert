@@ -88,7 +88,7 @@ const BuildingDashboard = ({
             <div className="flex items-center gap-4">
               <button
                 onClick={onEditProperty}
-                className="text-blue-600 hover:text-blue-800"
+                className="px-4 py-2 border rounded-lg hover:bg-gray-5"
               >
                 Modifier
               </button>
