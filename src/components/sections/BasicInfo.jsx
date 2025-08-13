@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Info, Home, DollarSign, TrendingUp, Briefcase, Building, Calculator } from 'lucide-react';
 import FormattedNumberInput from "../FormattedNumberInput";
 import useGooglePlacesAutocomplete from "../../hooks/useGooglePlacesAutocomplete";
@@ -13,9 +13,14 @@ export default function BasicInfo({
     onChange({ ...property, [field]: value });
   };
 
+  const autocompleteOptions = useMemo(
+    () => ({ componentRestrictions: { country: "ca" } }),
+    []
+  );
+
   const addressRef = useGooglePlacesAutocomplete(
     (place) => handleChange("address", place.formatted_address),
-    { componentRestrictions: { country: "ca" } }
+    autocompleteOptions
   );
 
   return (
