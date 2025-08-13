@@ -9,7 +9,8 @@ const PropertyForm = ({
   setCurrentProperty,
   setCurrentStep,
   advancedExpenses,
-  setAdvancedExpenses
+  setAdvancedExpenses,
+  onSave,
 }) => {
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -58,10 +59,10 @@ const PropertyForm = ({
                 Annuler
               </button>
               <button
-                onClick={() => setCurrentStep('report')}
+                onClick={onSave}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
-                Générer l'analyse
+                Sauvegarder
               </button>
             </div>
           </div>
