@@ -116,7 +116,9 @@ const calculateRentability = (property, advancedExpenses) => {
     }
   }
   const maxLoanByLTV = purchasePrice * maxLTVRatio;
-  const maxLoanAmount = Math.min(maxLoanByRCD, maxLoanByLTV);
+  const maxLoanAmount = property.ignoreLTV
+    ? maxLoanByRCD
+    : Math.min(maxLoanByRCD, maxLoanByLTV);
 
   const cmhcPremiums = {
     standard: [
