@@ -2,7 +2,7 @@
 const calculateRentability = (
   property,
   advancedExpenses,
-  { existingLoanBalance = 0 } = {}
+  { initialLoanAmount = 0 } = {},
 ) => {
   const purchasePrice = parseFloat(property.purchasePrice) || 0;
   const numberOfUnits = parseInt(property.numberOfUnits) || 1;
@@ -164,7 +164,7 @@ const calculateRentability = (
       premiumRate = premiumRate * (1 - rebate);
     }
 
-    const premiumBase = Math.max(maxLoanAmount - existingLoanBalance, 0);
+    const premiumBase = Math.max(maxLoanAmount - initialLoanAmount, 0);
     cmhcPremium = premiumBase * premiumRate;
     cmhcTax = cmhcPremium * 0.09;
     cmhcAnalysis = numberOfUnits * 150;

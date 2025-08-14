@@ -197,9 +197,9 @@ export default function FutureScenarioForm({
   const analysis = useMemo(() => {
     if (!combinedProperty) return null;
     return calculateRentability(combinedProperty, advancedExpenses, {
-      existingLoanBalance,
+      initialLoanAmount: initialAnalysis?.maxLoanAmount || 0,
     });
-  }, [combinedProperty, advancedExpenses, existingLoanBalance]);
+  }, [combinedProperty, advancedExpenses, initialAnalysis?.maxLoanAmount]);
 
   useEffect(() => {
     const financingType = scenario.financing.financingType;
