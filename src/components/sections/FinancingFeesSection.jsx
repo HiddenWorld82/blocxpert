@@ -12,7 +12,6 @@ export default function FinancingFeesSection({ fees = {}, onChange, analysis = {
     { field: "appraiser", label: "Évaluateur agréé" },
     { field: "otherFees", label: "Autres frais" },
     { field: "notary", label: "Notaire" },
-    { field: "other", label: "Autre" },
   ];
 
   return (

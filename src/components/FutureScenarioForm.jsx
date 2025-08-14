@@ -58,7 +58,7 @@ export default function FutureScenarioForm({
   const computeTotalFees = () => {
     return Object.values(scenario.financingFees).reduce(
       (sum, val) => sum + Number(parseLocaleNumber(val) || 0),
-      0
+      0,
     );
   };
 
@@ -80,18 +80,67 @@ export default function FutureScenarioForm({
   const analysisProperty = useMemo(() => {
     if (!property) return null;
     const pct =
-      (parseFloat(parseLocaleNumber(scenario.netIncomeIncreasePct)) || 0) /
-      100;
+      (parseFloat(parseLocaleNumber(scenario.netIncomeIncreasePct)) || 0) / 100;
     const marketValue =
       parseFloat(parseLocaleNumber(scenario.marketValue)) ||
       parseFloat(property.purchasePrice) ||
       0;
+    const years = scenario.refinanceDate
+      ? new Date(scenario.refinanceDate).getFullYear() -
+        new Date().getFullYear()
+      : 0;
+    const growthFactor = Math.pow(1 + pct, Math.max(years, 0));
+    const revenueFields = [
+      "annualRent",
+      "parkingRevenue",
+      "internetRevenue",
+      "storageRevenue",
+      "otherRevenue",
+    ];
+    const expenseFields = [
+      "municipalTaxes",
+      "schoolTaxes",
+      "insurance",
+      "electricityHeating",
+      "maintenance",
+      "concierge",
+      "operatingExpenses",
+      "otherExpenses",
+      "heating",
+      "electricity",
+      "landscaping",
+      "snowRemoval",
+      "extermination",
+      "fireInspection",
+      "advertising",
+      "legal",
+      "accounting",
+      "elevator",
+      "cableInternet",
+      "appliances",
+      "garbage",
+      "washerDryer",
+      "hotWater",
+    ];
+    const scaled = {};
+    [...revenueFields, ...expenseFields].forEach((field) => {
+      const value = parseFloat(property[field]);
+      if (!isNaN(value)) {
+        scaled[field] = value * growthFactor;
+      }
+    });
     return {
       ...property,
+      ...scaled,
       purchasePrice: marketValue,
-      annualRent: (parseFloat(property.annualRent) || 0) * (1 + pct),
     };
-  }, [property, scenario.marketValue, scenario.netIncomeIncreasePct]);
+    }, [
+    property,
+    scenario.marketValue,
+    scenario.netIncomeIncreasePct,
+    scenario.refinanceDate,
+  ]);
+
 
   const combinedProperty = useMemo(() => {
     if (!analysisProperty) return null;
@@ -145,8 +194,8 @@ export default function FutureScenarioForm({
 
   const titleText = {
     refinancing: "Scénario de refinancement",
-    incomeOptimization: "Scénario optimisation revenus",
-    renovation: "Scénario optimisation rénovation",
+    incomeOptimization: "Scénario Optimisation des Revenus",
+    renovation: "Scénario Optimisation par Rénovation",
   }[type] || "Scénario";
 
   const renderScenarioSections = () => (
@@ -230,15 +279,17 @@ export default function FutureScenarioForm({
 
             {analysis && (
               <>
-                <KeyIndicators analysis={analysis} />
-                <FinancialSummary
-                  analysis={analysis}
-                  advancedExpenses={advancedExpenses}
-                />
-                <FinancingSummary
-                  analysis={analysis}
-                  currentProperty={analysisProperty}
-                />
+                <KeyIndicators analysis={analysis} variant="future" />
+                <div className="grid md:grid-cols-2 gap-4">
+                  <FinancialSummary
+                    analysis={analysis}
+                    advancedExpenses={advancedExpenses}
+                  />
+                  <FinancingSummary
+                    analysis={analysis}
+                    currentProperty={analysisProperty}
+                  />
+                </div>
               </>
             )}
 
