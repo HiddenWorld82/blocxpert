@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import FinancingSection from "./sections/FinancingSection";
 import AcquisitionCosts from "./sections/AcquisitionCosts";
 import BasicInfo from "./sections/BasicInfo";
@@ -6,6 +6,7 @@ import RevenueSection from "./sections/RevenueSection";
 import OperatingExpensesSection from "./sections/OperatingExpensesSection";
 import { parseLocaleNumber } from "./FormattedNumberInput";
 import calculateWelcomeTax from "../utils/calculateWelcomeTax";
+import calculateRentability from "../utils/calculateRentability";
 import { saveScenario, updateScenario } from "../services/dataService";
 
 export default function FinancingScenarioForm({
@@ -57,6 +58,12 @@ export default function FinancingScenarioForm({
     );
   };
 
+  const analysis = useMemo(() => {
+    if (!property) return null;
+    const combinedProperty = { ...property, ...scenario.financing };
+    return calculateRentability(combinedProperty, advancedExpenses);
+  }, [property, scenario.financing, advancedExpenses]);
+
   useEffect(() => {
     if (!lockedFields.welcomeTax) return;
     const purchasePrice = parseFloat(property?.purchasePrice) || 0;
@@ -74,6 +81,26 @@ export default function FinancingScenarioForm({
     lockedFields.welcomeTax,
     scenario.acquisitionCosts.welcomeTax,
   ]);
+
+  useEffect(() => {
+    const financingType = scenario.financing.financingType;
+    if (["cmhc", "cmhc_aph"].includes(financingType)) {
+      const taxAmount = analysis?.cmhcTax
+        ? Math.round(analysis.cmhcTax).toString()
+        : "";
+      if (scenario.acquisitionCosts.cmhcTax !== taxAmount) {
+        setScenario((prev) => ({
+          ...prev,
+          acquisitionCosts: { ...prev.acquisitionCosts, cmhcTax: taxAmount },
+        }));
+      }
+    } else if (scenario.acquisitionCosts.cmhcTax) {
+      setScenario((prev) => ({
+        ...prev,
+        acquisitionCosts: { ...prev.acquisitionCosts, cmhcTax: "" },
+      }));
+    }
+  }, [analysis?.cmhcTax, scenario.financing.financingType, scenario.acquisitionCosts.cmhcTax]);
 
   useEffect(() => {
     if (!lockedFields.debtCoverage) return;

@@ -10,6 +10,7 @@ export default function FinancingFeesSection({ fees = {}, onChange, analysis = {
   const fields = [
     { field: "environmental1", label: "Env. Phase 1" },
     { field: "appraiser", label: "Évaluateur agréé" },
+    { field: "cmhcTax", label: "Taxe sur la prime SCHL", locked: true },
     { field: "otherFees", label: "Autres frais" },
     { field: "notary", label: "Notaire" },
   ];
@@ -20,7 +21,7 @@ export default function FinancingFeesSection({ fees = {}, onChange, analysis = {
         <Briefcase className="w-5 h-5 mr-2" />Frais de financement
       </h2>
       <div className="grid grid-cols-2 gap-4">
-        {fields.map(({ field, label }) => (
+        {fields.map(({ field, label, locked }) => (
           <div key={field}>
             <label className="block text-sm font-medium mb-1">{label}</label>
             <FormattedNumberInput
@@ -29,6 +30,7 @@ export default function FinancingFeesSection({ fees = {}, onChange, analysis = {
               className="w-full border rounded p-2"
               placeholder="0"
               type="currency"
+              disabled={locked}
             />
           </div>
         ))}
