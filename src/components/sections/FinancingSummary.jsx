@@ -37,7 +37,7 @@ export default function FinancingSummary({ analysis, currentProperty, equityAmou
           <span className="font-medium">{formatMoney(analysis?.downPayment)}</span>
         </div>
         <div className="flex justify-between">
-          <span className="text-gray-600">Frais de financement:</span>
+          <span className="text-gray-600">Frais d'acquisition:</span>
           <span className="font-medium">{formatMoney(analysis?.acquisitionCosts)}</span>
         </div>
         {equityAmount !== undefined ? (

@@ -142,6 +142,7 @@ const calculateRentability = (
 
   let cmhcPremium = 0;
   let cmhcTax = 0;
+  let cmhcAnalysis = 0;
   if (["cmhc", "cmhc_aph"].includes(property.financingType)) {
     const ltvRatio = (maxLoanAmount / purchasePrice) * 100;
     let premiumRate = 0;
@@ -166,6 +167,7 @@ const calculateRentability = (
     const premiumBase = Math.max(maxLoanAmount - existingLoanBalance, 0);
     cmhcPremium = premiumBase * premiumRate;
     cmhcTax = cmhcPremium * 0.09;
+    cmhcAnalysis = numberOfUnits * 150;
   }
 
   const totalLoanAmount = maxLoanAmount + cmhcPremium;
