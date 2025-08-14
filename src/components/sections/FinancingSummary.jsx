@@ -24,7 +24,7 @@ export default function FinancingSummary({ analysis, currentProperty, equityAmou
         </div>
         <div className="flex justify-between">
           <span className="text-gray-600">Prêt maximal:</span>
-          <span className="font-medium">{formatMoney(analysis?.maxLoanAmount)}</span>
+          <span className="font-medium">{formatMoney(analysis?.totalLoanAmount)}</span>
         </div>
         {analysis?.cmhcPremium > 0 && (
           <div className="flex justify-between">

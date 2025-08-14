@@ -204,12 +204,7 @@ export default function FutureScenarioForm({
         financing: { ...prev.financing, debtCoverageRatio: newRatio },
       }));
     }
-  }, [
-    scenario.financing.financingType,
-    property?.numberOfUnits,
-    lockedFields.debtCoverage,
-    scenario.financing.debtCoverageRatio,
-  ]);
+  }, [scenario.financing.financingType, property?.numberOfUnits]);
 
   const handleSave = async () => {
     const { id, ...dataWithoutId } = scenario;
@@ -234,7 +229,6 @@ export default function FutureScenarioForm({
       <FinancingSection
         financing={scenario.financing}
         onChange={handleFinancingChange}
-        lockedFields={lockedFields}
       />
       <FinancingFeesSection
         fees={scenario.financingFees}
