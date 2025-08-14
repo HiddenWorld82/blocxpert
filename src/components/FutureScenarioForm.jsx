@@ -142,6 +142,7 @@ export default function FutureScenarioForm({
       ...analysisProperty,
       ...scenario.financing,
       ...scenario.financingFees,
+      ignoreLTV: true,
     };
   }, [analysisProperty, scenario.financing, scenario.financingFees]);
 
@@ -182,8 +183,8 @@ export default function FutureScenarioForm({
 
   const equityWithdrawal = useMemo(() => {
     if (!analysis) return 0;
-    return analysis.maxLoanAmount - existingLoanBalance;
-  }, [analysis, existingLoanBalance]);
+    return analysis.maxLoanAmount - existingLoanBalance - computeTotalFees();
+  }, [analysis, existingLoanBalance, scenario.financingFees]);
 
   const isEquityNegative = equityWithdrawal < 0;
 
