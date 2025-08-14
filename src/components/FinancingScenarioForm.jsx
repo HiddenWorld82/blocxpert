@@ -206,6 +206,7 @@ export default function FinancingScenarioForm({
               advancedExpenses={advancedExpenses}
               analysis={{ acquisitionCosts: computeTotalCosts() }}
               lockedFields={lockedFields}
+              financingType={scenario.financing.financingType}
             />
 
             <div className="flex justify-end">

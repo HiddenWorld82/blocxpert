@@ -1,14 +1,30 @@
 // src/components/sections/AcquisitionCosts.jsx
 import React from "react";
-import { Info, Home, DollarSign, TrendingUp, Briefcase, Building, Calculator } from 'lucide-react';
+import {
+  Info,
+  Home,
+  DollarSign,
+  TrendingUp,
+  Briefcase,
+  Building,
+  Calculator,
+} from "lucide-react";
 import FormattedNumberInput from "../FormattedNumberInput";
 
-export default function AcquisitionCosts({ costs = {}, onChange, lockedFields = {}, advancedExpenses, analysis = {} }) {
+export default function AcquisitionCosts({
+  costs = {},
+  onChange,
+  lockedFields = {},
+  advancedExpenses,
+  analysis = {},
+  financingType,
+}) {
+
   const handleChange = (field, value) => {
     onChange({ ...costs, [field]: value });
   };
 
-  const isCMHC = ["cmhc", "cmhc_aph"].includes(costs.financingType);
+  const isCMHC = ["cmhc", "cmhc_aph"].includes(financingType);
 
   if (!advancedExpenses) {
     const fields = [
@@ -20,7 +36,7 @@ export default function AcquisitionCosts({ costs = {}, onChange, lockedFields = 
       { field: "notary", label: "Notaire", info: "Frais de notaire" },
       ...(isCMHC
         ? [
-            { field: "cmhcAnalysis", label: "Frais d'analyse SCHL", info: "150$ par logement", locked: true },
+            { field: "cmhcAnalysis", label: "Frais d'analyse SCHL", info: "200$ par logement", locked: true },
             { field: "cmhcTax", label: "Taxe sur la prime SCHL", info: "9% de la prime SCHL", locked: true },
           ]
         : []),
