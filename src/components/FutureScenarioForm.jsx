@@ -201,6 +201,26 @@ export default function FutureScenarioForm({
     });
   }, [combinedProperty, advancedExpenses, existingLoanBalance]);
 
+  useEffect(() => {
+    const financingType = scenario.financing.financingType;
+    if (["cmhc", "cmhc_aph"].includes(financingType)) {
+      const taxAmount = analysis?.cmhcTax
+        ? Math.round(analysis.cmhcTax).toString()
+        : "";
+      if (scenario.financingFees.cmhcTax !== taxAmount) {
+        setScenario((prev) => ({
+          ...prev,
+          financingFees: { ...prev.financingFees, cmhcTax: taxAmount },
+        }));
+      }
+    } else if (scenario.financingFees.cmhcTax) {
+      setScenario((prev) => ({
+        ...prev,
+        financingFees: { ...prev.financingFees, cmhcTax: "" },
+      }));
+    }
+  }, [analysis?.cmhcTax, scenario.financing.financingType, scenario.financingFees.cmhcTax]);
+
   const equityWithdrawal = useMemo(() => {
     if (!analysis) return 0;
     return analysis.maxLoanAmount - existingLoanBalance - computeTotalFees();
