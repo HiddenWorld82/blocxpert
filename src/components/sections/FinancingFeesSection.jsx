@@ -2,7 +2,12 @@ import React from "react";
 import { Briefcase } from 'lucide-react';
 import FormattedNumberInput from "../FormattedNumberInput";
 
-export default function FinancingFeesSection({ fees = {}, onChange, analysis = {} }) {
+export default function FinancingFeesSection({
+  fees = {},
+  onChange,
+  analysis = {},
+  isCMHC = false,
+}) {
   const handleChange = (field, value) => {
     onChange({ ...fees, [field]: value });
   };
@@ -10,7 +15,12 @@ export default function FinancingFeesSection({ fees = {}, onChange, analysis = {
   const fields = [
     { field: "environmental1", label: "Env. Phase 1" },
     { field: "appraiser", label: "Évaluateur agréé" },
-    { field: "cmhcTax", label: "Taxe sur la prime SCHL", locked: true },
+    ...(isCMHC
+      ? [
+          { field: "cmhcAnalysis", label: "Frais d'analyse SCHL", locked: true },
+          { field: "cmhcTax", label: "Taxe sur la prime SCHL", locked: true },
+        ]
+      : []),
     { field: "otherFees", label: "Autres frais" },
     { field: "notary", label: "Notaire" },
   ];
