@@ -109,6 +109,29 @@ export default function FinancingScenarioForm({
 
   useEffect(() => {
     const financingType = scenario.financing.financingType;
+    const units = parseInt(property?.numberOfUnits) || 0;
+    if (["cmhc", "cmhc_aph"].includes(financingType) && units > 0) {
+      const analysisAmount = (units * 150).toString();
+      if (scenario.acquisitionCosts.cmhcAnalysis !== analysisAmount) {
+        setScenario((prev) => ({
+          ...prev,
+          acquisitionCosts: { ...prev.acquisitionCosts, cmhcAnalysis: analysisAmount },
+        }));
+      }
+    } else if (scenario.acquisitionCosts.cmhcAnalysis) {
+      setScenario((prev) => ({
+        ...prev,
+        acquisitionCosts: { ...prev.acquisitionCosts, cmhcAnalysis: "" },
+      }));
+    }
+  }, [
+    scenario.financing.financingType,
+    property?.numberOfUnits,
+    scenario.acquisitionCosts.cmhcAnalysis,
+  ]);
+
+  useEffect(() => {
+    const financingType = scenario.financing.financingType;
     if (["cmhc", "cmhc_aph"].includes(financingType)) {
       const taxAmount = analysis?.cmhcTax
         ? Math.round(analysis.cmhcTax).toString()

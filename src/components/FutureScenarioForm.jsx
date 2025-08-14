@@ -203,6 +203,29 @@ export default function FutureScenarioForm({
 
   useEffect(() => {
     const financingType = scenario.financing.financingType;
+    const units = parseInt(property?.numberOfUnits) || 0;
+    if (["cmhc", "cmhc_aph"].includes(financingType) && units > 0) {
+      const analysisAmount = (units * 150).toString();
+      if (scenario.financingFees.cmhcAnalysis !== analysisAmount) {
+        setScenario((prev) => ({
+          ...prev,
+          financingFees: { ...prev.financingFees, cmhcAnalysis: analysisAmount },
+        }));
+      }
+    } else if (scenario.financingFees.cmhcAnalysis) {
+      setScenario((prev) => ({
+        ...prev,
+        financingFees: { ...prev.financingFees, cmhcAnalysis: "" },
+      }));
+    }
+  }, [
+    scenario.financing.financingType,
+    property?.numberOfUnits,
+    scenario.financingFees.cmhcAnalysis,
+  ]);
+
+  useEffect(() => {
+    const financingType = scenario.financing.financingType;
     if (["cmhc", "cmhc_aph"].includes(financingType)) {
       const taxAmount = analysis?.cmhcTax
         ? Math.round(analysis.cmhcTax).toString()
@@ -275,6 +298,7 @@ export default function FutureScenarioForm({
         fees={scenario.financingFees}
         onChange={handleFeesChange}
         analysis={{ financingFees: computeTotalFees() }}
+        isCMHC={["cmhc", "cmhc_aph"].includes(scenario.financing.financingType)}
       />
     </>
   );
