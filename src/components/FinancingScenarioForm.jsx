@@ -52,8 +52,33 @@ export default function FinancingScenarioForm({
   };
 
   const computeTotalCosts = () => {
-    return Object.values(scenario.acquisitionCosts).reduce(
-      (sum, val) => sum + Number(parseLocaleNumber(val) || 0),
+    const keys = advancedExpenses
+      ? [
+          "inspection",
+          "environmental1",
+          "environmental2",
+          "environmental3",
+          "otherFees",
+          "appraiser",
+          "notary",
+          "renovations",
+          "cmhcAnalysis",
+          "cmhcTax",
+          "welcomeTax",
+        ]
+      : [
+          "expertises",
+          "notary",
+          "renovations",
+          "cmhcAnalysis",
+          "cmhcTax",
+          "otherFees",
+          "welcomeTax",
+        ];
+
+    return keys.reduce(
+      (sum, key) =>
+        sum + Number(parseLocaleNumber(scenario.acquisitionCosts[key]) || 0),
       0
     );
   };
