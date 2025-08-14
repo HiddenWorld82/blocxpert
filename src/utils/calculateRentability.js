@@ -1,5 +1,9 @@
 // utils/calculateRentability.js
-const calculateRentability = (property, advancedExpenses) => {
+const calculateRentability = (
+  property,
+  advancedExpenses,
+  { existingLoanBalance = 0 } = {}
+) => {
   const purchasePrice = parseFloat(property.purchasePrice) || 0;
   const numberOfUnits = parseInt(property.numberOfUnits) || 1;
 
@@ -159,7 +163,8 @@ const calculateRentability = (property, advancedExpenses) => {
       premiumRate = premiumRate * (1 - rebate);
     }
 
-    cmhcPremium = maxLoanAmount * premiumRate;
+    const premiumBase = Math.max(maxLoanAmount - existingLoanBalance, 0);
+    cmhcPremium = premiumBase * premiumRate;
     cmhcTax = cmhcPremium * 0.09;
   }
 

@@ -124,8 +124,26 @@ export default function FutureScenarioForm({
         scaled[field] = value * growthFactor;
       }
     });
+    const acquisitionCostFields = [
+      "inspection",
+      "environmental1",
+      "environmental2",
+      "environmental3",
+      "otherFees",
+      "appraiser",
+      "notary",
+      "renovations",
+      "cmhcAnalysis",
+      "cmhcTax",
+      "welcomeTax",
+      "expertises",
+    ];
+    const propertyWithoutCosts = { ...property };
+    acquisitionCostFields.forEach((field) => {
+      delete propertyWithoutCosts[field];
+    });
     return {
-      ...property,
+      ...propertyWithoutCosts,
       ...scaled,
       purchasePrice: marketValue,
     };
@@ -145,11 +163,6 @@ export default function FutureScenarioForm({
       ignoreLTV: true,
     };
   }, [analysisProperty, scenario.financing, scenario.financingFees]);
-
-  const analysis = useMemo(() => {
-    if (!combinedProperty) return null;
-    return calculateRentability(combinedProperty, advancedExpenses);
-  }, [combinedProperty, advancedExpenses]);
 
   const initialAnalysis = useMemo(() => {
     if (!property) return null;
@@ -180,6 +193,13 @@ export default function FutureScenarioForm({
     property?.amortization,
     scenario.refinanceYears,
   ]);
+
+  const analysis = useMemo(() => {
+    if (!combinedProperty) return null;
+    return calculateRentability(combinedProperty, advancedExpenses, {
+      existingLoanBalance,
+    });
+  }, [combinedProperty, advancedExpenses, existingLoanBalance]);
 
   const equityWithdrawal = useMemo(() => {
     if (!analysis) return 0;
