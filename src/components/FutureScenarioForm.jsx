@@ -171,7 +171,7 @@ export default function FutureScenarioForm({
 
   const existingLoanBalance = useMemo(() => {
     if (!initialAnalysis) return 0;
-    const totalLoanAmount = initialAnalysis.totalLoanAmount || 0;
+    const totalLoanAmount = initialAnalysis.maxLoanAmount || 0;
     const mortgageRate = (parseFloat(property?.mortgageRate) || 0) / 100;
     const monthlyRate = Math.pow(1 + mortgageRate / 2, 1 / 6) - 1;
     const amortizationYears = parseInt(property?.amortization) || 25;
@@ -197,9 +197,17 @@ export default function FutureScenarioForm({
   const analysis = useMemo(() => {
     if (!combinedProperty) return null;
     return calculateRentability(combinedProperty, advancedExpenses, {
-      initialLoanAmount: initialAnalysis?.maxLoanAmount || 0,
+      existingLoanBalance,
     });
-  }, [combinedProperty, advancedExpenses, initialAnalysis?.maxLoanAmount]);
+  }, [combinedProperty, advancedExpenses, existingLoanBalance]);
+
+  const cmhcPremium = useMemo(() => {
+  if (!analysis || !initialAnalysis) return 0;
+  // Use the correct premium rate field from your analysis object
+  const premiumRate = analysis.cmhcRate || 0;
+  const cmhcPremiumBase = analysis.maxLoanAmount - initialAnalysis.maxLoanAmount;
+  return cmhcPremiumBase > 0 ? cmhcPremiumBase * premiumRate : 0;
+}, [analysis, initialAnalysis]);
 
   useEffect(() => {
     const financingType = scenario.financing.financingType;
@@ -245,9 +253,14 @@ export default function FutureScenarioForm({
   }, [analysis?.cmhcTax, scenario.financing.financingType, scenario.financingFees.cmhcTax]);
 
   const equityWithdrawal = useMemo(() => {
-    if (!analysis) return 0;
-    return analysis.maxLoanAmount - existingLoanBalance - computeTotalFees();
-  }, [analysis, existingLoanBalance, scenario.financingFees]);
+  if (!analysis) return 0;
+  return (
+    analysis.maxLoanAmount -
+    existingLoanBalance -
+    computeTotalFees() -
+    cmhcPremium
+  );
+}, [analysis, existingLoanBalance, scenario.financingFees, cmhcPremium]);
 
   const isEquityNegative = equityWithdrawal < 0;
 

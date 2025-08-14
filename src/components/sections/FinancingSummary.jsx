@@ -24,13 +24,19 @@ export default function FinancingSummary({ analysis, currentProperty, equityAmou
         </div>
         <div className="flex justify-between">
           <span className="text-gray-600">Prêt maximal:</span>
-          <span className="font-medium">{formatMoney(analysis?.totalLoanAmount)}</span>
+          <span className="font-medium">{formatMoney(analysis?.maxLoanAmount)}</span>
         </div>
         {analysis?.cmhcPremium > 0 && (
           <div className="flex justify-between">
             <span className="text-gray-600">Prime SCHL:</span>
             <span className="font-medium">{formatMoney(analysis?.cmhcPremium)}</span>
           </div>
+        )}
+        {analysis?.cmhcPremium > 0 && (
+        <div className="flex justify-between">
+          <span className="text-gray-600">Prêt total incluant prime:</span>
+          <span className="font-medium">{formatMoney(analysis?.totalLoanAmount)}</span>
+        </div>
         )}
         <div className="flex justify-between">
           <span className="text-gray-600">Mise de fonds:</span>
