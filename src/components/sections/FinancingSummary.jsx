@@ -1,7 +1,7 @@
 // src/components/sections/FinancingSummary.jsx
 import React from "react";
 
-export default function FinancingSummary({ analysis, currentProperty }) {
+export default function FinancingSummary({ analysis, currentProperty, equityAmount }) {
   const formatMoney = (value) => {
     if (value === null || value === undefined) return "—";
     return new Intl.NumberFormat("fr-CA", {
@@ -40,10 +40,23 @@ export default function FinancingSummary({ analysis, currentProperty }) {
           <span className="text-gray-600">Frais de financement:</span>
           <span className="font-medium">{formatMoney(analysis?.acquisitionCosts)}</span>
         </div>
-        <div className="flex justify-between border-t pt-3">
-          <span className="text-gray-600 font-semibold">Investissement total:</span>
-          <span className="font-bold text-lg">{formatMoney(analysis?.totalInvestment)}</span>
-        </div>
+        {equityAmount !== undefined ? (
+          <div className="flex justify-between border-t pt-3">
+            <span className="text-gray-600 font-semibold">Retrait d'équité:</span>
+            <span
+              className={`font-bold text-lg ${
+                equityAmount >= 0 ? "text-green-600" : "text-red-600"
+              }`}
+            >
+              {formatMoney(equityAmount)}
+            </span>
+          </div>
+        ) : (
+          <div className="flex justify-between border-t pt-3">
+            <span className="text-gray-600 font-semibold">Investissement total:</span>
+            <span className="font-bold text-lg">{formatMoney(analysis?.totalInvestment)}</span>
+          </div>
+        )}
         <div className="flex justify-between">
           <span className="text-gray-600">Paiement mensuel:</span>
           <span className="font-medium">{formatMoney(analysis?.monthlyPayment)}</span>

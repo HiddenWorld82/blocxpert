@@ -19,7 +19,7 @@ export default function FutureScenarioForm({
 }) {
   const [scenario, setScenario] = useState({
     title: "",
-    refinanceDate: "",
+    refinanceYears: "",
     marketValue: "",
     netIncomeIncreasePct: "",
     financing: {},
@@ -34,7 +34,7 @@ export default function FutureScenarioForm({
   useEffect(() => {
     setScenario({
       title: "",
-      refinanceDate: "",
+      refinanceYears: "",
       marketValue: "",
       netIncomeIncreasePct: "",
       financing: {},
@@ -63,11 +63,9 @@ export default function FutureScenarioForm({
   };
 
   useEffect(() => {
-    if (!property?.purchasePrice || !scenario.refinanceDate) return;
+    if (!property?.purchasePrice || !scenario.refinanceYears) return;
     const purchasePrice = parseFloat(property.purchasePrice) || 0;
-    const refDate = new Date(scenario.refinanceDate);
-    const currentYear = new Date().getFullYear();
-    const years = Math.max(refDate.getFullYear() - currentYear, 0);
+    const years = Math.max(parseFloat(parseLocaleNumber(scenario.refinanceYears)) || 0, 0);
     const estimated = Math.round(
       purchasePrice * Math.pow(1 + 0.03, years)
     ).toString();
@@ -75,7 +73,7 @@ export default function FutureScenarioForm({
       ...prev,
       marketValue: prev.marketValue || estimated,
     }));
-  }, [scenario.refinanceDate, property?.purchasePrice]);
+  }, [scenario.refinanceYears, property?.purchasePrice]);
 
   const analysisProperty = useMemo(() => {
     if (!property) return null;
@@ -85,10 +83,7 @@ export default function FutureScenarioForm({
       parseFloat(parseLocaleNumber(scenario.marketValue)) ||
       parseFloat(property.purchasePrice) ||
       0;
-    const years = scenario.refinanceDate
-      ? new Date(scenario.refinanceDate).getFullYear() -
-        new Date().getFullYear()
-      : 0;
+    const years = parseFloat(parseLocaleNumber(scenario.refinanceYears)) || 0;
     const growthFactor = Math.pow(1 + pct, Math.max(years, 0));
     const revenueFields = [
       "annualRent",
@@ -138,9 +133,8 @@ export default function FutureScenarioForm({
     property,
     scenario.marketValue,
     scenario.netIncomeIncreasePct,
-    scenario.refinanceDate,
+    scenario.refinanceYears,
   ]);
-
 
   const combinedProperty = useMemo(() => {
     if (!analysisProperty) return null;
@@ -155,6 +149,43 @@ export default function FutureScenarioForm({
     if (!combinedProperty) return null;
     return calculateRentability(combinedProperty, advancedExpenses);
   }, [combinedProperty, advancedExpenses]);
+
+  const initialAnalysis = useMemo(() => {
+    if (!property) return null;
+    return calculateRentability(property, advancedExpenses);
+  }, [property, advancedExpenses]);
+
+  const existingLoanBalance = useMemo(() => {
+    if (!initialAnalysis) return 0;
+    const totalLoanAmount = initialAnalysis.totalLoanAmount || 0;
+    const mortgageRate = (parseFloat(property?.mortgageRate) || 0) / 100;
+    const monthlyRate = Math.pow(1 + mortgageRate / 2, 1 / 6) - 1;
+    const amortizationYears = parseInt(property?.amortization) || 25;
+    const totalPayments = amortizationYears * 12;
+    const paymentsMade = Math.min(
+      (parseFloat(parseLocaleNumber(scenario.refinanceYears)) || 0) * 12,
+      totalPayments,
+    );
+    if (monthlyRate <= 0) return totalLoanAmount;
+    const balance =
+      totalLoanAmount *
+      (Math.pow(1 + monthlyRate, totalPayments) -
+        Math.pow(1 + monthlyRate, paymentsMade)) /
+      (Math.pow(1 + monthlyRate, totalPayments) - 1);
+    return balance;
+  }, [
+    initialAnalysis,
+    property?.mortgageRate,
+    property?.amortization,
+    scenario.refinanceYears,
+  ]);
+
+  const equityWithdrawal = useMemo(() => {
+    if (!analysis) return 0;
+    return analysis.maxLoanAmount - existingLoanBalance;
+  }, [analysis, existingLoanBalance]);
+
+  const isEquityNegative = equityWithdrawal < 0;
 
 
   useEffect(() => {
@@ -246,11 +277,10 @@ export default function FutureScenarioForm({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Date de refinancement</label>
-                  <input
-                    type="date"
-                    value={scenario.refinanceDate || ""}
-                    onChange={(e) => handleChange("refinanceDate", e.target.value)}
+                  <label className="block text-sm font-medium mb-1">Refinancement dans (années)</label>
+                  <FormattedNumberInput
+                    value={scenario.refinanceYears || ""}
+                    onChange={(val) => handleChange("refinanceYears", val)}
                     className="w-full border rounded p-2"
                   />
                 </div>
@@ -288,16 +318,27 @@ export default function FutureScenarioForm({
                   <FinancingSummary
                     analysis={analysis}
                     currentProperty={analysisProperty}
+                    equityAmount={equityWithdrawal}
                   />
                 </div>
               </>
             )}
 
+            {isEquityNegative && (
+              <div className="text-red-600 text-sm text-right">
+                Ce scénario de refinancement n'est pas possible.
+              </div>
+            )}
             <div className="flex justify-end">
               {onSaved && (
                 <button
                   onClick={handleSave}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  disabled={isEquityNegative}
+                  className={`px-6 py-2 text-white rounded-lg hover:bg-blue-700 ${
+                    isEquityNegative
+                      ? "bg-blue-300 cursor-not-allowed"
+                      : "bg-blue-600"
+                  }`}
                 >
                   Sauvegarder
                 </button>
