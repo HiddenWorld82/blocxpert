@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import FinancingSection from "./sections/FinancingSection";
 import FinancingFeesSection from "./sections/FinancingFeesSection";
+import RevenueSection from "./sections/RevenueSection";
+import OperatingExpensesSection from "./sections/OperatingExpensesSection";
 import FormattedNumberInput, { parseLocaleNumber } from "./FormattedNumberInput";
 import KeyIndicators from "./sections/KeyIndicators";
 import FinancialSummary from "./sections/FinancialSummary";
@@ -8,12 +10,12 @@ import FinancingSummary from "./sections/FinancingSummary";
 import calculateRentability from "../utils/calculateRentability";
 import { getScenarios, saveScenario, updateScenario } from "../services/dataService";
 
-export default function FutureScenarioForm({
+export default function OptimisationScenarioForm({
   onBack,
   onSaved,
   propertyId,
   initialScenario = {},
-  type = "refinancing",
+  type = "optimization",
   property,
   advancedExpenses,
 }) {
@@ -21,9 +23,10 @@ export default function FutureScenarioForm({
     title: "",
     refinanceYears: "",
     marketValue: "",
-    netIncomeIncreasePct: "",
     financing: {},
     financingFees: {},
+    revenue: {},
+    operatingExpenses: {},
     parentScenarioId: "",
     ...initialScenario,
   });
@@ -51,9 +54,10 @@ export default function FutureScenarioForm({
       title: "",
       refinanceYears: "",
       marketValue: "",
-      netIncomeIncreasePct: "",
       financing: {},
       financingFees: {},
+      revenue: {},
+      operatingExpenses: {},
       parentScenarioId: "",
       ...initialScenario,
     });
@@ -93,82 +97,13 @@ export default function FutureScenarioForm({
 
   const analysisProperty = useMemo(() => {
     if (!property) return null;
-    const pct =
-      (parseFloat(parseLocaleNumber(scenario.netIncomeIncreasePct)) || 0) / 100;
+    const overrides = { ...scenario.revenue, ...scenario.operatingExpenses };
     const marketValue =
       parseFloat(parseLocaleNumber(scenario.marketValue)) ||
       parseFloat(property.purchasePrice) ||
       0;
-    const years = parseFloat(parseLocaleNumber(scenario.refinanceYears)) || 0;
-    const growthFactor = Math.pow(1 + pct, Math.max(years, 0));
-    const revenueFields = [
-      "annualRent",
-      "parkingRevenue",
-      "internetRevenue",
-      "storageRevenue",
-      "otherRevenue",
-    ];
-    const expenseFields = [
-      "municipalTaxes",
-      "schoolTaxes",
-      "insurance",
-      "electricityHeating",
-      "maintenance",
-      "concierge",
-      "operatingExpenses",
-      "otherExpenses",
-      "heating",
-      "electricity",
-      "landscaping",
-      "snowRemoval",
-      "extermination",
-      "fireInspection",
-      "advertising",
-      "legal",
-      "accounting",
-      "elevator",
-      "cableInternet",
-      "appliances",
-      "garbage",
-      "washerDryer",
-      "hotWater",
-    ];
-    const scaled = {};
-    [...revenueFields, ...expenseFields].forEach((field) => {
-      const value = parseFloat(property[field]);
-      if (!isNaN(value)) {
-        scaled[field] = value * growthFactor;
-      }
-    });
-    const acquisitionCostFields = [
-      "inspection",
-      "environmental1",
-      "environmental2",
-      "environmental3",
-      "otherFees",
-      "appraiser",
-      "notary",
-      "renovations",
-      "cmhcAnalysis",
-      "cmhcTax",
-      "welcomeTax",
-      "expertises",
-    ];
-    const propertyWithoutCosts = { ...property };
-    acquisitionCostFields.forEach((field) => {
-      delete propertyWithoutCosts[field];
-    });
-    return {
-      ...propertyWithoutCosts,
-      ...scaled,
-      purchasePrice: marketValue,
-    };
-    }, [
-    property,
-    scenario.marketValue,
-    scenario.netIncomeIncreasePct,
-    scenario.refinanceYears,
-  ]);
+    return { ...property, ...overrides, purchasePrice: marketValue };
+  }, [property, scenario.revenue, scenario.operatingExpenses, scenario.marketValue]);
 
   const combinedProperty = useMemo(() => {
     if (!analysisProperty) return null;
@@ -179,6 +114,7 @@ export default function FutureScenarioForm({
       ignoreLTV: true,
     };
   }, [analysisProperty, scenario.financing, scenario.financingFees]);
+
 
   const parentProperty = useMemo(() => {
     if (!property) return null;
@@ -353,12 +289,21 @@ export default function FutureScenarioForm({
     }
   };
 
-  const titleText = {
-    refinancing: "Scénario de refinancement",
-  }[type] || "Scénario";
+  const titleText = "Scénario d'optimisation";
+
 
   const renderScenarioSections = () => (
     <>
+      <RevenueSection
+        revenue={scenario.revenue}
+        onChange={handleRevenueChange}
+        advancedExpenses={advancedExpenses}
+      />
+      <OperatingExpensesSection
+        expenses={scenario.operatingExpenses}
+        onChange={handleExpensesChange}
+        advancedExpenses={advancedExpenses}
+      />
       <FinancingSection
         financing={scenario.financing}
         onChange={handleFinancingChange}
@@ -371,7 +316,6 @@ export default function FutureScenarioForm({
       />
     </>
   );
-
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-4xl mx-auto">
@@ -412,25 +356,6 @@ export default function FutureScenarioForm({
                     className="w-full border rounded p-2"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Nouvelle valeur marchande</label>
-                  <FormattedNumberInput
-                    value={scenario.marketValue || ""}
-                    onChange={(val) => handleChange("marketValue", val)}
-                    className="w-full border rounded p-2"
-                    type="currency"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">% augmentation revenus net</label>
-                  <FormattedNumberInput
-                    value={scenario.netIncomeIncreasePct || ""}
-                    onChange={(val) => handleChange("netIncomeIncreasePct", val)}
-                    className="w-full border rounded p-2"
-                    type="percentage"
-                  />
-                </div>
-              </div>
             </div>
 
             {renderScenarioSections()}

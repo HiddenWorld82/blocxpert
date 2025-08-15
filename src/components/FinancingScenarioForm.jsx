@@ -185,8 +185,7 @@ export default function FinancingScenarioForm({
     }
   };
 
-  const titleText =
-    type === "renovation" ? "Scénario de rénovation" : "Scénario de financement";
+  const titleText = "Scénario de financement";
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
