@@ -81,6 +81,10 @@ export default function FinancingSummary({
           <span className="text-gray-600">Paiement mensuel:</span>
           <span className="font-medium">{formatMoney(analysis?.monthlyPayment)}</span>
         </div>
+        <div className="flex justify-between">
+          <span className="text-gray-600">Valeur économique:</span>
+          <span className="font-medium">{formatMoney(analysis?.economicValue)}</span>
+        </div>
       </div>
     </div>
   );
