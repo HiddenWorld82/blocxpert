@@ -192,7 +192,46 @@ export default function FutureScenarioForm({
 
   const existingLoanBalance = useMemo(() => {
     if (!initialAnalysis) return 0;
-    const totalLoanAmount = initialAnalysis.totalLoanAmount || 0;
+    const principal = initialAnalysis.maxLoanAmount || 0;
+
+    // Recalculate initial CMHC premium from scratch
+    let premium = 0;
+    if (["cmhc", "cmhc_aph"].includes(initialProperty?.financingType)) {
+      const purchasePrice = parseFloat(initialProperty?.purchasePrice) || 0;
+      const ltvRatio = purchasePrice > 0 ? (principal / purchasePrice) * 100 : 0;
+
+      const standardRates = [
+        { ltv: 65, rate: 0.026 },
+        { ltv: 70, rate: 0.0285 },
+        { ltv: 75, rate: 0.0335 },
+        { ltv: 80, rate: 0.0435 },
+        { ltv: 85, rate: 0.0535 },
+      ];
+
+      let premiumRate = 0;
+      if (initialProperty.financingType === "cmhc_aph" && ltvRatio > 85) {
+        premiumRate = ltvRatio <= 90 ? 0.059 : 0.0615;
+      } else {
+        const bracket = standardRates.find((b) => ltvRatio <= b.ltv);
+        premiumRate = bracket?.rate || standardRates.at(-1).rate;
+      }
+
+      const amortizationYears = parseInt(initialProperty?.amortization) || 25;
+      if (amortizationYears > 25) {
+        premiumRate += ((amortizationYears - 25) / 5) * 0.0025;
+      }
+
+      if (initialProperty.financingType === "cmhc_aph") {
+        const points = parseInt(initialProperty?.aphPoints) || 0;
+        const rebate =
+          points >= 100 ? 0.3 : points >= 70 ? 0.2 : points >= 50 ? 0.1 : 0;
+        premiumRate *= 1 - rebate;
+      }
+
+      premium = principal * premiumRate;
+    }
+
+    const totalLoanAmount = principal + premium;
     const mortgageRate = (parseFloat(initialProperty?.mortgageRate) || 0) / 100;
     const monthlyRate = Math.pow(1 + mortgageRate / 2, 1 / 6) - 1;
     const amortizationYears = parseInt(initialProperty?.amortization) || 25;
