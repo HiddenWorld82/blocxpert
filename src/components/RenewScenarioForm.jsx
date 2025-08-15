@@ -17,6 +17,7 @@ export default function RenewScenarioForm({
   const [scenario, setScenario] = useState({
     title: "",
     marketValue: "",
+    netIncomeIncreasePct: "",
     financing: {},
     parentScenarioId: "",
     ...initialScenario,
@@ -40,6 +41,7 @@ export default function RenewScenarioForm({
     setScenario({
       title: "",
       marketValue: "",
+      netIncomeIncreasePct: "",
       financing: {},
       parentScenarioId: "",
       ...initialScenario,
@@ -143,21 +145,99 @@ export default function RenewScenarioForm({
 
   const analysisProperty = useMemo(() => {
     if (!property) return null;
+    const pct =
+      (parseFloat(parseLocaleNumber(scenario.netIncomeIncreasePct)) || 0) / 100;
+    const termYears = parseInt(parentScenario?.financing?.term) || 0;
     const marketValue =
       parseFloat(parseLocaleNumber(scenario.marketValue)) ||
       parseFloat(property.purchasePrice) ||
       0;
-    return { ...property, purchasePrice: marketValue };
-  }, [property, scenario.marketValue]);
+    const growthFactor = Math.pow(1 + pct, Math.max(termYears, 0));
+    const revenueFields = [
+      "annualRent",
+      "parkingRevenue",
+      "internetRevenue",
+      "storageRevenue",
+      "otherRevenue",
+    ];
+    const expenseFields = [
+      "municipalTaxes",
+      "schoolTaxes",
+      "insurance",
+      "electricityHeating",
+      "maintenance",
+      "concierge",
+      "operatingExpenses",
+      "otherExpenses",
+      "heating",
+      "electricity",
+      "landscaping",
+      "snowRemoval",
+      "extermination",
+      "fireInspection",
+      "advertising",
+      "legal",
+      "accounting",
+      "elevator",
+      "cableInternet",
+      "appliances",
+      "garbage",
+      "washerDryer",
+      "hotWater",
+    ];
+    const scaled = {};
+    [...revenueFields, ...expenseFields].forEach((field) => {
+      const value = parseFloat(property[field]);
+      if (!isNaN(value)) {
+        scaled[field] = value * growthFactor;
+      }
+    });
+    const acquisitionCostFields = [
+      "inspection",
+      "environmental1",
+      "environmental2",
+      "environmental3",
+      "otherFees",
+      "appraiser",
+      "notary",
+      "renovations",
+      "cmhcAnalysis",
+      "cmhcTax",
+      "welcomeTax",
+      "expertises",
+    ];
+    const propertyWithoutCosts = { ...property };
+    acquisitionCostFields.forEach((field) => {
+      delete propertyWithoutCosts[field];
+    });
+    return { ...propertyWithoutCosts, ...scaled, purchasePrice: marketValue };
+  }, [
+    property,
+    scenario.marketValue,
+    scenario.netIncomeIncreasePct,
+    parentScenario?.financing?.term,
+  ]);
+
+  const combinedFinancing = useMemo(() => {
+    const parentFin = parentScenario?.financing || {};
+    const mortgageRate =
+      scenario.financing.mortgageRate || parentFin.mortgageRate || "";
+    return {
+      ...parentFin,
+      ...scenario.financing,
+      mortgageRate,
+      qualificationRate: mortgageRate,
+      amortization: remainingAmortization.toString(),
+    };
+  }, [parentScenario?.financing, scenario.financing, remainingAmortization]);
 
   const combinedProperty = useMemo(() => {
     if (!analysisProperty) return null;
     return {
       ...analysisProperty,
-      ...scenario.financing,
-      amortization: remainingAmortization.toString(),
+      ...combinedFinancing,
     };
-  }, [analysisProperty, scenario.financing, remainingAmortization]);
+  }, [analysisProperty, combinedFinancing]);
 
   const baseAnalysis = useMemo(() => {
     if (!combinedProperty) return null;
@@ -169,9 +249,10 @@ export default function RenewScenarioForm({
   const analysis = useMemo(() => {
     if (!baseAnalysis) return null;
     const mortgageRate =
-      (parseFloat(scenario.financing.mortgageRate) || 0) / 100;
+      (parseFloat(combinedFinancing.mortgageRate) || 0) / 100;
     const monthlyRate = Math.pow(1 + mortgageRate / 2, 1 / 6) - 1;
-    const totalPayments = remainingAmortization * 12;
+    const totalPayments =
+      (parseInt(combinedFinancing.amortization) || 0) * 12;
     const totalLoanAmount = existingLoanBalance;
     const monthlyPayment =
       totalLoanAmount > 0 && monthlyRate > 0
@@ -191,15 +272,19 @@ export default function RenewScenarioForm({
     };
   }, [
     baseAnalysis,
-    scenario.financing.mortgageRate,
-    remainingAmortization,
+    combinedFinancing.mortgageRate,
+    combinedFinancing.amortization,
     existingLoanBalance,
     existingLoanPrincipal,
   ]);
 
   const handleSave = async () => {
     const { id, ...dataWithoutId } = scenario;
-    const data = { ...dataWithoutId, type: "renewal" };
+    const data = {
+      ...dataWithoutId,
+      type: "renewal",
+      financing: combinedFinancing,
+    };
     if (id) {
       await updateScenario(propertyId, id, data);
       onSaved && onSaved({ id, ...data });
@@ -253,6 +338,17 @@ export default function RenewScenarioForm({
                     disabled
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    % augmentation revenus net
+                  </label>
+                  <FormattedNumberInput
+                    value={scenario.netIncomeIncreasePct || ""}
+                    onChange={(val) => handleChange("netIncomeIncreasePct", val)}
+                    className="w-full border rounded p-2"
+                    type="percentage"
+                  />
+                </div>
               </div>
             </div>
 
@@ -302,6 +398,7 @@ export default function RenewScenarioForm({
                     analysis={analysis}
                     currentProperty={analysisProperty}
                     equityAmount={0}
+                    financing={combinedFinancing}
                   />
                 </div>
               </>

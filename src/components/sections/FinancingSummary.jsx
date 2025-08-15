@@ -6,6 +6,7 @@ export default function FinancingSummary({
   currentProperty,
   equityAmount,
   scenarioType,
+  financing = {},
 }) {
   const formatMoney = (value) => {
     if (value === null || value === undefined) return "—";
@@ -15,6 +16,16 @@ export default function FinancingSummary({
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(value);
+  };
+
+  const formatPercent = (value) => {
+    if (value === null || value === undefined || value === "") return "—";
+    return `${
+      new Intl.NumberFormat("fr-CA", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(parseFloat(value))
+    }%`;
   };
 
   const isRefinancing =
@@ -27,10 +38,51 @@ export default function FinancingSummary({
     ? "Frais de financement"
     : "Frais d'acquisition";
 
+  const financingTypeLabels = {
+    conventional: "Conventionnel",
+    cmhc: "SCHL Standard",
+    cmhc_aph: "SCHL APH Select",
+  };
+
   return (
     <div className="bg-white rounded-lg p-6">
       <h3 className="text-lg font-semibold mb-4">Résumé du Financement</h3>
       <div className="space-y-3">
+        {financing.financingType && (
+          <div className="flex justify-between">
+            <span className="text-gray-600">Type de financement:</span>
+            <span className="font-medium">
+              {financingTypeLabels[financing.financingType] ||
+                financing.financingType}
+            </span>
+          </div>
+        )}
+        {financing.financingType === "cmhc_aph" && financing.aphPoints && (
+          <div className="flex justify-between">
+            <span className="text-gray-600">Points APH:</span>
+            <span className="font-medium">{financing.aphPoints}</span>
+          </div>
+        )}
+        {financing.qualificationRate && (
+          <div className="flex justify-between">
+            <span className="text-gray-600">Taux de qualification:</span>
+            <span className="font-medium">
+              {formatPercent(financing.qualificationRate)}
+            </span>
+          </div>
+        )}
+        {financing.amortization && (
+          <div className="flex justify-between">
+            <span className="text-gray-600">Amortissement:</span>
+            <span className="font-medium">{financing.amortization} ans</span>
+          </div>
+        )}
+        {financing.debtCoverageRatio && (
+          <div className="flex justify-between">
+            <span className="text-gray-600">Ratio couverture dette:</span>
+            <span className="font-medium">{financing.debtCoverageRatio}</span>
+          </div>
+        )}
         <div className="flex justify-between">
           <span className="text-gray-600">{purchaseLabel}:</span>
           <span className="font-medium">
