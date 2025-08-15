@@ -120,10 +120,12 @@ export default function FinancingSummary({
           <span className="text-gray-600">{downPaymentLabel}:</span>
           <span className="font-medium">{formatMoney(analysis?.downPayment)}</span>
         </div>
-        <div className="flex justify-between">
-          <span className="text-gray-600">{feesLabel}:</span>
-          <span className="font-medium">{formatMoney(analysis?.acquisitionCosts)}</span>
-        </div>
+        {!isRenewal && (
+          <div className="flex justify-between">
+            <span className="text-gray-600">{feesLabel}:</span>
+            <span className="font-medium">{formatMoney(analysis?.acquisitionCosts)}</span>
+          </div>
+        )}
         {!isRenewal && (
           equityAmount !== undefined ? (
             <div className="flex justify-between border-t pt-3">
