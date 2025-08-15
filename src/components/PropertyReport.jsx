@@ -287,7 +287,11 @@ const PropertyReport = ({
 
           <div className="grid md:grid-cols-2 gap-8 mb-8">
             <FinancialSummary analysis={reportAnalysis} advancedExpenses={advancedExpenses} />
-            <FinancingSummary analysis={reportAnalysis} currentProperty={reportProperty} />
+            <FinancingSummary
+              analysis={reportAnalysis}
+              currentProperty={reportProperty}
+              scenarioType="initialFinancing"
+            />
           </div>
 
           <div className="flex justify-center gap-4 mb-8">

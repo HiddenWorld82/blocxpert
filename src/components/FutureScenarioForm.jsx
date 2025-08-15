@@ -444,6 +444,7 @@ export default function FutureScenarioForm({
                     analysis={analysis}
                     currentProperty={analysisProperty}
                     equityAmount={equityWithdrawal}
+                    scenarioType={type}
                   />
                 </div>
               </>
