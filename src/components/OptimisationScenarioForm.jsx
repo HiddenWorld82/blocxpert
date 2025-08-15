@@ -71,6 +71,43 @@ export default function OptimisationScenarioForm({
     setScenario((prev) => ({ ...prev, financingFees: fees }));
   };
 
+  const handleRevenueChange = (revenue) => {
+    setScenario((prev) => ({ ...prev, revenue }));
+  };
+
+  const handleExpensesChange = (update) => {
+    setScenario((prev) => {
+      const prevCombined = {
+        numberOfUnits: property?.numberOfUnits,
+        ...prev.revenue,
+        ...prev.operatingExpenses,
+      };
+      const updatedCombined =
+        typeof update === "function" ? update(prevCombined) : update;
+      const revenueFields = [
+        "annualRent",
+        "parkingRevenue",
+        "internetRevenue",
+        "storageRevenue",
+        "otherRevenue",
+      ];
+      const newRevenue = {};
+      const newExpenses = {};
+      Object.entries(updatedCombined).forEach(([key, value]) => {
+        if (revenueFields.includes(key)) {
+          newRevenue[key] = value;
+        } else if (key !== "numberOfUnits") {
+          newExpenses[key] = value;
+        }
+      });
+      return {
+        ...prev,
+        revenue: { ...prev.revenue, ...newRevenue },
+        operatingExpenses: newExpenses,
+      };
+    });
+  };
+
   const handleChange = (field, value) => {
     setScenario((prev) => ({ ...prev, [field]: value }));
   };
@@ -300,7 +337,11 @@ export default function OptimisationScenarioForm({
         advancedExpenses={advancedExpenses}
       />
       <OperatingExpensesSection
-        expenses={scenario.operatingExpenses}
+        expenses={{
+          numberOfUnits: property?.numberOfUnits,
+          ...scenario.revenue,
+          ...scenario.operatingExpenses,
+        }}
         onChange={handleExpensesChange}
         advancedExpenses={advancedExpenses}
       />
