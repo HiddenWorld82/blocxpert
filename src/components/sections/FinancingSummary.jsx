@@ -74,7 +74,7 @@ export default function FinancingSummary({
         )}
         {financing.amortization && (
           <div className="flex justify-between">
-            <span className="text-gray-600">Amortissement:</span>
+            <span className="text-gray-600">Amortissement restant:</span>
             <span className="font-medium">{financing.amortization} ans</span>
           </div>
         )}
