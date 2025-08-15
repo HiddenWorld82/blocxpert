@@ -84,7 +84,7 @@ export default function RenewScenarioForm({
     if (!parentAnalysis)
       return { existingLoanBalance: 0, existingLoanPrincipal: 0 };
     const principal = parentAnalysis.maxLoanAmount || 0;
-    const totalLoanAmount = principal;
+    const totalLoanAmount = parentAnalysis.totalLoanAmount || principal;
     const mortgageRate = (parseFloat(parentProperty?.mortgageRate) || 0) / 100;
     const monthlyRate = Math.pow(1 + mortgageRate / 2, 1 / 6) - 1;
     const amortizationYears = parseInt(parentProperty?.amortization) || 25;
@@ -94,7 +94,10 @@ export default function RenewScenarioForm({
       totalPayments,
     );
     if (monthlyRate <= 0)
-      return { existingLoanBalance: totalLoanAmount, existingLoanPrincipal: principal };
+      return {
+        existingLoanBalance: totalLoanAmount,
+        existingLoanPrincipal: principal,
+      };
     const balance =
       totalLoanAmount *
       (Math.pow(1 + monthlyRate, totalPayments) -
@@ -232,6 +235,35 @@ export default function RenewScenarioForm({
         : 0;
     const annualDebtService = monthlyPayment * 12;
     const cashFlow = baseAnalysis.effectiveNetIncome - annualDebtService;
+    const purchasePrice =
+      parseFloat(analysisProperty?.purchasePrice) || 0;
+    const downPayment = purchasePrice - existingLoanBalance;
+    const totalInvestment = downPayment + baseAnalysis.acquisitionCosts;
+    let principalPaidYear1 = 0;
+    if (monthlyPayment > 0) {
+      let balance = totalLoanAmount;
+      for (let i = 0; i < 12; i++) {
+        const interest = balance * monthlyRate;
+        const principal = monthlyPayment - interest;
+        principalPaidYear1 += principal;
+        balance -= principal;
+      }
+    }
+    const loanPaydownReturn =
+      totalInvestment > 0 ? (principalPaidYear1 / totalInvestment) * 100 : 0;
+    const appreciationRate = 0.03;
+    const appreciationReturn =
+      totalInvestment > 0
+        ? ((purchasePrice * appreciationRate) / totalInvestment) * 100
+        : 0;
+    const cashOnCashReturn =
+      totalInvestment > 0 ? (cashFlow / totalInvestment) * 100 : 0;
+    const totalReturn =
+      cashOnCashReturn + loanPaydownReturn + appreciationReturn;
+    const valueGeneratedYear1 =
+      cashFlow + principalPaidYear1 + purchasePrice * appreciationRate;
+    const loanValueRatio =
+      purchasePrice > 0 ? (totalLoanAmount / purchasePrice) * 100 : 0;
     return {
       ...baseAnalysis,
       maxLoanAmount: existingLoanPrincipal,
@@ -240,6 +272,14 @@ export default function RenewScenarioForm({
       monthlyPayment,
       annualDebtService,
       cashFlow,
+      downPayment,
+      totalInvestment,
+      loanValueRatio,
+      cashOnCashReturn,
+      loanPaydownReturn,
+      appreciationReturn,
+      totalReturn,
+      valueGeneratedYear1,
     };
   }, [
     baseAnalysis,
@@ -247,6 +287,7 @@ export default function RenewScenarioForm({
     combinedFinancing.amortization,
     existingLoanBalance,
     existingLoanPrincipal,
+    analysisProperty?.purchasePrice,
   ]);
 
   const handleSave = async () => {
