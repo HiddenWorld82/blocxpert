@@ -24,6 +24,7 @@ export default function FutureScenarioForm({
     netIncomeIncreasePct: "",
     financing: {},
     financingFees: {},
+    parentScenarioId: "",
     ...initialScenario,
   });
 
@@ -31,19 +32,19 @@ export default function FutureScenarioForm({
     debtCoverage: true,
   });
 
-  const [initialFinancing, setInitialFinancing] = useState(null);
+  const [parentScenario, setParentScenario] = useState(null);
 
   useEffect(() => {
     if (!propertyId) return;
     const unsub = getScenarios(propertyId, (scenarios) => {
-      const baseId = scenario.initialFinancingId;
-      const initial = baseId
+      const baseId = scenario.parentScenarioId;
+      const parent = baseId
         ? scenarios.find((s) => s.id === baseId)
         : scenarios.find((s) => s.type === "initialFinancing");
-      setInitialFinancing(initial);
+      setParentScenario(parent);
     });
     return () => unsub && unsub();
-  }, [propertyId, scenario.initialFinancingId]);
+  }, [propertyId, scenario.parentScenarioId]);
 
   useEffect(() => {
     setScenario({
@@ -53,6 +54,7 @@ export default function FutureScenarioForm({
       netIncomeIncreasePct: "",
       financing: {},
       financingFees: {},
+      parentScenarioId: "",
       ...initialScenario,
     });
   }, [initialScenario.id]);
@@ -178,29 +180,29 @@ export default function FutureScenarioForm({
     };
   }, [analysisProperty, scenario.financing, scenario.financingFees]);
 
-  const initialProperty = useMemo(() => {
+  const parentProperty = useMemo(() => {
     if (!property) return null;
-    if (!initialFinancing) return property;
+    if (!parentScenario) return property;
     return {
       ...property,
-      ...initialFinancing.financing,
-      ...initialFinancing.acquisitionCosts,
+      ...parentScenario.financing,
+      ...parentScenario.acquisitionCosts,
     };
-  }, [property, initialFinancing]);
+  }, [property, parentScenario]);
 
-  const initialAnalysis = useMemo(() => {
-    if (!initialProperty) return null;
-    return calculateRentability(initialProperty, advancedExpenses);
-  }, [initialProperty, advancedExpenses]);
+  const parentAnalysis = useMemo(() => {
+    if (!parentProperty) return null;
+    return calculateRentability(parentProperty, advancedExpenses);
+  }, [parentProperty, advancedExpenses]);
 
   const existingLoanBalance = useMemo(() => {
-    if (!initialAnalysis) return 0;
-    const principal = initialAnalysis.maxLoanAmount || 0;
+    if (!parentAnalysis) return 0;
+    const principal = parentAnalysis.maxLoanAmount || 0;
 
     // Recalculate initial CMHC premium from scratch
     let premium = 0;
-    if (["cmhc", "cmhc_aph"].includes(initialProperty?.financingType)) {
-      const purchasePrice = parseFloat(initialProperty?.purchasePrice) || 0;
+    if (["cmhc", "cmhc_aph"].includes(parentProperty?.financingType)) {
+      const purchasePrice = parseFloat(parentProperty?.purchasePrice) || 0;
       const ltvRatio = purchasePrice > 0 ? (principal / purchasePrice) * 100 : 0;
 
       const standardRates = [
@@ -212,20 +214,20 @@ export default function FutureScenarioForm({
       ];
 
       let premiumRate = 0;
-      if (initialProperty.financingType === "cmhc_aph" && ltvRatio > 85) {
+      if (parentProperty.financingType === "cmhc_aph" && ltvRatio > 85) {
         premiumRate = ltvRatio <= 90 ? 0.059 : 0.0615;
       } else {
         const bracket = standardRates.find((b) => ltvRatio <= b.ltv);
         premiumRate = bracket?.rate || standardRates.at(-1).rate;
       }
 
-      const amortizationYears = parseInt(initialProperty?.amortization) || 25;
+      const amortizationYears = parseInt(parentProperty?.amortization) || 25;
       if (amortizationYears > 25) {
         premiumRate += ((amortizationYears - 25) / 5) * 0.0025;
       }
 
-      if (initialProperty.financingType === "cmhc_aph") {
-        const points = parseInt(initialProperty?.aphPoints) || 0;
+      if (parentProperty.financingType === "cmhc_aph") {
+        const points = parseInt(parentProperty?.aphPoints) || 0;
         const rebate =
           points >= 100 ? 0.3 : points >= 70 ? 0.2 : points >= 50 ? 0.1 : 0;
         premiumRate *= 1 - rebate;
@@ -235,9 +237,9 @@ export default function FutureScenarioForm({
     }
 
     const totalLoanAmount = principal + premium;
-    const mortgageRate = (parseFloat(initialProperty?.mortgageRate) || 0) / 100;
+    const mortgageRate = (parseFloat(parentProperty?.mortgageRate) || 0) / 100;
     const monthlyRate = Math.pow(1 + mortgageRate / 2, 1 / 6) - 1;
-    const amortizationYears = parseInt(initialProperty?.amortization) || 25;
+    const amortizationYears = parseInt(parentProperty?.amortization) || 25;
     const totalPayments = amortizationYears * 12;
     const paymentsMade = Math.min(
       (parseFloat(parseLocaleNumber(scenario.refinanceYears)) || 0) * 12,
@@ -250,11 +252,7 @@ export default function FutureScenarioForm({
         Math.pow(1 + monthlyRate, paymentsMade)) /
       (Math.pow(1 + monthlyRate, totalPayments) - 1);
     return balance;
-  }, [
-    initialAnalysis,
-    initialProperty,
-    scenario.refinanceYears,
-  ]);
+  }, [parentAnalysis, parentProperty, scenario.refinanceYears]);
 
   const analysis = useMemo(() => {
     if (!combinedProperty) return null;

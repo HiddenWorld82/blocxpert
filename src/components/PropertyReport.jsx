@@ -52,10 +52,9 @@ const PropertyReport = ({
 
   const reportRef = useRef(null);
 
-  const initialFinancingId =
-    scenario?.type === 'initialFinancing'
-      ? scenario.id
-      : scenario?.initialFinancingId;
+  const baseScenarioId = scenario
+    ? scenario.parentScenarioId || scenario.id
+    : null;
 
   const handleGeneratePDF = () => {
     if (!reportRef.current) return;
@@ -300,7 +299,7 @@ const PropertyReport = ({
             </button>
             <button
               onClick={() =>
-                setEditingScenario({ initialFinancingId })
+                setEditingScenario({ parentScenarioId: baseScenarioId })
               }
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
