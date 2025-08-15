@@ -1,5 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
-import FormattedNumberInput, { parseLocaleNumber } from "./FormattedNumberInput";
+import FormattedNumberInput, {
+  parseLocaleNumber,
+  formatPercentage,
+} from "./FormattedNumberInput";
 import KeyIndicators from "./sections/KeyIndicators";
 import FinancialSummary from "./sections/FinancialSummary";
 import FinancingSummary from "./sections/FinancingSummary";
@@ -55,6 +58,18 @@ export default function RenewScenarioForm({
   const handleChange = (field, value) => {
     setScenario((prev) => ({ ...prev, [field]: value }));
   };
+
+  useEffect(() => {
+    const { term, mortgageRate } = scenario.financing;
+    const termText = term ? `${term} ans` : "(nouveau terme)";
+    const rateText = mortgageRate
+      ? formatPercentage(mortgageRate)
+      : "(nouveau taux d'intérêt)";
+    const newTitle = `Renouvellement ${termText} à ${rateText}`;
+    if (scenario.title !== newTitle) {
+      setScenario((prev) => ({ ...prev, title: newTitle }));
+    }
+  }, [scenario.financing.term, scenario.financing.mortgageRate]);
   useEffect(() => {
     if (!property?.purchasePrice) return;
     const purchasePrice = parseFloat(property.purchasePrice) || 0;
@@ -332,9 +347,8 @@ export default function RenewScenarioForm({
                   <input
                     type="text"
                     value={scenario.title}
-                    onChange={(e) => handleChange("title", e.target.value)}
-                    className="w-full border rounded p-2"
-                    placeholder="Scénario"
+                    readOnly
+                    className="w-full border rounded p-2 bg-gray-100"
                   />
                 </div>
                 <div>
