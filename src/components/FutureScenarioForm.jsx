@@ -192,9 +192,7 @@ export default function FutureScenarioForm({
 
   const existingLoanBalance = useMemo(() => {
     if (!initialAnalysis) return 0;
-    const totalLoanAmount =
-      (initialAnalysis.maxLoanAmount || 0) +
-      (initialAnalysis.cmhcPremium || 0);
+    const totalLoanAmount = initialAnalysis.totalLoanAmount || 0;
     const mortgageRate = (parseFloat(initialProperty?.mortgageRate) || 0) / 100;
     const monthlyRate = Math.pow(1 + mortgageRate / 2, 1 / 6) - 1;
     const amortizationYears = parseInt(initialProperty?.amortization) || 25;
