@@ -401,6 +401,6 @@ export default function OptimisationScenarioForm({
         </div>
       </div>
     </div>
+  </div>
   );
 }
-
