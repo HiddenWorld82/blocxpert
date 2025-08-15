@@ -36,11 +36,14 @@ export default function FutureScenarioForm({
   useEffect(() => {
     if (!propertyId) return;
     const unsub = getScenarios(propertyId, (scenarios) => {
-      const initial = scenarios.find((s) => s.type === "initialFinancing");
+      const baseId = scenario.initialFinancingId;
+      const initial = baseId
+        ? scenarios.find((s) => s.id === baseId)
+        : scenarios.find((s) => s.type === "initialFinancing");
       setInitialFinancing(initial);
     });
     return () => unsub && unsub();
-  }, [propertyId]);
+  }, [propertyId, scenario.initialFinancingId]);
 
   useEffect(() => {
     setScenario({
