@@ -84,37 +84,7 @@ export default function RenewScenarioForm({
     if (!parentAnalysis)
       return { existingLoanBalance: 0, existingLoanPrincipal: 0 };
     const principal = parentAnalysis.maxLoanAmount || 0;
-    let premium = 0;
-    if (["cmhc", "cmhc_aph"].includes(parentProperty?.financingType)) {
-      const purchasePrice = parseFloat(parentProperty?.purchasePrice) || 0;
-      const ltvRatio = purchasePrice > 0 ? (principal / purchasePrice) * 100 : 0;
-      const standardRates = [
-        { ltv: 65, rate: 0.026 },
-        { ltv: 70, rate: 0.0285 },
-        { ltv: 75, rate: 0.0335 },
-        { ltv: 80, rate: 0.0435 },
-        { ltv: 85, rate: 0.0535 },
-      ];
-      let premiumRate = 0;
-      if (parentProperty.financingType === "cmhc_aph" && ltvRatio > 85) {
-        premiumRate = ltvRatio <= 90 ? 0.059 : 0.0615;
-      } else {
-        const bracket = standardRates.find((b) => ltvRatio <= b.ltv);
-        premiumRate = bracket?.rate || standardRates.at(-1).rate;
-      }
-      const amortizationYears = parseInt(parentProperty?.amortization) || 25;
-      if (amortizationYears > 25) {
-        premiumRate += ((amortizationYears - 25) / 5) * 0.0025;
-      }
-      if (parentProperty.financingType === "cmhc_aph") {
-        const points = parseInt(parentProperty?.aphPoints) || 0;
-        const rebate =
-          points >= 100 ? 0.3 : points >= 70 ? 0.2 : points >= 50 ? 0.1 : 0;
-        premiumRate *= 1 - rebate;
-      }
-      premium = principal * premiumRate;
-    }
-    const totalLoanAmount = principal + premium;
+    const totalLoanAmount = principal;
     const mortgageRate = (parseFloat(parentProperty?.mortgageRate) || 0) / 100;
     const monthlyRate = Math.pow(1 + mortgageRate / 2, 1 / 6) - 1;
     const amortizationYears = parseInt(parentProperty?.amortization) || 25;
@@ -266,6 +236,7 @@ export default function RenewScenarioForm({
       ...baseAnalysis,
       maxLoanAmount: existingLoanPrincipal,
       totalLoanAmount,
+      cmhcPremium: 0,
       monthlyPayment,
       annualDebtService,
       cashFlow,
@@ -315,7 +286,7 @@ export default function RenewScenarioForm({
                 Paramètres du scénario
               </h2>
               <div className="grid md:grid-cols-2 gap-4">
-                <div>
+                <div className="md:col-span-2">
                   <label className="block text-sm font-medium mb-1">Titre</label>
                   <input
                     type="text"
@@ -323,6 +294,17 @@ export default function RenewScenarioForm({
                     onChange={(e) => handleChange("title", e.target.value)}
                     className="w-full border rounded p-2"
                     placeholder="Scénario"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    % augmentation revenus net
+                  </label>
+                  <FormattedNumberInput
+                    value={scenario.netIncomeIncreasePct || ""}
+                    onChange={(val) => handleChange("netIncomeIncreasePct", val)}
+                    className="w-full border rounded p-2"
+                    type="percentage"
                   />
                 </div>
                 <div>
@@ -336,17 +318,6 @@ export default function RenewScenarioForm({
                     type="currency"
                     readOnly
                     disabled
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    % augmentation revenus net
-                  </label>
-                  <FormattedNumberInput
-                    value={scenario.netIncomeIncreasePct || ""}
-                    onChange={(val) => handleChange("netIncomeIncreasePct", val)}
-                    className="w-full border rounded p-2"
-                    type="percentage"
                   />
                 </div>
               </div>
@@ -397,8 +368,8 @@ export default function RenewScenarioForm({
                   <FinancingSummary
                     analysis={analysis}
                     currentProperty={analysisProperty}
-                    equityAmount={0}
                     financing={combinedFinancing}
+                    scenarioType="renewal"
                   />
                 </div>
               </>
