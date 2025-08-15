@@ -195,10 +195,10 @@ export default function FutureScenarioForm({
     return calculateRentability(parentProperty, advancedExpenses);
   }, [parentProperty, advancedExpenses]);
 
-  const existingLoanBalance = useMemo(() => {
-    if (!parentAnalysis) return 0;
+  const { existingLoanBalance, existingLoanPrincipal } = useMemo(() => {
+    if (!parentAnalysis)
+      return { existingLoanBalance: 0, existingLoanPrincipal: 0 };
     const principal = parentAnalysis.maxLoanAmount || 0;
-
     // Recalculate initial CMHC premium from scratch
     let premium = 0;
     if (["cmhc", "cmhc_aph"].includes(parentProperty?.financingType)) {
@@ -245,21 +245,26 @@ export default function FutureScenarioForm({
       (parseFloat(parseLocaleNumber(scenario.refinanceYears)) || 0) * 12,
       totalPayments,
     );
-    if (monthlyRate <= 0) return totalLoanAmount;
+    if (monthlyRate <= 0)
+      return { existingLoanBalance: totalLoanAmount, existingLoanPrincipal: principal };
     const balance =
       totalLoanAmount *
       (Math.pow(1 + monthlyRate, totalPayments) -
         Math.pow(1 + monthlyRate, paymentsMade)) /
       (Math.pow(1 + monthlyRate, totalPayments) - 1);
-    return balance;
+    const factor = balance / totalLoanAmount;
+    return {
+      existingLoanBalance: balance,
+      existingLoanPrincipal: principal * factor,
+    };
   }, [parentAnalysis, parentProperty, scenario.refinanceYears]);
 
   const analysis = useMemo(() => {
     if (!combinedProperty) return null;
     return calculateRentability(combinedProperty, advancedExpenses, {
-      initialLoanAmount: existingLoanBalance,
+      initialLoanAmount: existingLoanPrincipal,
     });
-  }, [combinedProperty, advancedExpenses, existingLoanBalance]);
+  }, [combinedProperty, advancedExpenses, existingLoanPrincipal]);
 
   const cmhcPremium = analysis?.cmhcPremium || 0;
 
@@ -444,7 +449,6 @@ export default function FutureScenarioForm({
                     analysis={analysis}
                     currentProperty={analysisProperty}
                     equityAmount={equityWithdrawal}
-                    scenarioType={type}
                   />
                 </div>
               </>

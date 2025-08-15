@@ -5,7 +5,7 @@ export default function FinancingSummary({
   analysis,
   currentProperty,
   equityAmount,
-  scenarioType = "initialFinancing",
+  scenarioType,
 }) {
   const formatMoney = (value) => {
     if (value === null || value === undefined) return "—";
@@ -17,7 +17,8 @@ export default function FinancingSummary({
     }).format(value);
   };
 
-  const isRefinancing = scenarioType !== "initialFinancing";
+  const isRefinancing =
+    scenarioType === undefined || scenarioType !== "initialFinancing";
   const purchaseLabel = isRefinancing
     ? "Valeur de l'immeuble"
     : "Prix d'achat";
@@ -35,6 +36,10 @@ export default function FinancingSummary({
           <span className="font-medium">
             {formatMoney(parseFloat(currentProperty?.purchasePrice) || 0)}
           </span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-gray-600">Valeur économique:</span>
+          <span className="font-medium">{formatMoney(analysis?.economicValue)}</span>
         </div>
         <div className="flex justify-between">
           <span className="text-gray-600">Prêt maximal:</span>
@@ -80,10 +85,6 @@ export default function FinancingSummary({
         <div className="flex justify-between">
           <span className="text-gray-600">Paiement mensuel:</span>
           <span className="font-medium">{formatMoney(analysis?.monthlyPayment)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-gray-600">Valeur économique:</span>
-          <span className="font-medium">{formatMoney(analysis?.economicValue)}</span>
         </div>
       </div>
     </div>
