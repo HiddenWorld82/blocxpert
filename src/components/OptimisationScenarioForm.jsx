@@ -357,91 +357,93 @@ export default function OptimisationScenarioForm({
       />
     </>
   );
-  return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-semibold">{titleText}</h2>
-            {onBack && (
-              <button
-                onClick={onBack}
-                className="text-gray-600 hover:text-gray-800"
-              >
-                ← Retour
-              </button>
-            )}
+  // ...existing code...
+return (
+  <div className="min-h-screen bg-gray-50 p-4">
+    <div className="max-w-4xl mx-auto">
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-semibold">{titleText}</h2>
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="text-gray-600 hover:text-gray-800"
+            >
+              ← Retour
+            </button>
+          )}
+        </div>
+
+        <div className="space-y-8">
+          <div className="border rounded-lg p-6">
+            <h2 className="text-lg font-semibold mb-4 text-gray-700">
+              Paramètres du scénario
+            </h2>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Titre</label>
+                <input
+                  type="text"
+                  value={scenario.title}
+                  onChange={(e) => handleChange("title", e.target.value)}
+                  className="w-full border rounded p-2"
+                  placeholder="Scénario"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Refinancement dans (années)</label>
+                <FormattedNumberInput
+                  value={scenario.refinanceYears || ""}
+                  onChange={(val) => handleChange("refinanceYears", val)}
+                  className="w-full border rounded p-2"
+                />
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-8">
-            <div className="border rounded-lg p-6">
-              <h2 className="text-lg font-semibold mb-4 text-gray-700">
-                Paramètres du scénario
-              </h2>
+          {renderScenarioSections()}
+
+          {analysis && (
+            <>
+              <KeyIndicators analysis={analysis} variant="future" />
               <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Titre</label>
-                  <input
-                    type="text"
-                    value={scenario.title}
-                    onChange={(e) => handleChange("title", e.target.value)}
-                    className="w-full border rounded p-2"
-                    placeholder="Scénario"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Refinancement dans (années)</label>
-                  <FormattedNumberInput
-                    value={scenario.refinanceYears || ""}
-                    onChange={(val) => handleChange("refinanceYears", val)}
-                    className="w-full border rounded p-2"
-                  />
-                </div>
-            </div>
-
-            {renderScenarioSections()}
-
-            {analysis && (
-              <>
-                <KeyIndicators analysis={analysis} variant="future" />
-                <div className="grid md:grid-cols-2 gap-4">
-                  <FinancialSummary
-                    analysis={analysis}
-                    advancedExpenses={advancedExpenses}
-                  />
-                  <FinancingSummary
-                    analysis={analysis}
-                    currentProperty={analysisProperty}
-                    equityAmount={equityWithdrawal}
-                  />
-                </div>
-              </>
-            )}
-
-            {isEquityNegative && (
-              <div className="text-red-600 text-sm text-right">
-                Ce scénario de refinancement n'est pas possible.
+                <FinancialSummary
+                  analysis={analysis}
+                  advancedExpenses={advancedExpenses}
+                />
+                <FinancingSummary
+                  analysis={analysis}
+                  currentProperty={analysisProperty}
+                  equityAmount={equityWithdrawal}
+                />
               </div>
-            )}
-            <div className="flex justify-end">
-              {onSaved && (
-                <button
-                  onClick={handleSave}
-                  disabled={isEquityNegative}
-                  className={`px-6 py-2 text-white rounded-lg hover:bg-blue-700 ${
-                    isEquityNegative
-                      ? "bg-blue-300 cursor-not-allowed"
-                      : "bg-blue-600"
-                  }`}
-                >
-                  Sauvegarder
-                </button>
-              )}
+            </>
+          )}
+
+          {isEquityNegative && (
+            <div className="text-red-600 text-sm text-right">
+              Ce scénario de refinancement n'est pas possible.
             </div>
+          )}
+          <div className="flex justify-end">
+            {onSaved && (
+              <button
+                onClick={handleSave}
+                disabled={isEquityNegative}
+                className={`px-6 py-2 text-white rounded-lg hover:bg-blue-700 ${
+                  isEquityNegative
+                    ? "bg-blue-300 cursor-not-allowed"
+                    : "bg-blue-600"
+                }`}
+              >
+                Sauvegarder
+              </button>
+            )}
           </div>
         </div>
       </div>
     </div>
   </div>
-  );
+);
+// ...existing code...
 }
