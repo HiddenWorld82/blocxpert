@@ -30,6 +30,7 @@ export default function FinancingSummary({
 
   const isRefinancing =
     scenarioType === undefined || scenarioType !== "initialFinancing";
+  const isRenewal = scenarioType === "renewal";
   const purchaseLabel = isRefinancing
     ? "Valeur de l'immeuble"
     : "Prix d'achat";
@@ -89,25 +90,31 @@ export default function FinancingSummary({
             {formatMoney(parseFloat(currentProperty?.purchasePrice) || 0)}
           </span>
         </div>
+        {!isRenewal && (
+          <div className="flex justify-between">
+            <span className="text-gray-600">Valeur économique:</span>
+            <span className="font-medium">{formatMoney(analysis?.economicValue)}</span>
+          </div>
+        )}
         <div className="flex justify-between">
-          <span className="text-gray-600">Valeur économique:</span>
-          <span className="font-medium">{formatMoney(analysis?.economicValue)}</span>
+          <span className="text-gray-600">{isRenewal ? "Solde du prêt" : "Prêt maximal"}:</span>
+          <span className="font-medium">
+            {formatMoney(
+              isRenewal ? analysis?.totalLoanAmount : analysis?.maxLoanAmount
+            )}
+          </span>
         </div>
-        <div className="flex justify-between">
-          <span className="text-gray-600">Prêt maximal:</span>
-          <span className="font-medium">{formatMoney(analysis?.maxLoanAmount)}</span>
-        </div>
-        {analysis?.cmhcPremium > 0 && (
+        {!isRenewal && analysis?.cmhcPremium > 0 && (
           <div className="flex justify-between">
             <span className="text-gray-600">Prime SCHL:</span>
             <span className="font-medium">{formatMoney(analysis?.cmhcPremium)}</span>
           </div>
         )}
-        {analysis?.cmhcPremium > 0 && (
-        <div className="flex justify-between">
-          <span className="text-gray-600">Prêt total incluant prime:</span>
-          <span className="font-medium">{formatMoney(analysis?.totalLoanAmount)}</span>
-        </div>
+        {!isRenewal && analysis?.cmhcPremium > 0 && (
+          <div className="flex justify-between">
+            <span className="text-gray-600">Prêt total incluant prime:</span>
+            <span className="font-medium">{formatMoney(analysis?.totalLoanAmount)}</span>
+          </div>
         )}
         <div className="flex justify-between">
           <span className="text-gray-600">{downPaymentLabel}:</span>
@@ -117,22 +124,26 @@ export default function FinancingSummary({
           <span className="text-gray-600">{feesLabel}:</span>
           <span className="font-medium">{formatMoney(analysis?.acquisitionCosts)}</span>
         </div>
-        {equityAmount !== undefined ? (
-          <div className="flex justify-between border-t pt-3">
-            <span className="text-gray-600 font-semibold">Retrait d'équité:</span>
-            <span
-              className={`font-bold text-lg ${
-                equityAmount >= 0 ? "text-green-600" : "text-red-600"
-              }`}
-            >
-              {formatMoney(equityAmount)}
-            </span>
-          </div>
-        ) : (
-          <div className="flex justify-between border-t pt-3">
-            <span className="text-gray-600 font-semibold">Investissement total:</span>
-            <span className="font-bold text-lg">{formatMoney(analysis?.totalInvestment)}</span>
-          </div>
+        {!isRenewal && (
+          equityAmount !== undefined ? (
+            <div className="flex justify-between border-t pt-3">
+              <span className="text-gray-600 font-semibold">Retrait d'équité:</span>
+              <span
+                className={`font-bold text-lg ${
+                  equityAmount >= 0 ? "text-green-600" : "text-red-600"
+                }`}
+              >
+                {formatMoney(equityAmount)}
+              </span>
+            </div>
+          ) : (
+            <div className="flex justify-between border-t pt-3">
+              <span className="text-gray-600 font-semibold">Investissement total:</span>
+              <span className="font-bold text-lg">
+                {formatMoney(analysis?.totalInvestment)}
+              </span>
+            </div>
+          )
         )}
         <div className="flex justify-between">
           <span className="text-gray-600">Paiement mensuel:</span>
