@@ -357,7 +357,7 @@ export default function OptimisationScenarioForm({
       />
     </>
   );
-  // ...existing code...
+
 return (
   <div className="min-h-screen bg-gray-50 p-4">
     <div className="max-w-4xl mx-auto">
@@ -445,5 +445,5 @@ return (
     </div>
   </div>
 );
-// ...existing code...
+
 }
