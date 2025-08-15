@@ -1,7 +1,12 @@
 // src/components/sections/FinancingSummary.jsx
 import React from "react";
 
-export default function FinancingSummary({ analysis, currentProperty, equityAmount }) {
+export default function FinancingSummary({
+  analysis,
+  currentProperty,
+  equityAmount,
+  scenarioType = "initialFinancing",
+}) {
   const formatMoney = (value) => {
     if (value === null || value === undefined) return "—";
     return new Intl.NumberFormat("fr-CA", {
@@ -12,12 +17,21 @@ export default function FinancingSummary({ analysis, currentProperty, equityAmou
     }).format(value);
   };
 
+  const isRefinancing = scenarioType !== "initialFinancing";
+  const purchaseLabel = isRefinancing
+    ? "Valeur de l'immeuble"
+    : "Prix d'achat";
+  const downPaymentLabel = isRefinancing ? "Équité figée" : "Mise de fonds";
+  const feesLabel = isRefinancing
+    ? "Frais de financement"
+    : "Frais d'acquisition";
+
   return (
     <div className="bg-white rounded-lg p-6">
       <h3 className="text-lg font-semibold mb-4">Résumé du Financement</h3>
       <div className="space-y-3">
         <div className="flex justify-between">
-          <span className="text-gray-600">Prix d'achat:</span>
+          <span className="text-gray-600">{purchaseLabel}:</span>
           <span className="font-medium">
             {formatMoney(parseFloat(currentProperty?.purchasePrice) || 0)}
           </span>
@@ -39,11 +53,11 @@ export default function FinancingSummary({ analysis, currentProperty, equityAmou
         </div>
         )}
         <div className="flex justify-between">
-          <span className="text-gray-600">Mise de fonds:</span>
+          <span className="text-gray-600">{downPaymentLabel}:</span>
           <span className="font-medium">{formatMoney(analysis?.downPayment)}</span>
         </div>
         <div className="flex justify-between">
-          <span className="text-gray-600">Frais d'acquisition:</span>
+          <span className="text-gray-600">{feesLabel}:</span>
           <span className="font-medium">{formatMoney(analysis?.acquisitionCosts)}</span>
         </div>
         {equityAmount !== undefined ? (
