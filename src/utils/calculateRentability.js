@@ -194,6 +194,7 @@ const calculateRentability = (
           "otherFees",
           "appraiser",
           "notary",
+          "workCost",
           "renovations",
           "cmhcAnalysis",
           "cmhcTax",
@@ -202,6 +203,7 @@ const calculateRentability = (
       : [
           "expertises",
           "notary",
+          "workCost",
           "renovations",
           "cmhcAnalysis",
           "cmhcTax",
