@@ -52,6 +52,11 @@ const PropertyReport = ({
 
   const reportRef = useRef(null);
 
+  const initialFinancingId =
+    scenario?.type === 'initialFinancing'
+      ? scenario.id
+      : scenario?.initialFinancingId;
+
   const handleGeneratePDF = () => {
     if (!reportRef.current) return;
     const printContents = reportRef.current.innerHTML;
@@ -104,7 +109,7 @@ const PropertyReport = ({
       property: currentProperty,
       advancedExpenses,
       onSaved: () => setEditingScenario(null),
-      initialScenario: editingScenario.id ? editingScenario : undefined,
+      initialScenario: editingScenario,
     };
     return <FutureScenarioForm {...formProps} type={editingScenario.type} />;
   };
@@ -294,7 +299,9 @@ const PropertyReport = ({
               Amortissement
             </button>
             <button
-              onClick={() => setEditingScenario({})}
+              onClick={() =>
+                setEditingScenario({ initialFinancingId })
+              }
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
               Nouveau scénario
