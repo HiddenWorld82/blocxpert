@@ -7,6 +7,8 @@ import Recommendations from './sections/Recommendations';
 import ExecutiveSummary from './sections/ExecutiveSummary';
 import ScenarioList from './ScenarioList';
 import FutureScenarioForm from './FutureScenarioForm';
+import RenewScenarioForm from './RenewScenarioForm';
+import OptimisationScenarioForm from './OptimisationScenarioForm';
 import calculateRentability from '../utils/calculateRentability';
 
 const PropertyReport = ({
@@ -70,6 +72,7 @@ const PropertyReport = ({
     printWindow.print();
   };
 
+
   const renderScenarioForm = () => {
     if (!editingScenario) return null;
     if (!editingScenario.type) {
@@ -86,18 +89,16 @@ const PropertyReport = ({
               Refinancement
             </button>
             <button
-              onClick={() =>
-                setEditingScenario({ ...editingScenario, type: 'incomeOptimization' })
-              }
+              onClick={() => setEditingScenario({ ...editingScenario, type: 'renewal' })}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
-              Optimisation Revenus
+              Renouvellement hypothécaire
             </button>
             <button
-              onClick={() => setEditingScenario({ ...editingScenario, type: 'renovation' })}
+              onClick={() => setEditingScenario({ ...editingScenario, type: 'optimization' })}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
-              Optimisation Rénovation
+              Optimisation
             </button>
           </div>
         </div>
@@ -110,9 +111,14 @@ const PropertyReport = ({
       onSaved: () => setEditingScenario(null),
       initialScenario: editingScenario,
     };
-    return <FutureScenarioForm {...formProps} type={editingScenario.type} />;
+    const formComponents = {
+      refinancing: FutureScenarioForm,
+      renewal: RenewScenarioForm,
+      optimization: OptimisationScenarioForm,
+    };
+    const ScenarioFormComponent = formComponents[editingScenario.type];
+    return <ScenarioFormComponent {...formProps} type={editingScenario.type} />;
   };
-
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-6xl mx-auto">
