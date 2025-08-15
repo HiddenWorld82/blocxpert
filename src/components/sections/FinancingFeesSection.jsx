@@ -21,6 +21,7 @@ export default function FinancingFeesSection({
           { field: "cmhcTax", label: "Taxe sur la prime SCHL", locked: true },
         ]
       : []),
+    { field: "workCost", label: "Coût des travaux" },
     { field: "otherFees", label: "Autres frais" },
     { field: "notary", label: "Notaire" },
   ];
@@ -28,7 +29,7 @@ export default function FinancingFeesSection({
   return (
     <div className="border rounded-lg p-6">
       <h2 className="text-lg font-semibold mb-4 text-orange-600 flex items-center">
-        <Briefcase className="w-5 h-5 mr-2" />Frais de financement
+        <Briefcase className="w-5 h-5 mr-2" />Frais de financement et travaux d'optimisation
       </h2>
       <div className="grid grid-cols-2 gap-4">
         {fields.map(({ field, label, locked }) => (
@@ -46,7 +47,7 @@ export default function FinancingFeesSection({
         ))}
       </div>
       <div className="mt-4">
-        <label className="block text-sm font-medium mb-1">Total frais de financement</label>
+        <label className="block text-sm font-medium mb-1">Total frais de financement et travaux d'optimisation</label>
         <FormattedNumberInput
           value={analysis.financingFees?.toString() || ''}
           onChange={() => {}}
