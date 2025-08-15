@@ -210,7 +210,11 @@ export default function FutureScenarioForm({
         Math.pow(1 + monthlyRate, paymentsMade)) /
       (Math.pow(1 + monthlyRate, totalPayments) - 1);
     return balance;
-  }, [initialAnalysis, initialProperty, scenario.refinanceYears]);
+  }, [
+    initialAnalysis,
+    initialProperty,
+    scenario.refinanceYears,
+  ]);
 
   const analysis = useMemo(() => {
     if (!combinedProperty) return null;
