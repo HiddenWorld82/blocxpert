@@ -124,6 +124,8 @@ const calculateRentability = (
     ? maxLoanByRCD
     : Math.min(maxLoanByRCD, maxLoanByLTV);
 
+  const economicValue = maxLTVRatio > 0 ? maxLoanAmount / maxLTVRatio : 0;
+
   const cmhcPremiums = {
     standard: [
       { ltv: 65, rate: 0.026 },
@@ -251,6 +253,7 @@ const calculateRentability = (
     cmhcTax,
     totalLoanAmount,
     downPayment,
+    economicValue,
     monthlyPayment,
     annualDebtService,
     maxDebtService,
