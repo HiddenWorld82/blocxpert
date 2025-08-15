@@ -6,7 +6,7 @@ import KeyIndicators from "./sections/KeyIndicators";
 import FinancialSummary from "./sections/FinancialSummary";
 import FinancingSummary from "./sections/FinancingSummary";
 import calculateRentability from "../utils/calculateRentability";
-import { saveScenario, updateScenario } from "../services/dataService";
+import { getScenarios, saveScenario, updateScenario } from "../services/dataService";
 
 export default function FutureScenarioForm({
   onBack,
@@ -30,6 +30,17 @@ export default function FutureScenarioForm({
   const [lockedFields] = useState({
     debtCoverage: true,
   });
+
+  const [initialFinancing, setInitialFinancing] = useState(null);
+
+  useEffect(() => {
+    if (!propertyId) return;
+    const unsub = getScenarios(propertyId, (scenarios) => {
+      const initial = scenarios.find((s) => s.type === "initialFinancing");
+      setInitialFinancing(initial);
+    });
+    return () => unsub && unsub();
+  }, [propertyId]);
 
   useEffect(() => {
     setScenario({
@@ -164,17 +175,27 @@ export default function FutureScenarioForm({
     };
   }, [analysisProperty, scenario.financing, scenario.financingFees]);
 
-  const initialAnalysis = useMemo(() => {
+  const initialProperty = useMemo(() => {
     if (!property) return null;
-    return calculateRentability(property, advancedExpenses);
-  }, [property, advancedExpenses]);
+    if (!initialFinancing) return property;
+    return {
+      ...property,
+      ...initialFinancing.financing,
+      ...initialFinancing.acquisitionCosts,
+    };
+  }, [property, initialFinancing]);
+
+  const initialAnalysis = useMemo(() => {
+    if (!initialProperty) return null;
+    return calculateRentability(initialProperty, advancedExpenses);
+  }, [initialProperty, advancedExpenses]);
 
   const existingLoanBalance = useMemo(() => {
     if (!initialAnalysis) return 0;
-    const totalLoanAmount = initialAnalysis.maxLoanAmount || 0;
-    const mortgageRate = (parseFloat(property?.mortgageRate) || 0) / 100;
+    const totalLoanAmount = initialAnalysis.totalLoanAmount || 0;
+    const mortgageRate = (parseFloat(initialProperty?.mortgageRate) || 0) / 100;
     const monthlyRate = Math.pow(1 + mortgageRate / 2, 1 / 6) - 1;
-    const amortizationYears = parseInt(property?.amortization) || 25;
+    const amortizationYears = parseInt(initialProperty?.amortization) || 25;
     const totalPayments = amortizationYears * 12;
     const paymentsMade = Math.min(
       (parseFloat(parseLocaleNumber(scenario.refinanceYears)) || 0) * 12,
@@ -187,27 +208,16 @@ export default function FutureScenarioForm({
         Math.pow(1 + monthlyRate, paymentsMade)) /
       (Math.pow(1 + monthlyRate, totalPayments) - 1);
     return balance;
-  }, [
-    initialAnalysis,
-    property?.mortgageRate,
-    property?.amortization,
-    scenario.refinanceYears,
-  ]);
+  }, [initialAnalysis, initialProperty, scenario.refinanceYears]);
 
   const analysis = useMemo(() => {
     if (!combinedProperty) return null;
     return calculateRentability(combinedProperty, advancedExpenses, {
-      existingLoanBalance,
+      initialLoanAmount: existingLoanBalance,
     });
   }, [combinedProperty, advancedExpenses, existingLoanBalance]);
 
-  const cmhcPremium = useMemo(() => {
-  if (!analysis || !initialAnalysis) return 0;
-  // Use the correct premium rate field from your analysis object
-  const premiumRate = analysis.cmhcRate || 0;
-  const cmhcPremiumBase = analysis.maxLoanAmount - initialAnalysis.maxLoanAmount;
-  return cmhcPremiumBase > 0 ? cmhcPremiumBase * premiumRate : 0;
-}, [analysis, initialAnalysis]);
+  const cmhcPremium = analysis?.cmhcPremium || 0;
 
   useEffect(() => {
     const financingType = scenario.financing.financingType;
@@ -257,8 +267,7 @@ export default function FutureScenarioForm({
   return (
     analysis.maxLoanAmount -
     existingLoanBalance -
-    computeTotalFees() -
-    cmhcPremium
+    computeTotalFees()
   );
 }, [analysis, existingLoanBalance, scenario.financingFees, cmhcPremium]);
 
