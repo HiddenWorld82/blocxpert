@@ -5,7 +5,7 @@ export default function FinancingSummary({
   analysis,
   currentProperty,
   equityAmount,
-  scenarioType = "initialFinancing",
+  scenarioType,
 }) {
   const formatMoney = (value) => {
     if (value === null || value === undefined) return "—";
@@ -17,7 +17,8 @@ export default function FinancingSummary({
     }).format(value);
   };
 
-  const isRefinancing = scenarioType !== "initialFinancing";
+  const isRefinancing =
+    scenarioType === undefined || scenarioType !== "initialFinancing";
   const purchaseLabel = isRefinancing
     ? "Valeur de l'immeuble"
     : "Prix d'achat";
