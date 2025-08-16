@@ -1,4 +1,6 @@
 // utils/calculateRentability.js
+import { getAphMaxLtvRatio } from "./cmhc.js";
+
 const calculateRentability = (
   property,
   advancedExpenses,
@@ -112,12 +114,7 @@ const calculateRentability = (
     maxLTVRatio = 0.85;
   } else if (property.financingType === 'cmhc_aph') {
     const points = parseInt(property.aphPoints) || 0;
-    if (points >= 70) {
-      maxLTVRatio = 0.95;
-    } else {
-      // APH Select with 50 points or less defaults to the SCHL cap
-      maxLTVRatio = 0.85;
-    }
+    maxLTVRatio = getAphMaxLtvRatio(points);
   }
   const maxLoanByLTV = purchasePrice * maxLTVRatio;
   const maxLoanAmount = property.ignoreLTV
@@ -146,13 +143,17 @@ const calculateRentability = (
   let cmhcTax = 0;
   let cmhcAnalysis = 0;
   if (["cmhc", "cmhc_aph"].includes(property.financingType)) {
-    const ltvRatio = (maxLoanAmount / purchasePrice) * 100;
+    const ltvRatio = purchasePrice > 0 ? (maxLoanAmount / purchasePrice) * 100 : 0;
+    const points = parseInt(property.aphPoints) || 0;
+    const effectiveLtv = property.financingType === 'cmhc_aph'
+      ? Math.min(ltvRatio, getAphMaxLtvRatio(points) * 100)
+      : ltvRatio;
     let premiumRate = 0;
 
-    if (property.financingType === 'cmhc_aph' && ltvRatio > 85) {
-      premiumRate = ltvRatio <= 90 ? cmhcPremiums.select[0].rate : cmhcPremiums.select[1].rate;
+    if (property.financingType === 'cmhc_aph' && effectiveLtv > 85) {
+      premiumRate = effectiveLtv <= 90 ? cmhcPremiums.select[0].rate : cmhcPremiums.select[1].rate;
     } else {
-      const bracket = cmhcPremiums.standard.find(b => ltvRatio <= b.ltv);
+      const bracket = cmhcPremiums.standard.find(b => effectiveLtv <= b.ltv);
       premiumRate = bracket?.rate || cmhcPremiums.standard.at(-1).rate;
     }
 
@@ -161,7 +162,6 @@ const calculateRentability = (
     }
 
     if (property.financingType === 'cmhc_aph') {
-      const points = parseInt(property.aphPoints) || 0;
       const rebate = points >= 100 ? 0.3 : points >= 70 ? 0.2 : points >= 50 ? 0.1 : 0;
       premiumRate = premiumRate * (1 - rebate);
     }

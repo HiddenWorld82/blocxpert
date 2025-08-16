@@ -6,6 +6,7 @@ import KeyIndicators from "./sections/KeyIndicators";
 import FinancialSummary from "./sections/FinancialSummary";
 import FinancingSummary from "./sections/FinancingSummary";
 import calculateRentability from "../utils/calculateRentability";
+import { getAphMaxLtvRatio } from "../utils/cmhc";
 import { getScenarios, saveScenario, updateScenario } from "../services/dataService";
 
 export default function FutureScenarioForm({
@@ -213,11 +214,17 @@ export default function FutureScenarioForm({
         { ltv: 85, rate: 0.0535 },
       ];
 
+      const points = parseInt(parentProperty?.aphPoints) || 0;
+      const effectiveLtv =
+        parentProperty.financingType === "cmhc_aph"
+          ? Math.min(ltvRatio, getAphMaxLtvRatio(points) * 100)
+          : ltvRatio;
+
       let premiumRate = 0;
-      if (parentProperty.financingType === "cmhc_aph" && ltvRatio > 85) {
-        premiumRate = ltvRatio <= 90 ? 0.059 : 0.0615;
+      if (parentProperty.financingType === "cmhc_aph" && effectiveLtv > 85) {
+        premiumRate = effectiveLtv <= 90 ? 0.059 : 0.0615;
       } else {
-        const bracket = standardRates.find((b) => ltvRatio <= b.ltv);
+        const bracket = standardRates.find((b) => effectiveLtv <= b.ltv);
         premiumRate = bracket?.rate || standardRates.at(-1).rate;
       }
 
@@ -227,7 +234,6 @@ export default function FutureScenarioForm({
       }
 
       if (parentProperty.financingType === "cmhc_aph") {
-        const points = parseInt(parentProperty?.aphPoints) || 0;
         const rebate =
           points >= 100 ? 0.3 : points >= 70 ? 0.2 : points >= 50 ? 0.1 : 0;
         premiumRate *= 1 - rebate;
