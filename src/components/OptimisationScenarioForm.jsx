@@ -19,6 +19,7 @@ const baseScenario = {
   financingFees: {},
   revenue: {},
   operatingExpenses: {
+    vacancyRate: defaultProperty.vacancyRate,
     maintenance: defaultProperty.maintenance,
     managementRate: defaultProperty.managementRate,
     concierge: defaultProperty.concierge,
@@ -184,9 +185,9 @@ export default function OptimisationScenarioForm({
     return calculateRentability(parentProperty, advancedExpenses);
   }, [parentProperty, advancedExpenses]);
 
-  const { existingLoanBalance, existingLoanPrincipal } = useMemo(() => {
-    if (!parentAnalysis)
-      return { existingLoanBalance: 0, existingLoanPrincipal: 0 };
+  const existingLoanBalance = useMemo(() => {
+    if (!parentAnalysis) return 0;
+
     const principal = parentAnalysis.maxLoanAmount || 0;
     // Recalculate initial CMHC premium from scratch
     let premium = 0;
@@ -234,26 +235,22 @@ export default function OptimisationScenarioForm({
       (parseFloat(parseLocaleNumber(scenario.refinanceYears)) || 0) * 12,
       totalPayments,
     );
-    if (monthlyRate <= 0)
-      return { existingLoanBalance: totalLoanAmount, existingLoanPrincipal: principal };
+    if (monthlyRate <= 0) return totalLoanAmount;
     const balance =
       totalLoanAmount *
       (Math.pow(1 + monthlyRate, totalPayments) -
         Math.pow(1 + monthlyRate, paymentsMade)) /
       (Math.pow(1 + monthlyRate, totalPayments) - 1);
     const factor = balance / totalLoanAmount;
-    return {
-      existingLoanBalance: balance,
-      existingLoanPrincipal: principal * factor,
-    };
+    return balance;
   }, [parentAnalysis, parentProperty, scenario.refinanceYears]);
 
   const analysis = useMemo(() => {
     if (!combinedProperty) return null;
     return calculateRentability(combinedProperty, advancedExpenses, {
-      initialLoanAmount: existingLoanPrincipal,
+      initialLoanAmount: existingLoanBalance,
     });
-  }, [combinedProperty, advancedExpenses, existingLoanPrincipal]);
+  }, [combinedProperty, advancedExpenses, existingLoanBalance]);
 
   const cmhcPremium = analysis?.cmhcPremium || 0;
 
