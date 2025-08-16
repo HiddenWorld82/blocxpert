@@ -9,6 +9,22 @@ import FinancialSummary from "./sections/FinancialSummary";
 import FinancingSummary from "./sections/FinancingSummary";
 import calculateRentability from "../utils/calculateRentability";
 import { getScenarios, saveScenario, updateScenario } from "../services/dataService";
+import defaultProperty from "../defaults/defaultProperty";
+
+const baseScenario = {
+  title: "",
+  refinanceYears: "",
+  marketValue: "",
+  financing: {},
+  financingFees: {},
+  revenue: {},
+  operatingExpenses: {
+    maintenance: defaultProperty.maintenance,
+    managementRate: defaultProperty.managementRate,
+    concierge: defaultProperty.concierge,
+  },
+  parentScenarioId: "",
+};
 
 export default function OptimisationScenarioForm({
   onBack,
@@ -19,17 +35,17 @@ export default function OptimisationScenarioForm({
   property,
   advancedExpenses,
 }) {
-  const [scenario, setScenario] = useState({
-    title: "",
-    refinanceYears: "",
-    marketValue: "",
-    financing: {},
-    financingFees: {},
-    revenue: {},
-    operatingExpenses: {},
-    parentScenarioId: "",
-    ...initialScenario,
+  const buildScenarioState = (init = {}) => ({
+    ...baseScenario,
+    ...init,
+    operatingExpenses: {
+      ...baseScenario.operatingExpenses,
+      ...(init.operatingExpenses || {}),
+    },
+
   });
+
+  const [scenario, setScenario] = useState(buildScenarioState(initialScenario));
 
   const [lockedFields] = useState({
     debtCoverage: true,
@@ -50,17 +66,7 @@ export default function OptimisationScenarioForm({
   }, [propertyId, scenario.parentScenarioId]);
 
   useEffect(() => {
-    setScenario({
-      title: "",
-      refinanceYears: "",
-      marketValue: "",
-      financing: {},
-      financingFees: {},
-      revenue: {},
-      operatingExpenses: {},
-      parentScenarioId: "",
-      ...initialScenario,
-    });
+    setScenario(buildScenarioState(initialScenario));
   }, [initialScenario.id]);
 
   const handleFinancingChange = (financing) => {
@@ -137,10 +143,20 @@ export default function OptimisationScenarioForm({
     const overrides = { ...scenario.revenue, ...scenario.operatingExpenses };
     const marketValue =
       parseFloat(parseLocaleNumber(scenario.marketValue)) ||
-      parseFloat(property.purchasePrice) ||
       0;
-    return { ...property, ...overrides, purchasePrice: marketValue };
-  }, [property, scenario.revenue, scenario.operatingExpenses, scenario.marketValue]);
+
+      return {
+      ...defaultProperty,
+      numberOfUnits: property.numberOfUnits,
+      purchasePrice: marketValue,
+      ...overrides,
+    };
+  }, [
+    property,
+    scenario.revenue,
+    scenario.operatingExpenses,
+    scenario.marketValue,
+  ]);
 
   const combinedProperty = useMemo(() => {
     if (!analysisProperty) return null;
@@ -354,6 +370,7 @@ export default function OptimisationScenarioForm({
         onChange={handleFeesChange}
         analysis={{ financingFees: computeTotalFees() }}
         isCMHC={["cmhc", "cmhc_aph"].includes(scenario.financing.financingType)}
+        includeWorkCost
       />
     </>
   );
@@ -415,6 +432,7 @@ return (
                   analysis={analysis}
                   currentProperty={analysisProperty}
                   equityAmount={equityWithdrawal}
+                  scenarioType={type}
                 />
               </div>
             </>

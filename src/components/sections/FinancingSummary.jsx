@@ -35,9 +35,12 @@ export default function FinancingSummary({
     ? "Valeur de l'immeuble"
     : "Prix d'achat";
   const downPaymentLabel = isRefinancing ? "Équité figée" : "Mise de fonds";
-  const feesLabel = isRefinancing
-    ? "Frais de financement et travaux d'optimisation"
-    : "Frais d'acquisition";
+  const feesLabel =
+    scenarioType === "optimization"
+      ? "Frais de financement et travaux"
+      : isRefinancing
+      ? "Frais de financement"
+      : "Frais d'acquisition";
 
   const financingTypeLabels = {
     conventional: "Conventionnel",

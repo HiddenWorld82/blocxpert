@@ -184,33 +184,41 @@ const calculateRentability = (
   // revenu net effectif plutôt que le NOI SCHL
   const cashFlow = effectiveNetIncome - annualDebtService;
 
-  const acquisitionCosts = (
-    advancedExpenses
-      ? [
-          "inspection",
-          "environmental1",
-          "environmental2",
-          "environmental3",
-          "otherFees",
-          "appraiser",
-          "notary",
-          "workCost",
-          "renovations",
-          "cmhcAnalysis",
-          "cmhcTax",
-          "welcomeTax",
-        ]
-      : [
-          "expertises",
-          "notary",
-          "workCost",
-          "renovations",
-          "cmhcAnalysis",
-          "cmhcTax",
-          "otherFees",
-          "welcomeTax",
-        ]
-  ).reduce((sum, key) => sum + (parseFloat(property[key]) || 0), 0);
+  const acquisitionCostKeys = advancedExpenses
+    ? [
+        "inspection",
+        "environmental1",
+        "environmental2",
+        "environmental3",
+        "otherFees",
+        "appraiser",
+        "notary",
+        "renovations",
+        "cmhcAnalysis",
+        "cmhcTax",
+      ]
+    : [
+        "expertises",
+        "notary",
+        "renovations",
+        "cmhcAnalysis",
+        "cmhcTax",
+        "otherFees",
+      ];
+
+  if (property.workCost !== undefined) {
+    acquisitionCostKeys.push("workCost");
+  }
+
+  // La taxe de bienvenue ne s'applique que lors d'un achat initial
+  if (!property.ignoreLTV) {
+    acquisitionCostKeys.push("welcomeTax");
+  }
+
+  const acquisitionCosts = acquisitionCostKeys.reduce(
+    (sum, key) => sum + (parseFloat(property[key]) || 0),
+    0,
+  );
 
   const totalInvestment = downPayment + acquisitionCosts;
 
