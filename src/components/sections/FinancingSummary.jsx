@@ -46,6 +46,7 @@ export default function FinancingSummary({
     conventional: "Conventionnel",
     cmhc: "SCHL Standard",
     cmhc_aph: "SCHL APH Select",
+    private: "Prêt privé",
   };
 
   return (
@@ -85,6 +86,12 @@ export default function FinancingSummary({
           <div className="flex justify-between">
             <span className="text-gray-600">Ratio couverture dette:</span>
             <span className="font-medium">{financing.debtCoverageRatio}</span>
+          </div>
+        )}
+        {financing.financingType === "private" && financing.ltvRatio && (
+          <div className="flex justify-between">
+            <span className="text-gray-600">Ratio prêt-valeur:</span>
+            <span className="font-medium">{formatPercent(financing.ltvRatio)}</span>
           </div>
         )}
         <div className="flex justify-between">

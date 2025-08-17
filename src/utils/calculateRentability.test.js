@@ -92,3 +92,30 @@ test('APH premium uses capped LTV based on points', () => {
   const expectedRate = 0.0535 * 0.9; // 10% rebate on 85% LTV rate
   assert.ok(Math.abs(premiumRate - expectedRate) < 1e-6);
 });
+
+test('Private financing uses interest-only payments and RPV', () => {
+  const property = {
+    purchasePrice: 1_000_000,
+    annualRent: 200_000,
+    vacancyRate: 0,
+    municipalTaxes: 0,
+    schoolTaxes: 0,
+    insurance: 0,
+    maintenance: 0,
+    managementRate: 0,
+    concierge: 0,
+    electricityHeating: 0,
+    otherExpenses: 0,
+    financingType: 'private',
+    ltvRatio: 60,
+    mortgageRate: 10,
+    originationFee: 2,
+    originationFeeType: 'percentage'
+  };
+
+  const result = calculateRentability(property, false, { initialLoanAmount: 0 });
+  assert.equal(Math.round(result.maxLoanAmount), 600000);
+  assert.equal(Math.round(result.monthlyPayment), 5000);
+  assert.equal(Math.round(result.acquisitionCosts), 12000);
+  assert.equal(result.loanPaydownReturn, 0);
+});

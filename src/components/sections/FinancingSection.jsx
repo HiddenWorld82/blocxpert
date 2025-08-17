@@ -33,6 +33,7 @@ export default function FinancingSection({
           <option value="conventional">Conventionnel</option>
           <option value="cmhc">SCHL Standard</option>
           <option value="cmhc_aph">SCHL APH Select</option>
+          <option value="private">Prêt privé</option>
         </select>
       </div>
       
@@ -59,15 +60,28 @@ export default function FinancingSection({
             type="percentage"
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Amortissement (années)</label>
-          <FormattedNumberInput
-            value={financing.amortization || ""}
-            onChange={(val) => handleChange("amortization", val)}
-            className="w-full border rounded p-2"
-            placeholder="25"
-          />
-        </div>
+        {financing.financingType === "private" ? (
+          <div>
+            <label className="block text-sm font-medium mb-1">Ratio Prêt Valeur (RPV)</label>
+            <FormattedNumberInput
+              value={financing.ltvRatio || ""}
+              onChange={(val) => handleChange("ltvRatio", val)}
+              className="w-full border rounded p-2"
+              placeholder="60"
+              type="percentage"
+            />
+          </div>
+        ) : (
+          <div>
+            <label className="block text-sm font-medium mb-1">Amortissement (années)</label>
+            <FormattedNumberInput
+              value={financing.amortization || ""}
+              onChange={(val) => handleChange("amortization", val)}
+              className="w-full border rounded p-2"
+              placeholder="25"
+            />
+          </div>
+        )}
         <div>
           <label className="block text-sm font-medium mb-1">Terme (années)</label>
           <select
@@ -84,28 +98,53 @@ export default function FinancingSection({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mt-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Taux de qualification (%)</label>
-          <FormattedNumberInput
-            value={financing.qualificationRate || ""}
-            onChange={(val) => handleChange("qualificationRate", val)}
-            className="w-full border rounded p-2"
-            placeholder="6.0"
-            type="percentage"
-          />
+      {financing.financingType === "private" && (
+        <div className="mt-4">
+          <label className="block text-sm font-medium mb-1">Frais de dossier</label>
+          <div className="flex">
+            <FormattedNumberInput
+              value={financing.originationFee || ""}
+              onChange={(val) => handleChange("originationFee", val)}
+              className="w-full border rounded p-2"
+              placeholder="0"
+              type={financing.originationFeeType === "currency" ? "currency" : "percentage"}
+            />
+            <select
+              value={financing.originationFeeType || "percentage"}
+              onChange={(e) => handleChange("originationFeeType", e.target.value)}
+              className="ml-2 border rounded p-2"
+            >
+              <option value="percentage">%</option>
+              <option value="currency">$</option>
+            </select>
+          </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Ratio couverture dette</label>
-          <FormattedNumberInput
-            value={financing.debtCoverageRatio || ""}
-            onChange={(val) => handleChange("debtCoverageRatio", val)}
-            className="w-full border rounded p-2"
-            placeholder="1.15"
-            //disabled={lockedFields?.debtCoverage}
-          />
+      )}
+
+      {financing.financingType !== "private" && (
+        <div className="grid grid-cols-2 gap-4 mt-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Taux de qualification (%)</label>
+            <FormattedNumberInput
+              value={financing.qualificationRate || ""}
+              onChange={(val) => handleChange("qualificationRate", val)}
+              className="w-full border rounded p-2"
+              placeholder="6.0"
+              type="percentage"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Ratio couverture dette</label>
+            <FormattedNumberInput
+              value={financing.debtCoverageRatio || ""}
+              onChange={(val) => handleChange("debtCoverageRatio", val)}
+              className="w-full border rounded p-2"
+              placeholder="1.15"
+              //disabled={lockedFields?.debtCoverage}
+            />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
