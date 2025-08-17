@@ -95,31 +95,50 @@ const calculateRentability = (
   const totalExpenses = operatingExpensesTotal + vacancyAmount;
   const netOperatingIncome = totalGrossRevenue - schlTotalExpenses;
   const effectiveNetIncome = totalGrossRevenue - totalExpenses;
-  const debtCoverageRatio = parseFloat(property.debtCoverageRatio) || 1.15;
-  const maxDebtService = netOperatingIncome / debtCoverageRatio;
-
-  const qualificationRate = (parseFloat(property.qualificationRate) || 6) / 100;
   const mortgageRate = (parseFloat(property.mortgageRate) || 5.5) / 100;
-  const amortizationYears = parseInt(property.amortization) || 25;
-  const monthlyQualRate = Math.pow(1 + qualificationRate / 2, 1 / 6) - 1; 
-  const totalPayments = amortizationYears * 12;
+  let maxLoanAmount = 0;
+  let maxDebtService = 0;
+  let monthlyPayment = 0;
+  let monthlyMortgageRate = Math.pow(1 + mortgageRate / 2, 1 / 6) - 1;
+  let amortizationYears = parseInt(property.amortization) || 25;
+  let totalPayments = amortizationYears * 12;
+  let maxLTVRatio = 0.8;
 
-  const maxLoanByRCD = monthlyQualRate > 0
-    ? maxDebtService / 12 * ((Math.pow(1 + monthlyQualRate, totalPayments) - 1) / (monthlyQualRate * Math.pow(1 + monthlyQualRate, totalPayments)))
-    : 0;
+  if (property.financingType === 'private') {
+    maxLTVRatio = (parseFloat(property.ltvRatio) || 0) / 100;
+    maxLoanAmount = purchasePrice * maxLTVRatio;
+    monthlyMortgageRate = mortgageRate / 12;
+    monthlyPayment = maxLoanAmount * mortgageRate / 12;
+    maxDebtService = monthlyPayment * 12;
+  } else {
+    const debtCoverageRatio = parseFloat(property.debtCoverageRatio) || 1.15;
+    maxDebtService = netOperatingIncome / debtCoverageRatio;
 
-  // Loan-to-value ratio ceiling based on financing type
-  let maxLTVRatio = 0.80; // Conventional financing
-  if (property.financingType === 'cmhc') {
-    maxLTVRatio = 0.85;
-  } else if (property.financingType === 'cmhc_aph') {
-    const points = parseInt(property.aphPoints) || 0;
-    maxLTVRatio = getAphMaxLtvRatio(points);
+    const qualificationRate = (parseFloat(property.qualificationRate) || 6) / 100;
+    const monthlyQualRate = Math.pow(1 + qualificationRate / 2, 1 / 6) - 1;
+    totalPayments = amortizationYears * 12;
+
+    const maxLoanByRCD = monthlyQualRate > 0
+      ? (maxDebtService / 12) * ((Math.pow(1 + monthlyQualRate, totalPayments) - 1) / (monthlyQualRate * Math.pow(1 + monthlyQualRate, totalPayments)))
+      : 0;
+
+    // Loan-to-value ratio ceiling based on financing type
+    if (property.financingType === 'cmhc') {
+      maxLTVRatio = 0.85;
+    } else if (property.financingType === 'cmhc_aph') {
+      const points = parseInt(property.aphPoints) || 0;
+      maxLTVRatio = getAphMaxLtvRatio(points);
+    }
+    const maxLoanByLTV = purchasePrice * maxLTVRatio;
+    maxLoanAmount = property.ignoreLTV
+      ? maxLoanByRCD
+      : Math.min(maxLoanByRCD, maxLoanByLTV);
+
+    monthlyPayment = maxLoanAmount > 0 && monthlyMortgageRate > 0
+      ? maxLoanAmount * (monthlyMortgageRate * Math.pow(1 + monthlyMortgageRate, totalPayments)) /
+        (Math.pow(1 + monthlyMortgageRate, totalPayments) - 1)
+      : 0;
   }
-  const maxLoanByLTV = purchasePrice * maxLTVRatio;
-  const maxLoanAmount = property.ignoreLTV
-    ? maxLoanByRCD
-    : Math.min(maxLoanByRCD, maxLoanByLTV);
 
   const economicValue = maxLTVRatio > 0 ? maxLoanAmount / maxLTVRatio : 0;
 
@@ -172,13 +191,17 @@ const calculateRentability = (
     cmhcAnalysis = numberOfUnits * 150;
   }
 
+  let originationFee = 0;
+  if (property.financingType === 'private') {
+    const fee = parseFloat(property.originationFee) || 0;
+    originationFee =
+      (property.originationFeeType || 'percentage') === 'currency'
+        ? fee
+        : (maxLoanAmount * fee) / 100;
+  }
+
   const totalLoanAmount = maxLoanAmount + cmhcPremium;
   const downPayment = purchasePrice - maxLoanAmount;
-  const monthlyMortgageRate = Math.pow(1 + mortgageRate / 2, 1 / 6) - 1;
-  const monthlyPayment = totalLoanAmount > 0 && monthlyMortgageRate > 0
-    ? totalLoanAmount * (monthlyMortgageRate * Math.pow(1 + monthlyMortgageRate, totalPayments)) /
-      (Math.pow(1 + monthlyMortgageRate, totalPayments) - 1)
-    : 0;
   const annualDebtService = monthlyPayment * 12;
   // Le cashflow doit refléter toutes les dépenses, on utilise donc le
   // revenu net effectif plutôt que le NOI SCHL
@@ -218,7 +241,7 @@ const calculateRentability = (
   const acquisitionCosts = acquisitionCostKeys.reduce(
     (sum, key) => sum + (parseFloat(property[key]) || 0),
     0,
-  );
+  ) + originationFee;
 
   const totalInvestment = downPayment + acquisitionCosts;
 
@@ -280,7 +303,8 @@ const calculateRentability = (
     appreciationReturn,
     loanValueRatio,
     totalReturn,
-    valueGeneratedYear1
+    valueGeneratedYear1,
+    originationFee,
   };
 };
 

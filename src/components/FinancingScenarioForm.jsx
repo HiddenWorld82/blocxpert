@@ -76,11 +76,23 @@ export default function FinancingScenarioForm({
           "welcomeTax",
         ];
 
-    return keys.reduce(
+    let total = keys.reduce(
       (sum, key) =>
         sum + Number(parseLocaleNumber(scenario.acquisitionCosts[key]) || 0),
       0
     );
+
+    if (scenario.financing.financingType === "private") {
+      const fee = Number(parseLocaleNumber(scenario.financing.originationFee) || 0);
+      const loan = analysis?.maxLoanAmount || 0;
+      const amount =
+        (scenario.financing.originationFeeType || "percentage") === "currency"
+          ? fee
+          : (loan * fee) / 100;
+      total += amount;
+    }
+
+    return total;
   };
 
   const analysis = useMemo(() => {
@@ -154,11 +166,13 @@ export default function FinancingScenarioForm({
     if (!lockedFields.debtCoverage) return;
     const financingType = scenario.financing.financingType;
     const units = parseInt(property?.numberOfUnits) || 1;
-    let newRatio = "1.15";
+    let newRatio = "";
     if (financingType === "cmhc") {
       newRatio = units >= 7 ? "1.3" : "1.1";
     } else if (financingType === "cmhc_aph") {
       newRatio = "1.1";
+    } else if (financingType && financingType !== "private") {
+      newRatio = "1.15";
     }
     if (scenario.financing.debtCoverageRatio !== newRatio) {
       setScenario((prev) => ({
