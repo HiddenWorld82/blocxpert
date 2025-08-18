@@ -29,6 +29,12 @@ const PropertyReport = ({
       maximumFractionDigits: 0,
     }).format(value || 0);
 
+  const formatPercent = (value) =>
+    `${new Intl.NumberFormat('fr-CA', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value || 0)}%`;
+
   const reportProperty = useMemo(
     () =>
       scenario
@@ -232,6 +238,18 @@ const PropertyReport = ({
                       <span className="text-gray-600">Investissement total:</span>
                       <div className="font-semibold">{formatMoney(reportAnalysis.totalInvestment)}</div>
                     </div>
+                    {reportProperty.financingType === 'private' && (
+                      <div>
+                        <span className="text-gray-600">Ratio prêt-valeur:</span>
+                        <div className="font-semibold">{formatPercent(reportAnalysis.loanValueRatio)}</div>
+                      </div>
+                    )}
+                    {reportProperty.financingType === 'private' && reportAnalysis.originationFee > 0 && (
+                      <div>
+                        <span className="text-gray-600">Frais de dossier:</span>
+                        <div className="font-semibold">{formatMoney(reportAnalysis.originationFee)}</div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -283,6 +301,18 @@ const PropertyReport = ({
                       <span className="text-gray-600">Investissement total:</span>
                       <div className="font-semibold">{formatMoney(reportAnalysis.totalInvestment)}</div>
                     </div>
+                    {reportProperty.financingType === 'private' && (
+                      <div>
+                        <span className="text-gray-600">Ratio prêt-valeur:</span>
+                        <div className="font-semibold">{formatPercent(reportAnalysis.loanValueRatio)}</div>
+                      </div>
+                    )}
+                    {reportProperty.financingType === 'private' && reportAnalysis.originationFee > 0 && (
+                      <div>
+                        <span className="text-gray-600">Frais de dossier:</span>
+                        <div className="font-semibold">{formatMoney(reportAnalysis.originationFee)}</div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

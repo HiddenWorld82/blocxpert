@@ -94,6 +94,12 @@ export default function FinancingSummary({
             <span className="font-medium">{formatPercent(financing.ltvRatio)}</span>
           </div>
         )}
+        {financing.financingType === "private" && analysis?.originationFee > 0 && (
+          <div className="flex justify-between">
+            <span className="text-gray-600">Frais de dossier:</span>
+            <span className="font-medium">{formatMoney(analysis.originationFee)}</span>
+          </div>
+        )}
         <div className="flex justify-between">
           <span className="text-gray-600">{purchaseLabel}:</span>
           <span className="font-medium">
@@ -158,7 +164,11 @@ export default function FinancingSummary({
           )
         )}
         <div className="flex justify-between">
-          <span className="text-gray-600">Paiement mensuel:</span>
+          <span className="text-gray-600">
+            {financing.financingType === "private"
+              ? "Paiement mensuel (intérêts seulement):"
+              : "Paiement mensuel:"}
+          </span>
           <span className="font-medium">{formatMoney(analysis?.monthlyPayment)}</span>
         </div>
       </div>
