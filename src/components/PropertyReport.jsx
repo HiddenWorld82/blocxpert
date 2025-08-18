@@ -358,6 +358,7 @@ const PropertyReport = ({
               propertyId={currentProperty.id}
               onEdit={(sc) => setEditingScenario(sc)}
               excludeTypes={['initialFinancing']}
+              parentScenarioId={baseScenarioId}
             />
           </div>
 
