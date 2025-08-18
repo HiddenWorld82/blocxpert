@@ -13,7 +13,13 @@ const typeLabels = {
   other: "Autres",
 };
 
-export default function ScenarioList({ propertyId, onEdit, onView, excludeTypes = [] }) {
+export default function ScenarioList({
+  propertyId,
+  onEdit,
+  onView,
+  excludeTypes = [],
+  parentScenarioId = null,
+}) {
   const [scenarios, setScenarios] = useState([]);
 
   useEffect(() => {
@@ -36,9 +42,11 @@ export default function ScenarioList({ propertyId, onEdit, onView, excludeTypes 
     setScenarios((prev) => prev.filter((s) => s.id !== id));
   };
 
-  const filtered = scenarios.filter(
-    (s) => !excludeTypes.includes(s.type || "other")
-  );
+  const filtered = scenarios.filter((s) => {
+    if (excludeTypes.includes(s.type || "other")) return false;
+    if (parentScenarioId && s.parentScenarioId !== parentScenarioId) return false;
+    return true;
+  });
 
   // If initial financing scenarios are excluded, render a flat list (for child scenarios only)
   if (excludeTypes.includes("initialFinancing")) {
