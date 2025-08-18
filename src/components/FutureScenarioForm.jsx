@@ -268,9 +268,16 @@ export default function FutureScenarioForm({
   const analysis = useMemo(() => {
     if (!combinedProperty) return null;
     return calculateRentability(combinedProperty, advancedExpenses, {
-      initialLoanAmount: existingLoanPrincipal,
+      initialLoanAmount: ["cmhc", "cmhc_aph"].includes(parentProperty?.financingType)
+        ? existingLoanPrincipal
+        : 0,
     });
-  }, [combinedProperty, advancedExpenses, existingLoanPrincipal]);
+  }, [
+    combinedProperty,
+    advancedExpenses,
+    existingLoanPrincipal,
+    parentProperty?.financingType,
+  ]);
 
   const cmhcPremium = analysis?.cmhcPremium || 0;
 
