@@ -108,7 +108,7 @@ export default function FinancingSummary({
         </div>
         {!isRenewal && (
           <div className="flex justify-between">
-            <span className="text-gray-600">Valeur économique:</span>
+            <span className="text-gray-600">Valeur d'emprunt:</span>
             <span className="font-medium">{formatMoney(analysis?.economicValue)}</span>
           </div>
         )}
