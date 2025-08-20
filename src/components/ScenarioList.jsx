@@ -24,9 +24,9 @@ export default function ScenarioList({
 
   useEffect(() => {
     if (!propertyId) return;
-    const unsub = getScenarios(propertyId, setScenarios);
+    const unsub = getScenarios(propertyId, setScenarios, parentScenarioId);
     return () => unsub && unsub();
-  }, [propertyId]);
+  }, [propertyId, parentScenarioId]);
 
   const handleDuplicate = async (scenario) => {
     // Firestore's onSnapshot listener in `getScenarios` already updates the
