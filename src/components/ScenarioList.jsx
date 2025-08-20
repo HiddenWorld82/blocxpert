@@ -24,9 +24,9 @@ export default function ScenarioList({
 
   useEffect(() => {
     if (!propertyId) return;
-    const unsub = getScenarios(propertyId, setScenarios, parentScenarioId);
+    const unsub = getScenarios(propertyId, setScenarios);
     return () => unsub && unsub();
-  }, [propertyId, parentScenarioId]);
+  }, [propertyId]);
 
   const handleDuplicate = async (scenario) => {
     // Firestore's onSnapshot listener in `getScenarios` already updates the
@@ -44,7 +44,9 @@ export default function ScenarioList({
 
   const filtered = scenarios.filter((s) => {
     if (excludeTypes.includes(s.type || "other")) return false;
-    if (parentScenarioId && s.parentScenarioId !== parentScenarioId) return false;
+    if (parentScenarioId != null && s.parentScenarioId !== parentScenarioId) {
+      return false;
+    }
     return true;
   });
 

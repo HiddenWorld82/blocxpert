@@ -63,21 +63,14 @@ export const saveFinancingScenario = async (propertyId, scenario) => {
   return saveScenario(propertyId, { ...scenario, type: 'initialFinancing' });
 };
 
-export const getScenarios = (
-  propertyId,
-  callback,
-  parentScenarioId = null
-) => {
+export const getScenarios = (propertyId, callback) => {
   const scenariosCollection = collection(
     firestore,
     'properties',
     propertyId,
     'scenarios'
   );
-  const q = parentScenarioId
-    ? query(scenariosCollection, where('parentScenarioId', '==', parentScenarioId))
-    : scenariosCollection;
-  return onSnapshot(q, (snapshot) => {
+  return onSnapshot(scenariosCollection, (snapshot) => {
     const scenarios = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
     callback(scenarios);
   });

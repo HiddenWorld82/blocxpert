@@ -61,7 +61,7 @@ const PropertyReport = ({
   const reportRef = useRef(null);
 
   const baseScenarioId = scenario
-    ? scenario.parentScenarioId || scenario.id
+    ? scenario.parentScenarioId ?? scenario.id
     : null;
 
   const handleGeneratePDF = () => {
