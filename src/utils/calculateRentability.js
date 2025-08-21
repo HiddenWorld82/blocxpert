@@ -302,6 +302,7 @@ const calculateRentability = (
     loanPaydownReturn,
     appreciationReturn,
     loanValueRatio,
+    mortgageRate: mortgageRate * 100,
     totalReturn,
     valueGeneratedYear1,
     originationFee,

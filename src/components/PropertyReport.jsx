@@ -325,7 +325,14 @@ const PropertyReport = ({
             )}
           </div>
 
-          <KeyIndicators analysis={reportAnalysis} />
+          <KeyIndicators
+            analysis={reportAnalysis}
+            variant={
+              reportProperty.financingType === "private"
+                ? "private"
+                : "acquisition"
+            }
+          />
 
           <div className="grid md:grid-cols-2 gap-8 mb-8">
             <FinancialSummary analysis={reportAnalysis} advancedExpenses={advancedExpenses} />
