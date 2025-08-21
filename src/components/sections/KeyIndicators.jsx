@@ -1,6 +1,12 @@
 // src/components/sections/KeyIndicators.jsx
 import React from "react";
-import { DollarSign, TrendingUp, BarChart, PiggyBank, Percent } from "lucide-react";
+import {
+  DollarSign,
+  TrendingUp,
+  BarChart,
+  PiggyBank,
+  Percent,
+} from "lucide-react";
 
 export default function KeyIndicators({ analysis, variant = "acquisition" }) {
   if (!analysis) return null;
@@ -18,7 +24,7 @@ export default function KeyIndicators({ analysis, variant = "acquisition" }) {
         }).format(value)
       : "—";
 
-  const cards = [
+  let cards = [
     {
       key: "mrb",
       label: "Multiplicateur de revenu brut (MRB)",
@@ -81,13 +87,55 @@ export default function KeyIndicators({ analysis, variant = "acquisition" }) {
       value: formatPercent(analysis.loanValueRatio),
       icon: <Percent className="w-6 h-6 text-cyan-600" />,
       color: "text-gray-700",
-    }
+    },
   ];
 
-  const visibleCards =
-    variant === "future"
-      ? cards.filter((card) => !["mrb", "mrn", "tga"].includes(card.key))
-      : cards;
+  if (variant === "private") {
+    cards = cards.concat([
+      {
+        key: "interestRate",
+        label: "Taux d'intérêt du prêt",
+        value: formatPercent(analysis.mortgageRate),
+        icon: <Percent className="w-6 h-6 text-rose-600" />,
+        color: "text-gray-700",
+      },
+      {
+        key: "monthlyInterest",
+        label: "Intérêt mensuel payé",
+        value: formatMoney(analysis.monthlyPayment),
+        icon: <DollarSign className="w-6 h-6 text-rose-600" />,
+        color: "text-gray-700",
+      },
+      {
+        key: "annualInterest",
+        label: "Total des intérêts payables",
+        value: formatMoney(analysis.annualDebtService),
+        icon: <DollarSign className="w-6 h-6 text-red-600" />,
+        color: "text-gray-700",
+      },
+      {
+        key: "capitalRequired",
+        label: "Capital nécessaire",
+        value: formatMoney(
+          (analysis.totalInvestment || 0) + (analysis.annualDebtService || 0),
+        ),
+        icon: <PiggyBank className="w-6 h-6 text-rose-600" />,
+        color: "text-gray-700",
+      },
+    ]);
+  }
+
+  const filterConfig = {
+    future: (card) => !["mrb", "mrn", "tga"].includes(card.key),
+    private: (card) =>
+      !["coc", "loanPaydownReturn", "appreciationReturn", "totalReturn"].includes(
+        card.key,
+      ),
+  };
+
+  const visibleCards = filterConfig[variant]
+    ? cards.filter(filterConfig[variant])
+    : cards;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
