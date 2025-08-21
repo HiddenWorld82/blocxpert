@@ -188,34 +188,43 @@ const PropertyReport = ({
                 </div>
                 <div>
                   <div className="grid md:grid-cols-4 gap-4">
+                    {reportProperty.financingType !== 'private' && (
                     <div>
                       <span className="text-gray-600">Revenus totaux:</span>
                       <div className="font-semibold">
                         {formatMoney(reportAnalysis.totalGrossRevenue)}
                       </div>
                     </div>
+                    )}
+                    {reportProperty.financingType !== 'private' && (
                     <div>
                       <span className="text-gray-600">Dépenses totales:</span>
                       <div className="font-semibold text-red-600">
                         {formatMoney(reportAnalysis.totalExpenses)}
                       </div>
                     </div>
+                    )}
+                    {reportProperty.financingType !== 'private' && (
                     <div>
                       <span className="text-gray-600">Service de la dette an 1:</span>
                       <div className="font-semibold text-red-600">
                         {formatMoney(reportAnalysis.annualDebtService)}
                       </div>
                     </div>
+                    )}
+                    {reportProperty.financingType !== 'private' && (
                     <div>
                       <span className="text-gray-600">Cash Flow:</span>
                       <div className={`font-semibold ${reportAnalysis.cashFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                         {formatMoney(reportAnalysis.cashFlow)}
                       </div>
                     </div>
+                    )}
                   </div>
                 </div>
                 <div>
                   <div className="grid md:grid-cols-4 gap-4">
+                    {reportProperty.financingType !== 'private' && (
                     <div>
                       <span className="text-gray-600">Financement:</span>
                       <div className="font-semibold">
@@ -224,10 +233,25 @@ const PropertyReport = ({
                         {reportProperty.financingType === 'cmhc_aph' && `SCHL APH (${reportProperty.aphPoints} pts)`}
                       </div>
                     </div>
+                    )}
+                    {reportProperty.financingType !== 'private' && (
                     <div>
                       <span className="text-gray-600">Prêt maximal:</span>
                       <div className="font-semibold">{formatMoney(reportAnalysis.maxLoanAmount)}</div>
                     </div>
+                    )}
+                    {reportProperty.financingType === 'private' && (
+                      <div>
+                      <span className="text-gray-600">Prêt octroyé:</span>
+                      <div className="font-semibold">{formatMoney(reportAnalysis.maxLoanAmount)}</div>
+                    </div>
+                    )}
+                    {reportProperty.financingType === 'private' && (
+                      <div>
+                        <span className="text-gray-600">Ratio prêt-valeur:</span>
+                        <div className="font-semibold">{formatPercent(reportAnalysis.loanValueRatio)}</div>
+                      </div>
+                    )}
                     <div>
                       <span className="text-gray-600">Mise de fonds:</span>
                       <div className="font-semibold">{formatMoney(reportAnalysis.downPayment)}</div>
@@ -236,18 +260,6 @@ const PropertyReport = ({
                       <span className="text-gray-600">Investissement total:</span>
                       <div className="font-semibold">{formatMoney(reportAnalysis.totalInvestment)}</div>
                     </div>
-                    {reportProperty.financingType === 'private' && (
-                      <div>
-                        <span className="text-gray-600">Ratio prêt-valeur:</span>
-                        <div className="font-semibold">{formatPercent(reportAnalysis.loanValueRatio)}</div>
-                      </div>
-                    )}
-                    {reportProperty.financingType === 'private' && reportAnalysis.originationFee > 0 && (
-                      <div>
-                        <span className="text-gray-600">Frais de dossier:</span>
-                        <div className="font-semibold">{formatMoney(reportAnalysis.originationFee)}</div>
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
@@ -279,6 +291,7 @@ const PropertyReport = ({
                 </div>
                 <div>
                   <div className="grid md:grid-cols-4 gap-4">
+                    {reportProperty.financingType !== 'private' && (
                     <div>
                       <span className="text-gray-600">Financement:</span>
                       <div className="font-semibold">
@@ -287,10 +300,17 @@ const PropertyReport = ({
                         {reportProperty.financingType === 'cmhc_aph' && `SCHL APH (${reportProperty.aphPoints} pts)`}
                       </div>
                     </div>
+                    )}
                     <div>
                       <span className="text-gray-600">Prêt maximal:</span>
                       <div className="font-semibold">{formatMoney(reportAnalysis.maxLoanAmount)}</div>
                     </div>
+                    {reportProperty.financingType === 'private' && (
+                      <div>
+                        <span className="text-gray-600">Ratio prêt-valeur:</span>
+                        <div className="font-semibold">{formatPercent(reportAnalysis.loanValueRatio)}</div>
+                      </div>
+                    )}
                     <div>
                       <span className="text-gray-600">Mise de fonds:</span>
                       <div className="font-semibold">{formatMoney(reportAnalysis.downPayment)}</div>
@@ -299,18 +319,6 @@ const PropertyReport = ({
                       <span className="text-gray-600">Investissement total:</span>
                       <div className="font-semibold">{formatMoney(reportAnalysis.totalInvestment)}</div>
                     </div>
-                    {reportProperty.financingType === 'private' && (
-                      <div>
-                        <span className="text-gray-600">Ratio prêt-valeur:</span>
-                        <div className="font-semibold">{formatPercent(reportAnalysis.loanValueRatio)}</div>
-                      </div>
-                    )}
-                    {reportProperty.financingType === 'private' && reportAnalysis.originationFee > 0 && (
-                      <div>
-                        <span className="text-gray-600">Frais de dossier:</span>
-                        <div className="font-semibold">{formatMoney(reportAnalysis.originationFee)}</div>
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
