@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { TrendingUp } from 'lucide-react';
 import FormattedNumberInput, { formatCurrency } from "../FormattedNumberInput";
+import schlExpenses from "../../defaults/schlExpenses";
 
 export default function OperatingExpensesSection({
   expenses = {},
@@ -13,6 +14,18 @@ export default function OperatingExpensesSection({
   };
 
   const numberOfUnits = parseInt(expenses.numberOfUnits) || 0;
+  const province = expenses.province;
+  const structureType = expenses.structureType || 'woodFrame';
+
+  const provinceConfig = province ? schlExpenses[province] : null;
+  let schlConfig;
+  if (provinceConfig) {
+    if (structureType === 'woodFrame') {
+      schlConfig = provinceConfig.woodFrame[numberOfUnits <= 11 ? 'small' : 'large'];
+    } else {
+      schlConfig = provinceConfig.concrete.any;
+    }
+  }
 
   const totalRevenue = [
     "annualRent",
@@ -29,6 +42,33 @@ export default function OperatingExpensesSection({
   const conciergePerUnit = parseFloat(expenses.concierge) || 0;
   const maintenanceTotal = parseFloat(expenses.maintenance) * numberOfUnits;
   const conciergeTotal = parseFloat(expenses.concierge) * numberOfUnits;
+
+  const numHeatPumps = parseInt(expenses.numHeatPumps) || 0;
+  const numElevators = parseInt(expenses.numElevators) || 0;
+  const applianceCount = [
+    "numFridges",
+    "numStoves",
+    "numDishwashers",
+    "numWashers",
+    "numDryers",
+  ].reduce((sum, key) => sum + (parseInt(expenses[key]) || 0), 0);
+
+  const rrRates = schlConfig?.replacementReserve || {};
+  const replacementReserve =
+    applianceCount * (rrRates.appliance || 0) +
+    numHeatPumps * (rrRates.heatPump || 0) +
+    numElevators * (rrRates.elevator || 0);
+
+  useEffect(() => {
+    if (!schlConfig) return;
+    const updates = {};
+    if (!expenses.maintenance) updates.maintenance = schlConfig.maintenance.toString();
+    if (!expenses.managementRate) updates.managementRate = schlConfig.managementRate.toString();
+    if (!expenses.concierge) updates.concierge = schlConfig.salaries.toString();
+    if (Object.keys(updates).length > 0) {
+      onChange(prev => ({ ...prev, ...updates }));
+    }
+  }, [schlConfig, expenses.maintenance, expenses.managementRate, expenses.concierge, onChange]);
 
   /**useEffect(() => {
     if (!advancedExpenses) return;
@@ -62,12 +102,10 @@ export default function OperatingExpensesSection({
         "accounting",
         "elevator",
         "cableInternet",
-        "appliances",
         "garbage",
-        "washerDryer",
         "hotWater",
         "otherExpenses",
-      ].reduce((sum, key) => sum + (parseFloat(expenses[key]) || 0), 0) + managementFee + vacancyAmount + maintenanceTotal + conciergeTotal
+      ].reduce((sum, key) => sum + (parseFloat(expenses[key]) || 0), 0) + managementFee + vacancyAmount + maintenanceTotal + conciergeTotal + replacementReserve
     : [
         "municipalTaxes",
         "schoolTaxes",
@@ -75,7 +113,7 @@ export default function OperatingExpensesSection({
         "electricityHeating",
         "management",
         "otherExpenses",
-    ].reduce((sum, key) => sum + (parseFloat(expenses[key]) || 0), 0) + managementFee + vacancyAmount + maintenanceTotal + conciergeTotal
+    ].reduce((sum, key) => sum + (parseFloat(expenses[key]) || 0), 0) + managementFee + vacancyAmount + maintenanceTotal + conciergeTotal + replacementReserve
 
   useEffect(() => {
     if (!advancedExpenses) {
@@ -180,10 +218,15 @@ export default function OperatingExpensesSection({
     { field: "accounting", label: "Comptabilité" },
     { field: "elevator", label: "Ascenseur" },
     { field: "cableInternet", label: "Câble/Internet" },
-    { field: "appliances", label: "Électroménagers" },
     { field: "garbage", label: "Ordures" },
-    { field: "washerDryer", label: "Laveuse/Sécheuse" },
     { field: "hotWater", label: "Eau chaude" },
+    { field: "numHeatPumps", label: "Thermopompes murales (nombre)" },
+    { field: "numFridges", label: "Réfrigérateurs (nombre)" },
+    { field: "numStoves", label: "Cuisinières (nombre)" },
+    { field: "numDishwashers", label: "Lave-vaisselles (nombre)" },
+    { field: "numWashers", label: "Laveuses (nombre)" },
+    { field: "numDryers", label: "Sécheuses (nombre)" },
+    { field: "numElevators", label: "Ascenseurs (nombre)" },
     { field: "otherExpenses", label: "Autres dépenses" },
   ];
 
@@ -233,6 +276,17 @@ export default function OperatingExpensesSection({
             )}
           </div>
         ))}
+        <div className="col-span-1">
+          <label className="block text-sm font-medium mb-1">Réserve de remplacement</label>
+          <FormattedNumberInput
+            value={replacementReserve || ""}
+            onChange={() => {}}
+            className="w-full border rounded p-2 bg-gray-100"
+            placeholder="0"
+            disabled
+            type="currency"
+          />
+        </div>
       </div>
       <div className="mt-4">
         <label className="block text-sm font-medium mb-1">Total des dépenses</label>

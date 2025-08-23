@@ -161,6 +161,18 @@ export default function BasicInfo({
             readOnly={readOnly}
           />
         </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Type de structure</label>
+          <select
+            value={property.structureType || 'woodFrame'}
+            onChange={(e) => handleChange('structureType', e.target.value)}
+            className={`w-full border rounded p-2 ${readOnly ? 'bg-gray-100' : ''}`}
+            disabled={readOnly}
+          >
+            <option value="woodFrame">Bois</option>
+            <option value="concrete">Béton</option>
+          </select>
+        </div>
       </div>
     </div>
   );
