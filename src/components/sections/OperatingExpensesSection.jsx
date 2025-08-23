@@ -23,7 +23,8 @@ export default function OperatingExpensesSection({
   ].reduce((sum, key) => sum + (parseFloat(expenses[key]) || 0), 0);
 
   const vacancyAmount = totalRevenue * ((parseFloat(expenses.vacancyRate) || 0) / 100);
-  const managementFee = totalRevenue * ((parseFloat(expenses.managementRate) || 0) / 100);
+  const effectiveRevenue = totalRevenue - vacancyAmount;
+  const managementFee = effectiveRevenue * ((parseFloat(expenses.managementRate) || 0) / 100);
   const maintenancePerUnit = parseFloat(expenses.maintenance) || 0;
   const conciergePerUnit = parseFloat(expenses.concierge) || 0;
   const maintenanceTotal = parseFloat(expenses.maintenance) * numberOfUnits;
@@ -124,7 +125,7 @@ export default function OperatingExpensesSection({
             {field === "managementRate" && (
               <p className="text-xs text-gray-500 mt-1">
                 {expenses.managementRate
-                  ? `${expenses.managementRate}% de ${formatCurrency(totalRevenue)} = ${formatCurrency(managementFee)}`
+                  ? `${expenses.managementRate}% de ${formatCurrency(effectiveRevenue)} = ${formatCurrency(managementFee)}`
                   : ''}
               </p>
             )}
@@ -212,7 +213,7 @@ export default function OperatingExpensesSection({
             {field === "managementRate" && (
               <p className="text-xs text-gray-500 mt-1">
                 {expenses.managementRate
-                  ? `${expenses.managementRate}% de ${formatCurrency(totalRevenue)} = ${formatCurrency(managementFee)}`
+                  ? `${expenses.managementRate}% de ${formatCurrency(effectiveRevenue)} = ${formatCurrency(managementFee)}`
                   : ''}
               </p>
             )}

@@ -33,7 +33,7 @@ const calculateRentability = (
       (parseFloat(property.electricity) || 0) +
       (parseFloat(property.insurance) || 0) +
       (numberOfUnits * (parseFloat(property.maintenance) || 610)) +
-      (totalGrossRevenue * (parseFloat(property.managementRate) || 0) / 100) +
+      (effectiveGrossRevenue * (parseFloat(property.managementRate) || 0) / 100) +
       (numberOfUnits * (parseFloat(property.concierge) || 365)) +
       //(parseFloat(property.landscaping) || 0) +
       //(parseFloat(property.snowRemoval) || 0) +
@@ -56,7 +56,7 @@ const calculateRentability = (
       (parseFloat(property.electricity) || 0) +
       (parseFloat(property.insurance) || 0) +
       (numberOfUnits * (parseFloat(property.maintenance) || 610)) +
-      (totalGrossRevenue * (parseFloat(property.managementRate) || 0) / 100) +
+      (effectiveGrossRevenue * (parseFloat(property.managementRate) || 0) / 100) +
       (numberOfUnits * (parseFloat(property.concierge) || 365)) +
       (parseFloat(property.landscaping) || 0) +
       (parseFloat(property.snowRemoval) || 0) +
@@ -78,7 +78,7 @@ const calculateRentability = (
       (parseFloat(property.schoolTaxes) || 0) +
       (parseFloat(property.insurance) || 0) +
       (numberOfUnits * (parseFloat(property.maintenance) || 610)) +
-      (totalGrossRevenue * (parseFloat(property.managementRate) || 0) / 100) +
+      (effectiveGrossRevenue * (parseFloat(property.managementRate) || 0) / 100) +
       (numberOfUnits * (parseFloat(property.concierge) || 365)) +
       (parseFloat(property.electricityHeating) || 0) +
       (parseFloat(property.otherExpenses) || 0);
