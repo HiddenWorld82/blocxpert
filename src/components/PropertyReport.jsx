@@ -43,6 +43,15 @@ const PropertyReport = ({
     [currentProperty, scenario]
   );
 
+  const fullAddress = [
+    reportProperty.address,
+    reportProperty.city,
+    reportProperty.province,
+    reportProperty.postalCode,
+  ]
+    .filter(Boolean)
+    .join(', ');
+
   const reportAnalysis = useMemo(
     () =>
       scenario
@@ -156,7 +165,7 @@ const PropertyReport = ({
 
           <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-6 mb-6">
             <h3 className="text-xl font-semibold mb-2">
-              {reportProperty.address || 'Propriété à analyser'}
+              {fullAddress || 'Propriété à analyser'}
             </h3>
             {advancedExpenses ? (
               <div className="space-y-4 text-sm">

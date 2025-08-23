@@ -12,6 +12,18 @@ const PropertyForm = ({
   setAdvancedExpenses,
   onSave,
 }) => {
+  const handleSaveClick = () => {
+    if (
+      !currentProperty.address ||
+      !currentProperty.city ||
+      !currentProperty.province ||
+      !currentProperty.postalCode
+    ) {
+      alert("Veuillez remplir l'adresse complète (adresse, ville, province, code postal).");
+      return;
+    }
+    onSave();
+  };
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-4xl mx-auto">
@@ -67,7 +79,7 @@ const PropertyForm = ({
                 </button>
               )}
               <button
-                onClick={onSave}
+                onClick={handleSaveClick}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
                 Sauvegarder
