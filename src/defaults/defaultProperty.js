@@ -9,6 +9,7 @@ const defaultProperty = {
   purchasePrice: '',
   municipalEvaluation: '',
   numberOfUnits: '',
+  structureType: 'woodFrame',
 
   // Revenus
   annualRent: '',
@@ -46,6 +47,13 @@ const defaultProperty = {
   garbage: '',
   washerDryer: '',
   hotWater: '',
+  numFridges: '',
+  numStoves: '',
+  numDishwashers: '',
+  numWashers: '',
+  numDryers: '',
+  numHeatPumps: '',
+  numElevators: '',
 
   // Financement
   financingType: 'conventional',
