@@ -35,15 +35,18 @@ export default function BasicInfo({
           const street = [get("street_number"), get("route")]
             .filter(Boolean)
             .join(" ");
-          handleChange("address", street);
           const city =
             get("locality") ||
             get("administrative_area_level_2") ||
             get("sublocality") ||
             get("postal_town");
-          handleChange("city", city);
-          handleChange("province", get("administrative_area_level_1", true));
-          handleChange("postalCode", get("postal_code"));
+          onChange({
+            ...property,
+            address: street,
+            city,
+            province: get("administrative_area_level_1", true),
+            postalCode: get("postal_code"),
+          });
         },
         autocompleteOptions
       );
