@@ -22,7 +22,20 @@ export default function BasicInfo({
   const addressRef = disablePlaceAutocomplete
     ? useRef(null)
     : useGooglePlacesAutocomplete(
-        (place) => handleChange("address", place.formatted_address),
+        (place) => {
+          const components = place.address_components || [];
+          const get = (type) => {
+            const comp = components.find((c) => c.types.includes(type));
+            return comp ? comp.long_name : "";
+          };
+          const street = [get("street_number"), get("route")]
+            .filter(Boolean)
+            .join(" ");
+          handleChange("address", street);
+          handleChange("city", get("locality") || get("sublocality"));
+          handleChange("province", get("administrative_area_level_1"));
+          handleChange("postalCode", get("postal_code"));
+        },
         autocompleteOptions
       );
 
@@ -37,10 +50,52 @@ export default function BasicInfo({
           value={property.address || ""}
           onChange={(e) => handleChange("address", e.target.value)}
           className={`w-full border rounded p-2 ${readOnly ? 'bg-gray-100' : ''}`}
-          placeholder="123 rue Example, Montréal"
+          placeholder="123 rue Example"
           disabled={readOnly}
           readOnly={readOnly}
+          required
         />
+      </div>
+      <div className="grid grid-cols-3 gap-4 mt-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Ville</label>
+          <input
+            type="text"
+            value={property.city || ""}
+            onChange={(e) => handleChange("city", e.target.value)}
+            className={`w-full border rounded p-2 ${readOnly ? 'bg-gray-100' : ''}`}
+            placeholder="Montréal"
+            disabled={readOnly}
+            readOnly={readOnly}
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Province</label>
+          <input
+            type="text"
+            value={property.province || ""}
+            onChange={(e) => handleChange("province", e.target.value)}
+            className={`w-full border rounded p-2 ${readOnly ? 'bg-gray-100' : ''}`}
+            placeholder="QC"
+            disabled={readOnly}
+            readOnly={readOnly}
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Code postal</label>
+          <input
+            type="text"
+            value={property.postalCode || ""}
+            onChange={(e) => handleChange("postalCode", e.target.value)}
+            className={`w-full border rounded p-2 ${readOnly ? 'bg-gray-100' : ''}`}
+            placeholder="H2B 1A0"
+            disabled={readOnly}
+            readOnly={readOnly}
+            required
+          />
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-4 mt-4">
         {advancedExpenses && (

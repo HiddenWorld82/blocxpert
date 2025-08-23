@@ -36,6 +36,9 @@ const RentalPropertyAnalyzer = () => {
   const handleSave = async () => {
     const fieldsToSave = [
       'address',
+      'city',
+      'province',
+      'postalCode',
       'askingPrice',
       'purchasePrice',
       'municipalEvaluation',

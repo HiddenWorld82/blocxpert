@@ -18,7 +18,16 @@ export default function ExecutiveSummary({ analysis, currentProperty }) {
       <div className="prose max-w-none text-gray-700">
         <p>
           Cet immeuble de <strong>{currentProperty?.numberOfUnits || 0} unités</strong> situé au{" "}
-          <strong>{currentProperty?.address || "adresse non spécifiée"}</strong> représente un
+          <strong>
+            {[
+              currentProperty?.address,
+              currentProperty?.city,
+              currentProperty?.province,
+              currentProperty?.postalCode,
+            ]
+              .filter(Boolean)
+              .join(', ') || "adresse non spécifiée"}
+          </strong> représente un
           investissement de <strong>{formatMoney(parseFloat(currentProperty?.purchasePrice))}</strong>.
         </p>
         <p className="mt-3">

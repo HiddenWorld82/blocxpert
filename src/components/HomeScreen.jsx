@@ -71,44 +71,54 @@ const HomeScreen = ({ properties, onNew, onSelect, onDelete }) => {
               </button>
             </div>
             <div className="grid gap-4">
-              {properties.map((property, index) => (
-                <div
-                  key={index}
-                  className="relative border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
-                  onClick={() => onSelect(property)}
-                >
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete?.(property.id);
-                    }}
-                    className="absolute top-2 right-2 text-red-600 hover:text-red-800"
-                    aria-label="Supprimer"
+              {properties.map((property, index) => {
+                const fullAddress = [
+                  property.address,
+                  property.city,
+                  property.province,
+                  property.postalCode,
+                ]
+                  .filter(Boolean)
+                  .join(', ');
+                return (
+                  <div
+                    key={index}
+                    className="relative border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                    onClick={() => onSelect(property)}
                   >
-                    <X size={16} />
-                  </button>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-semibold text-lg">
-                        {property.address || 'Adresse non spécifiée'}
-                      </h3>
-                      <p className="text-gray-600">
-                        {property.numberOfUnits} unités •
-                        {Number(property.purchasePrice).toLocaleString('fr-CA')}$ •
-                        {(property.purchasePrice / property.numberOfUnits).toLocaleString('fr-CA')}$/porte
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <div className={`text-lg font-semibold ${property.effectiveNetIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {property.effectiveNetIncome >= 0 ? '+' : ''}{Math.round(property.effectiveNetIncome).toLocaleString('fr-CA')}$ /an
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete?.(property.id);
+                      }}
+                      className="absolute top-2 right-2 text-red-600 hover:text-red-800"
+                      aria-label="Supprimer"
+                    >
+                      <X size={16} />
+                    </button>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-semibold text-lg">
+                          {fullAddress || 'Adresse non spécifiée'}
+                        </h3>
+                        <p className="text-gray-600">
+                          {property.numberOfUnits} unités •
+                          {Number(property.purchasePrice).toLocaleString('fr-CA')}$ •
+                          {(property.purchasePrice / property.numberOfUnits).toLocaleString('fr-CA')}$/porte
+                        </p>
                       </div>
-                      <div className="text-sm text-gray-500">
-                        Rendement après 1 an: {property.totalReturn?.toFixed(1) || 'N/A'}%
+                      <div className="text-right">
+                        <div className={`text-lg font-semibold ${property.effectiveNetIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {property.effectiveNetIncome >= 0 ? '+' : ''}{Math.round(property.effectiveNetIncome).toLocaleString('fr-CA')}$ /an
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          Rendement après 1 an: {property.totalReturn?.toFixed(1) || 'N/A'}%
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

@@ -2,6 +2,9 @@
 
 const defaultProperty = {
   address: '',
+  city: '',
+  province: '',
+  postalCode: '',
   askingPrice: '',
   purchasePrice: '',
   municipalEvaluation: '',

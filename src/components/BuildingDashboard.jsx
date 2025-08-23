@@ -79,6 +79,15 @@ const BuildingDashboard = ({
     },
   ];
 
+  const fullAddress = [
+    property.address,
+    property.city,
+    property.province,
+    property.postalCode,
+  ]
+    .filter(Boolean)
+    .join(', ');
+
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-5xl mx-auto">
@@ -102,7 +111,7 @@ const BuildingDashboard = ({
           </div>
           <div className="mb-6">
             <h3 className="text-xl font-semibold">
-              {property.address || 'Adresse non spécifiée'}
+              {fullAddress || 'Adresse non spécifiée'}
             </h3>
           </div>
 
