@@ -15,7 +15,10 @@ export default function BasicInfo({
   };
 
   const autocompleteOptions = useMemo(
-    () => ({ componentRestrictions: { country: "ca" } }),
+    () => ({
+      componentRestrictions: { country: "ca" },
+      fields: ["address_components"],
+    }),
     []
   );
 
@@ -24,16 +27,22 @@ export default function BasicInfo({
     : useGooglePlacesAutocomplete(
         (place) => {
           const components = place.address_components || [];
-          const get = (type) => {
+          const get = (type, short = false) => {
             const comp = components.find((c) => c.types.includes(type));
-            return comp ? comp.long_name : "";
+            if (!comp) return "";
+            return short ? comp.short_name : comp.long_name;
           };
           const street = [get("street_number"), get("route")]
             .filter(Boolean)
             .join(" ");
           handleChange("address", street);
-          handleChange("city", get("locality") || get("sublocality"));
-          handleChange("province", get("administrative_area_level_1"));
+          const city =
+            get("locality") ||
+            get("administrative_area_level_2") ||
+            get("sublocality") ||
+            get("postal_town");
+          handleChange("city", city);
+          handleChange("province", get("administrative_area_level_1", true));
           handleChange("postalCode", get("postal_code"));
         },
         autocompleteOptions
