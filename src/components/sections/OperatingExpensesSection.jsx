@@ -45,34 +45,36 @@ export default function OperatingExpensesSection({
 
   const numHeatPumps = parseInt(expenses.numHeatPumps) || 0;
   const numElevators = parseInt(expenses.numElevators) || 0;
-  const applianceCount = [
-    "numFridges",
-    "numStoves",
-    "numDishwashers",
-    "numWashers",
-    "numDryers",
-  ].reduce((sum, key) => sum + (parseInt(expenses[key]) || 0), 0);
+  const numFridges = parseInt(expenses.numFridges) || 0;
+  const numStoves = parseInt(expenses.numStoves) || 0;
+  const numDishwashers = parseInt(expenses.numDishwashers) || 0;
+  const numWashers = parseInt(expenses.numWashers) || 0;
+  const numDryers = parseInt(expenses.numDryers) || 0;
 
   const rrRates = schlConfig?.replacementReserve || {};
-  const replacementReserve =
-    applianceCount * (rrRates.appliance || 0) +
-    numHeatPumps * (rrRates.heatPump || 0) +
-    numElevators * (rrRates.elevator || 0) * 12;
+  const rrBreakdown = {
+    numHeatPumps: { rate: rrRates.heatPump || 0, count: numHeatPumps, multiplier: 1 },
+    numFridges: { rate: rrRates.appliance || 0, count: numFridges, multiplier: 1 },
+    numStoves: { rate: rrRates.appliance || 0, count: numStoves, multiplier: 1 },
+    numDishwashers: { rate: rrRates.appliance || 0, count: numDishwashers, multiplier: 1 },
+    numWashers: { rate: rrRates.appliance || 0, count: numWashers, multiplier: 1 },
+    numDryers: { rate: rrRates.appliance || 0, count: numDryers, multiplier: 1 },
+    numElevators: { rate: rrRates.elevator || 0, count: numElevators, multiplier: 12 },
+  };
+
+  Object.values(rrBreakdown).forEach(item => {
+    item.value = item.rate * item.count * item.multiplier;
+  });
+
+  const replacementReserve = Object.values(rrBreakdown).reduce(
+    (sum, item) => sum + item.value,
+    0
+  );
 
   const replacementReserveCalculation = () => {
-    const parts = [];
-    if (applianceCount)
-      parts.push(
-        `${formatCurrency(rrRates.appliance || 0)} × ${applianceCount}`
-      );
-    if (numHeatPumps)
-      parts.push(
-        `${formatCurrency(rrRates.heatPump || 0)} × ${numHeatPumps}`
-      );
-    if (numElevators)
-      parts.push(
-        `${formatCurrency(rrRates.elevator || 0)} × 12 × ${numElevators}`
-      );
+    const parts = Object.values(rrBreakdown)
+      .filter(item => item.value)
+      .map(item => formatCurrency(item.value));
     return parts.length
       ? `${parts.join(" + ")} = ${formatCurrency(replacementReserve)}`
       : "";
@@ -307,6 +309,17 @@ export default function OperatingExpensesSection({
                 {expenses.concierge
                   ? `${formatCurrency(conciergePerUnit)} × ${numberOfUnits} = ${formatCurrency(conciergeTotal)}`
                   : ''}
+              </p>
+            )}
+            {rrBreakdown[field]?.value > 0 && (
+              <p className="text-xs text-gray-500 mt-1">
+                {`${formatCurrency(rrBreakdown[field].rate)} × ${
+                  rrBreakdown[field].multiplier > 1
+                    ? rrBreakdown[field].multiplier + ' × '
+                    : ''
+                }${rrBreakdown[field].count} = ${formatCurrency(
+                  rrBreakdown[field].value
+                )}`}
               </p>
             )}
           </div>
