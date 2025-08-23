@@ -57,7 +57,26 @@ export default function OperatingExpensesSection({
   const replacementReserve =
     applianceCount * (rrRates.appliance || 0) +
     numHeatPumps * (rrRates.heatPump || 0) +
-    numElevators * (rrRates.elevator || 0);
+    numElevators * (rrRates.elevator || 0) * 12;
+
+  const replacementReserveCalculation = () => {
+    const parts = [];
+    if (applianceCount)
+      parts.push(
+        `${formatCurrency(rrRates.appliance || 0)} × ${applianceCount}`
+      );
+    if (numHeatPumps)
+      parts.push(
+        `${formatCurrency(rrRates.heatPump || 0)} × ${numHeatPumps}`
+      );
+    if (numElevators)
+      parts.push(
+        `${formatCurrency(rrRates.elevator || 0)} × 12 × ${numElevators}`
+      );
+    return parts.length
+      ? `${parts.join(" + ")} = ${formatCurrency(replacementReserve)}`
+      : "";
+  };
 
   useEffect(() => {
     if (!schlConfig) return;
@@ -230,6 +249,16 @@ export default function OperatingExpensesSection({
     { field: "otherExpenses", label: "Autres dépenses" },
   ];
 
+  const integerFields = [
+    "numHeatPumps",
+    "numFridges",
+    "numStoves",
+    "numDishwashers",
+    "numWashers",
+    "numDryers",
+    "numElevators",
+  ];
+
   return (
     <div className="border rounded-lg p-6">
       <h2 className="text-lg font-semibold mb-4 text-red-600 flex items-center"> <TrendingUp className="w-5 h-5 mr-2" />Dépenses d'exploitation</h2>
@@ -242,7 +271,13 @@ export default function OperatingExpensesSection({
               onChange={(val) => handleChange(field, val)}
               className={`w-full border rounded p-2 ${readOnly ? 'bg-gray-100' : ''}`}
               placeholder="0"
-              type={field === "vacancyRate" || field === "managementRate" ? "percentage" : "currency"}
+              type={
+                field === "vacancyRate" || field === "managementRate"
+                  ? "percentage"
+                  : integerFields.includes(field)
+                  ? "number"
+                  : "currency"
+              }
               disabled={readOnly}
               readOnly={readOnly}
             />
@@ -286,6 +321,11 @@ export default function OperatingExpensesSection({
             disabled
             type="currency"
           />
+          {replacementReserveCalculation() && (
+            <p className="text-xs text-gray-500 mt-1">
+              {replacementReserveCalculation()}
+            </p>
+          )}
         </div>
       </div>
       <div className="mt-4">
