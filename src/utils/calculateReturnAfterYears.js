@@ -50,8 +50,8 @@ export default function calculateReturnAfterYears(property, analysis, years) {
   const totalLoanAmount = analysis.totalLoanAmount || 0;
 
   let principalPaid = 0;
+  let balance = totalLoanAmount;
   if (monthlyPayment > 0 && totalLoanAmount > 0) {
-    let balance = totalLoanAmount;
     const months = Math.min(nYears * 12, totalPayments);
     for (let i = 0; i < months && balance > 0; i++) {
       const interest = balance * monthlyRate;
@@ -62,11 +62,13 @@ export default function calculateReturnAfterYears(property, analysis, years) {
   }
 
   const appreciationRate = 0.03;
-  const appreciationAmount = purchasePrice * (Math.pow(1 + appreciationRate, nYears) - 1);
+  const propertyValue = purchasePrice * (1 + appreciationRate * nYears);
+  const saleNet = propertyValue - balance;
   const cashFlowTotal = cashFlow * nYears;
+  const totalCashReceived = cashFlowTotal + saleNet;
+  const profit = totalCashReceived - totalInvestment;
 
-  const valueGenerated = cashFlowTotal + principalPaid + appreciationAmount;
-  const totalReturn = totalInvestment > 0 ? (valueGenerated / totalInvestment) * 100 : 0;
+  const totalReturn = totalInvestment > 0 ? (profit / totalInvestment) * 100 : 0;
   const annualizedReturn = totalReturn > -100 && nYears > 0
     ? (Math.pow(1 + totalReturn / 100, 1 / nYears) - 1) * 100
     : 0;
@@ -77,9 +79,9 @@ export default function calculateReturnAfterYears(property, analysis, years) {
     cashFlows.push(cashFlow);
   }
   if (cashFlows.length > 1) {
-    cashFlows[nYears] += principalPaid + appreciationAmount;
+    cashFlows[nYears] += saleNet;
   }
   const irr = totalInvestment > 0 ? computeIRR(cashFlows) * 100 : 0;
 
-  return { totalReturn, annualizedReturn, internalRateOfReturn: irr, valueGenerated };
+  return { totalReturn, annualizedReturn, internalRateOfReturn: irr, valueGenerated: profit };
 }
