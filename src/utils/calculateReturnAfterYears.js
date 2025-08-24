@@ -62,13 +62,12 @@ export default function calculateReturnAfterYears(property, analysis, years) {
   }
 
   const appreciationRate = 0.03;
-  const propertyValue = purchasePrice * (1 + appreciationRate * nYears);
-  const saleNet = propertyValue - balance;
+  const propertyValue = purchasePrice * Math.pow(1 + appreciationRate, nYears);
+  const appreciationAmount = propertyValue - purchasePrice;
   const cashFlowTotal = cashFlow * nYears;
-  const totalCashReceived = cashFlowTotal + saleNet;
-  const profit = totalCashReceived - totalInvestment;
 
-  const totalReturn = totalInvestment > 0 ? (profit / totalInvestment) * 100 : 0;
+  const valueGenerated = cashFlowTotal + principalPaid + appreciationAmount;
+  const totalReturn = totalInvestment > 0 ? (valueGenerated / totalInvestment) * 100 : 0;
   const annualizedReturn = totalReturn > -100 && nYears > 0
     ? (Math.pow(1 + totalReturn / 100, 1 / nYears) - 1) * 100
     : 0;
@@ -78,10 +77,11 @@ export default function calculateReturnAfterYears(property, analysis, years) {
   for (let i = 1; i <= nYears; i++) {
     cashFlows.push(cashFlow);
   }
+  const saleNet = propertyValue - balance;
   if (cashFlows.length > 1) {
     cashFlows[nYears] += saleNet;
   }
   const irr = totalInvestment > 0 ? computeIRR(cashFlows) * 100 : 0;
 
-  return { totalReturn, annualizedReturn, internalRateOfReturn: irr, valueGenerated: profit };
+  return { totalReturn, annualizedReturn, internalRateOfReturn: irr, valueGenerated };
 }
