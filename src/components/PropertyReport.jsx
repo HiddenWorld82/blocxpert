@@ -10,6 +10,7 @@ import FutureScenarioForm from './FutureScenarioForm';
 import RenewScenarioForm from './RenewScenarioForm';
 import OptimisationScenarioForm from './OptimisationScenarioForm';
 import calculateRentability from '../utils/calculateRentability';
+import calculateReturnAfterYears from '../utils/calculateReturnAfterYears';
 
 const PropertyReport = ({
   currentProperty,
@@ -64,6 +65,12 @@ const PropertyReport = ({
     ((parseFloat(reportProperty.annualRent) || 0) /
       (parseInt(reportProperty.numberOfUnits) || 1)) /
     12;
+
+  const [returnYears, setReturnYears] = useState(5);
+  const { totalReturn: multiYearReturn, annualizedReturn: multiYearAnnualized } = useMemo(
+    () => calculateReturnAfterYears(reportProperty, reportAnalysis, returnYears),
+    [reportProperty, reportAnalysis, returnYears]
+  );
 
   const [editingScenario, setEditingScenario] = useState(null);
 
@@ -342,6 +349,31 @@ const PropertyReport = ({
                 : "acquisition"
             }
           />
+
+          <div className="mb-8">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Rendement après {returnYears} années
+            </label>
+            <div className="flex items-center gap-4">
+              <input
+                type="number"
+                min="1"
+                value={returnYears}
+                onChange={(e) => setReturnYears(parseInt(e.target.value) || 0)}
+                className="w-24 px-2 py-1 border rounded"
+              />
+              <div className="flex items-center gap-6">
+                <div>
+                  <p className="text-sm text-gray-500">Rendement global</p>
+                  <p className="font-semibold">{formatPercent(multiYearReturn)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Rendement annualisé</p>
+                  <p className="font-semibold">{formatPercent(multiYearAnnualized)}</p>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <div className="grid md:grid-cols-2 gap-8 mb-8">
             <FinancialSummary analysis={reportAnalysis} advancedExpenses={advancedExpenses} />
