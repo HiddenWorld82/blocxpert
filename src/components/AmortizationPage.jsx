@@ -9,7 +9,7 @@ const AmortizationPage = ({ analysis, currentProperty, setCurrentStep }) => {
   const monthlyRate = Math.pow(1 + mortgageRate / 100 / 2, 1 / 6) - 1;
   let balance = loanAmount;
   let cumulativePrincipal = 0;
-  const monthlyAppreciation = 0.03 / 12;
+  const appreciationRate = parseFloat(currentProperty.appreciationRate) || 0.03;
   const purchasePrice = parseFloat(currentProperty.purchasePrice) || 0;
   const rows = [];
   for (let month = 1; month <= totalMonths; month++) {
@@ -17,7 +17,7 @@ const AmortizationPage = ({ analysis, currentProperty, setCurrentStep }) => {
     const principal = Math.min(monthlyPayment - interest, balance);
     balance -= principal;
     cumulativePrincipal += principal;
-    const propertyValue = purchasePrice * (1 + monthlyAppreciation * month);
+    const propertyValue = purchasePrice * Math.pow(1 + appreciationRate, month / 12);
     const equity = propertyValue - balance - analysis.acquisitionCosts;
     rows.push({
       month,

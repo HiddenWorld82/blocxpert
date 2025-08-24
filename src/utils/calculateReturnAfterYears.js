@@ -28,13 +28,27 @@ function computeIRR(cashFlows) {
   return mid;
 }
 
-export default function calculateReturnAfterYears(property, analysis, years) {
+export default function calculateReturnAfterYears(
+  property,
+  analysis,
+  years,
+  incomeIncreaseRate = 0.02,
+  expenseIncreaseRate = 0.025,
+  valueIncreaseRate = 0.03,
+) {
   const nYears = parseInt(years, 10);
   if (!analysis || !property || !nYears || nYears <= 0) {
-    return { totalReturn: 0, annualizedReturn: 0, internalRateOfReturn: 0, valueGenerated: 0 };
+    return {
+      totalReturn: 0,
+      annualizedReturn: 0,
+      internalRateOfReturn: 0,
+      valueGenerated: 0,
+    };
   }
 
-  const cashFlow = analysis.cashFlow || 0; // annual cash flow
+  const baseRevenue = analysis.effectiveGrossRevenue || 0;
+  const baseExpenses = analysis.operatingExpensesTotal || 0;
+  const annualDebtService = analysis.annualDebtService || 0;
   const totalInvestment = analysis.totalInvestment || 0;
   const purchasePrice = parseFloat(property.purchasePrice) || 0;
   const mortgageRate = (parseFloat(property.mortgageRate) || 5.5) / 100;
@@ -61,27 +75,44 @@ export default function calculateReturnAfterYears(property, analysis, years) {
     }
   }
 
-  const appreciationRate = 0.03;
-  const propertyValue = purchasePrice * Math.pow(1 + appreciationRate, nYears);
+  // Calculate cash flows with annual increases
+  let revenue = baseRevenue;
+  let expenses = baseExpenses;
+  let cashFlowTotal = 0;
+  const cashFlows = [-totalInvestment];
+  for (let year = 1; year <= nYears; year++) {
+    if (year > 1) {
+      revenue *= 1 + incomeIncreaseRate;
+      expenses *= 1 + expenseIncreaseRate;
+    }
+    const netIncome = revenue - expenses;
+    const annualCashFlow = netIncome - annualDebtService;
+    cashFlowTotal += annualCashFlow;
+    cashFlows.push(annualCashFlow);
+  }
+
+  const propertyValue =
+    purchasePrice * Math.pow(1 + valueIncreaseRate, nYears);
   const appreciationAmount = propertyValue - purchasePrice;
-  const cashFlowTotal = cashFlow * nYears;
 
   const valueGenerated = cashFlowTotal + principalPaid + appreciationAmount;
-  const totalReturn = totalInvestment > 0 ? (valueGenerated / totalInvestment) * 100 : 0;
-  const annualizedReturn = totalReturn > -100 && nYears > 0
-    ? (Math.pow(1 + totalReturn / 100, 1 / nYears) - 1) * 100
-    : 0;
+  const totalReturn =
+    totalInvestment > 0 ? (valueGenerated / totalInvestment) * 100 : 0;
+  const annualizedReturn =
+    totalReturn > -100 && nYears > 0
+      ? (Math.pow(1 + totalReturn / 100, 1 / nYears) - 1) * 100
+      : 0;
 
-  // Build cash flow array for IRR calculation
-  const cashFlows = [-totalInvestment];
-  for (let i = 1; i <= nYears; i++) {
-    cashFlows.push(cashFlow);
-  }
   const saleNet = propertyValue - balance;
   if (cashFlows.length > 1) {
     cashFlows[nYears] += saleNet;
   }
   const irr = totalInvestment > 0 ? computeIRR(cashFlows) * 100 : 0;
 
-  return { totalReturn, annualizedReturn, internalRateOfReturn: irr, valueGenerated };
+  return {
+    totalReturn,
+    annualizedReturn,
+    internalRateOfReturn: irr,
+    valueGenerated,
+  };
 }

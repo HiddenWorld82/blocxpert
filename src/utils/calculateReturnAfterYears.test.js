@@ -17,12 +17,15 @@ test('calculates multi-year, annualized and internal rate returns', () => {
   };
   const analysis = {
     cashFlow: 1000,
+    effectiveGrossRevenue: 5000,
+    operatingExpensesTotal: 4000,
+    annualDebtService: 0,
     totalInvestment: 100000,
     monthlyPayment: 0,
     totalLoanAmount: 0,
   };
 
-  const { totalReturn, annualizedReturn, internalRateOfReturn } = calculateReturnAfterYears(property, analysis, 5);
+  const { totalReturn, annualizedReturn, internalRateOfReturn } = calculateReturnAfterYears(property, analysis, 5, 0, 0, 0.03);
   assert.ok(Math.abs(totalReturn - 20.927) < 0.01);
   assert.ok(Math.abs(annualizedReturn - 3.88) < 0.01);
   assert.ok(Math.abs(internalRateOfReturn - 3.94) < 0.01);
