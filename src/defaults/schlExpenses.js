@@ -34,6 +34,42 @@ const atlantic = {
   },
 };
 
+const ontario = {
+  woodFrame: {
+    small: {
+      maintenance: 830,
+      managementRate: 4.25,
+      salaries: 555,
+      replacementReserve: {
+        appliance: 60,
+        heatPump: 190,
+        elevator: 300,
+      },
+    },
+    large: {
+      maintenance: 830,
+      managementRate: 4.25,
+      salaries: 555,
+      replacementReserve: {
+        appliance: 60,
+        heatPump: 190,
+        elevator: 300,
+      },
+    },
+  },
+  concrete: {
+    any: {
+      maintenance: 975,
+      managementRate: 4.25,
+      salaries: 700,
+      replacementReserve: {
+        appliance: 60,
+        heatPump: 190,
+      },
+    },
+  },
+};
+
 const schlExpenses = {
   QC: {
     woodFrame: {
@@ -74,6 +110,7 @@ const schlExpenses = {
   NS: atlantic,
   PE: atlantic,
   NL: atlantic,
+  ON: ontario,
 };
 
 export default schlExpenses;
