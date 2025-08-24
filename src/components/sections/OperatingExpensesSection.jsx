@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { TrendingUp } from 'lucide-react';
 import FormattedNumberInput, { formatCurrency } from "../FormattedNumberInput";
 import schlExpenses from "../../defaults/schlExpenses";
@@ -80,16 +80,27 @@ export default function OperatingExpensesSection({
       : "";
   };
 
+  const prevProvinceRef = useRef(province);
+
   useEffect(() => {
     if (!schlConfig) return;
     const updates = {};
-    if (!expenses.maintenance) updates.maintenance = schlConfig.maintenance.toString();
-    if (!expenses.managementRate) updates.managementRate = schlConfig.managementRate.toString();
-    if (!expenses.concierge) updates.concierge = schlConfig.salaries.toString();
+    const prevProvince = prevProvinceRef.current;
+
+    if (province !== prevProvince) {
+      updates.maintenance = schlConfig.maintenance.toString();
+      updates.managementRate = schlConfig.managementRate.toString();
+      updates.concierge = schlConfig.salaries.toString();
+    } else {
+      if (!expenses.maintenance) updates.maintenance = schlConfig.maintenance.toString();
+      if (!expenses.managementRate) updates.managementRate = schlConfig.managementRate.toString();
+      if (!expenses.concierge) updates.concierge = schlConfig.salaries.toString();
+    }
     if (Object.keys(updates).length > 0) {
       onChange(prev => ({ ...prev, ...updates }));
     }
-  }, [schlConfig, expenses.maintenance, expenses.managementRate, expenses.concierge, onChange]);
+    prevProvinceRef.current = province;
+  }, [schlConfig, province, expenses.maintenance, expenses.managementRate, expenses.concierge, onChange]);
 
   /**useEffect(() => {
     if (!advancedExpenses) return;
