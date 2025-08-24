@@ -133,11 +133,6 @@ const calculateRentability = (
     maxLoanAmount = property.ignoreLTV
       ? maxLoanByRCD
       : Math.min(maxLoanByRCD, maxLoanByLTV);
-
-    monthlyPayment = maxLoanAmount > 0 && monthlyMortgageRate > 0
-      ? maxLoanAmount * (monthlyMortgageRate * Math.pow(1 + monthlyMortgageRate, totalPayments)) /
-        (Math.pow(1 + monthlyMortgageRate, totalPayments) - 1)
-      : 0;
   }
 
   const economicValue = maxLTVRatio > 0 ? maxLoanAmount / maxLTVRatio : 0;
@@ -201,6 +196,12 @@ const calculateRentability = (
   }
 
   const totalLoanAmount = maxLoanAmount + cmhcPremium;
+  if (property.financingType !== 'private') {
+    monthlyPayment = totalLoanAmount > 0 && monthlyMortgageRate > 0
+      ? totalLoanAmount * (monthlyMortgageRate * Math.pow(1 + monthlyMortgageRate, totalPayments)) /
+        (Math.pow(1 + monthlyMortgageRate, totalPayments) - 1)
+      : 0;
+  }
   const downPayment = purchasePrice - maxLoanAmount;
   const annualDebtService = monthlyPayment * 12;
   // Le cashflow doit refléter toutes les dépenses, on utilise donc le
