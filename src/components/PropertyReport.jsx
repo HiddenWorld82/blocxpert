@@ -67,7 +67,11 @@ const PropertyReport = ({
     12;
 
   const [returnYears, setReturnYears] = useState(5);
-  const { totalReturn: multiYearReturn, annualizedReturn: multiYearAnnualized } = useMemo(
+  const {
+    totalReturn: multiYearReturn,
+    annualizedReturn: multiYearAnnualized,
+    internalRateOfReturn: multiYearIRR,
+  } = useMemo(
     () => calculateReturnAfterYears(reportProperty, reportAnalysis, returnYears),
     [reportProperty, reportAnalysis, returnYears]
   );
@@ -370,6 +374,10 @@ const PropertyReport = ({
                 <div>
                   <p className="text-sm text-gray-500">Rendement annualisé</p>
                   <p className="font-semibold">{formatPercent(multiYearAnnualized)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">TRI à la {returnYears}e année</p>
+                  <p className="font-semibold">{formatPercent(multiYearIRR)}</p>
                 </div>
               </div>
             </div>
