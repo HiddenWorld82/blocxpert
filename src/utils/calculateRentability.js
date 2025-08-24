@@ -1,5 +1,6 @@
 // utils/calculateRentability.js
 import { getAphMaxLtvRatio } from "./cmhc.js";
+import schlExpenses from "../defaults/schlExpenses.js";
 
 const calculateRentability = (
   property,
@@ -8,6 +9,8 @@ const calculateRentability = (
 ) => {
   const purchasePrice = parseFloat(property.purchasePrice) || 0;
   const numberOfUnits = parseInt(property.numberOfUnits) || 1;
+  const province = property.province;
+  const structureType = property.structureType || "woodFrame";
 
   const grossRent = parseFloat(property.annualRent) || 0;
   const totalGrossRevenue = grossRent +
@@ -23,6 +26,26 @@ const calculateRentability = (
   const vacancyAmount = totalGrossRevenue * ((parseFloat(property.vacancyRate) || 0) / 100);
   const effectiveGrossRevenue = totalGrossRevenue - vacancyAmount;
 
+  const provinceConfig = province ? schlExpenses[province] : null;
+  let schlConfig;
+  if (provinceConfig) {
+    if (structureType === "woodFrame") {
+      schlConfig = provinceConfig.woodFrame[numberOfUnits <= 11 ? "small" : "large"];
+    } else {
+      schlConfig = provinceConfig.concrete.any;
+    }
+  }
+
+  const rrRates = schlConfig?.replacementReserve || {};
+  const replacementReserve =
+    ((parseInt(property.numHeatPumps) || 0) * (rrRates.heatPump || 0)) +
+    ((parseInt(property.numFridges) || 0) * (rrRates.appliance || 0)) +
+    ((parseInt(property.numStoves) || 0) * (rrRates.appliance || 0)) +
+    ((parseInt(property.numDishwashers) || 0) * (rrRates.appliance || 0)) +
+    ((parseInt(property.numWashers) || 0) * (rrRates.appliance || 0)) +
+    ((parseInt(property.numDryers) || 0) * (rrRates.appliance || 0)) +
+    ((parseInt(property.numElevators) || 0) * (rrRates.elevator || 0) * 12);
+
   let operatingExpensesSCHL = 0;
   let operatingExpensesTotal = 0;
   if (advancedExpenses) {
@@ -32,9 +55,9 @@ const calculateRentability = (
       (parseFloat(property.heating) || 0) +
       (parseFloat(property.electricity) || 0) +
       (parseFloat(property.insurance) || 0) +
-      (numberOfUnits * (parseFloat(property.maintenance) || 610)) +
+      (numberOfUnits * (parseFloat(property.maintenance) || 0)) +
       (effectiveGrossRevenue * (parseFloat(property.managementRate) || 0) / 100) +
-      (numberOfUnits * (parseFloat(property.concierge) || 365)) +
+      (numberOfUnits * (parseFloat(property.concierge) || 0)) +
       //(parseFloat(property.landscaping) || 0) +
       //(parseFloat(property.snowRemoval) || 0) +
       //(parseFloat(property.extermination) || 0) +
@@ -48,16 +71,17 @@ const calculateRentability = (
       //(parseFloat(property.garbage) || 0) +
       //(parseFloat(property.washerDryer) || 0) +
       //(parseFloat(property.hotWater) || 0) +
-      (parseFloat(property.otherExpenses) || 0);
+      (parseFloat(property.otherExpenses) || 0) +
+      replacementReserve;
     operatingExpensesTotal =
       (parseFloat(property.municipalTaxes) || 0) +
       (parseFloat(property.schoolTaxes) || 0) +
       (parseFloat(property.heating) || 0) +
       (parseFloat(property.electricity) || 0) +
       (parseFloat(property.insurance) || 0) +
-      (numberOfUnits * (parseFloat(property.maintenance) || 610)) +
+      (numberOfUnits * (parseFloat(property.maintenance) || 0)) +
       (effectiveGrossRevenue * (parseFloat(property.managementRate) || 0) / 100) +
-      (numberOfUnits * (parseFloat(property.concierge) || 365)) +
+      (numberOfUnits * (parseFloat(property.concierge) || 0)) +
       (parseFloat(property.landscaping) || 0) +
       (parseFloat(property.snowRemoval) || 0) +
       (parseFloat(property.extermination) || 0) +
@@ -71,17 +95,19 @@ const calculateRentability = (
       (parseFloat(property.garbage) || 0) +
       (parseFloat(property.washerDryer) || 0) +
       (parseFloat(property.hotWater) || 0) +
-      (parseFloat(property.otherExpenses) || 0);
+      (parseFloat(property.otherExpenses) || 0) +
+      replacementReserve;
   } else {
     operatingExpensesSCHL =
       (parseFloat(property.municipalTaxes) || 0) +
       (parseFloat(property.schoolTaxes) || 0) +
       (parseFloat(property.insurance) || 0) +
-      (numberOfUnits * (parseFloat(property.maintenance) || 610)) +
+      (numberOfUnits * (parseFloat(property.maintenance) || 0)) +
       (effectiveGrossRevenue * (parseFloat(property.managementRate) || 0) / 100) +
-      (numberOfUnits * (parseFloat(property.concierge) || 365)) +
+      (numberOfUnits * (parseFloat(property.concierge) || 0)) +
       (parseFloat(property.electricityHeating) || 0) +
-      (parseFloat(property.otherExpenses) || 0);
+      (parseFloat(property.otherExpenses) || 0) +
+      replacementReserve;
 
     // Lorsque les dépenses avancées ne sont pas utilisées, les dépenses
     // totales correspondent aux dépenses SCHL calculées ci-dessus
