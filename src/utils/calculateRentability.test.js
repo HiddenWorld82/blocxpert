@@ -93,6 +93,36 @@ test('APH premium uses capped LTV based on points', () => {
   assert.ok(Math.abs(premiumRate - expectedRate) < 1e-6);
 });
 
+test('Monthly payment uses total loan including CMHC premium', () => {
+  const property = {
+    purchasePrice: 1_000_000,
+    annualRent: 200_000,
+    vacancyRate: 0,
+    municipalTaxes: 0,
+    schoolTaxes: 0,
+    insurance: 0,
+    maintenance: 0,
+    managementRate: 0,
+    concierge: 0,
+    electricityHeating: 0,
+    otherExpenses: 0,
+    financingType: 'cmhc',
+    debtCoverageRatio: 1.1,
+    mortgageRate: 5,
+    qualificationRate: 5,
+    amortization: 25,
+  };
+
+  const result = calculateRentability(property, false, { initialLoanAmount: 0 });
+  const mortgageRate = property.mortgageRate / 100;
+  const monthlyRate = Math.pow(1 + mortgageRate / 2, 1 / 6) - 1;
+  const n = (parseInt(property.amortization) || 25) * 12;
+  const expected = result.totalLoanAmount *
+    (monthlyRate * Math.pow(1 + monthlyRate, n)) /
+    (Math.pow(1 + monthlyRate, n) - 1);
+  assert.ok(Math.abs(result.monthlyPayment - expected) < 1e-6);
+});
+
 test('Private financing uses interest-only payments and RPV', () => {
   const property = {
     purchasePrice: 1_000_000,
