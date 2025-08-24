@@ -142,8 +142,7 @@ const britishColumbia = {
   },
 };
 
-const schlExpenses = {
-  QC: {
+const quebec = {
     woodFrame: {
       small: {
         maintenance: 610,
@@ -176,7 +175,6 @@ const schlExpenses = {
           heatPump: 190,
         },
       },
-    },
   },
   NB: atlantic,
   NS: atlantic,
@@ -190,6 +188,7 @@ const schlExpenses = {
   NT: prairies,
   NU: prairies,
   YT: prairies,
+  QC: quebec,
 };
 
 export default schlExpenses;
