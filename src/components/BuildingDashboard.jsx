@@ -49,7 +49,7 @@ const BuildingDashboard = ({
       icon: <DollarSign className="w-6 h-6 text-green-600" />,
     },
     {
-      label: "Dépenses d'exploitation",
+      label: "Dépenses totales",
       value: formatMoney(property.totalExpenses),
       icon: <DollarSign className="w-6 h-6 text-red-600" />,
     },
