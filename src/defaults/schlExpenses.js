@@ -106,6 +106,42 @@ const prairies = {
   },
 };
 
+const britishColumbia = {
+  woodFrame: {
+    small: {
+      maintenance: 830,
+      managementRate: 4.25,
+      salaries: 635,
+      replacementReserve: {
+        appliance: 60,
+        heatPump: 190,
+        elevator: 300,
+      },
+    },
+    large: {
+      maintenance: 830,
+      managementRate: 4.25,
+      salaries: 635,
+      replacementReserve: {
+        appliance: 60,
+        heatPump: 190,
+        elevator: 300,
+      },
+    },
+  },
+  concrete: {
+    any: {
+      maintenance: 975,
+      managementRate: 4.25,
+      salaries: 700,
+      replacementReserve: {
+        appliance: 60,
+        heatPump: 190,
+      },
+    },
+  },
+};
+
 const schlExpenses = {
   QC: {
     woodFrame: {
@@ -150,6 +186,7 @@ const schlExpenses = {
   MB: prairies,
   SK: prairies,
   AB: prairies,
+  BC: britishColumbia,
   NT: prairies,
   NU: prairies,
   YT: prairies,
