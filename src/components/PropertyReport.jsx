@@ -67,13 +67,31 @@ const PropertyReport = ({
     12;
 
   const [returnYears, setReturnYears] = useState(5);
+  const [incomeGrowth, setIncomeGrowth] = useState(2);
+  const [expenseGrowth, setExpenseGrowth] = useState(2.5);
+  const [valueGrowth, setValueGrowth] = useState(3);
   const {
     totalReturn: multiYearReturn,
     annualizedReturn: multiYearAnnualized,
     internalRateOfReturn: multiYearIRR,
   } = useMemo(
-    () => calculateReturnAfterYears(reportProperty, reportAnalysis, returnYears),
-    [reportProperty, reportAnalysis, returnYears]
+    () =>
+      calculateReturnAfterYears(
+        reportProperty,
+        reportAnalysis,
+        returnYears,
+        incomeGrowth / 100,
+        expenseGrowth / 100,
+        valueGrowth / 100,
+      ),
+    [
+      reportProperty,
+      reportAnalysis,
+      returnYears,
+      incomeGrowth,
+      expenseGrowth,
+      valueGrowth,
+    ],
   );
 
   const [editingScenario, setEditingScenario] = useState(null);
@@ -358,27 +376,60 @@ const PropertyReport = ({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Rendement après {returnYears} années
             </label>
-            <div className="flex items-center gap-4">
-              <input
-                type="number"
-                min="1"
-                value={returnYears}
-                onChange={(e) => setReturnYears(parseInt(e.target.value) || 0)}
-                className="w-24 px-2 py-1 border rounded"
-              />
-              <div className="flex items-center gap-6">
-                <div>
-                  <p className="text-sm text-gray-500">Rendement global</p>
-                  <p className="font-semibold">{formatPercent(multiYearReturn)}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Rendement annualisé</p>
-                  <p className="font-semibold">{formatPercent(multiYearAnnualized)}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">TRI à la {returnYears}e année</p>
-                  <p className="font-semibold">{formatPercent(multiYearIRR)}</p>
-                </div>
+            <div className="grid md:grid-cols-4 gap-4 mb-4">
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Années</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={returnYears}
+                  onChange={(e) => setReturnYears(parseInt(e.target.value) || 0)}
+                  className="w-full px-2 py-1 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Augmentation revenus (%)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={incomeGrowth}
+                  onChange={(e) => setIncomeGrowth(parseFloat(e.target.value) || 0)}
+                  className="w-full px-2 py-1 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Augmentation dépenses (%)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={expenseGrowth}
+                  onChange={(e) => setExpenseGrowth(parseFloat(e.target.value) || 0)}
+                  className="w-full px-2 py-1 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Augmentation valeur (%)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={valueGrowth}
+                  onChange={(e) => setValueGrowth(parseFloat(e.target.value) || 0)}
+                  className="w-full px-2 py-1 border rounded"
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-6">
+              <div>
+                <p className="text-sm text-gray-500">Rendement global</p>
+                <p className="font-semibold">{formatPercent(multiYearReturn)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Rendement annualisé</p>
+                <p className="font-semibold">{formatPercent(multiYearAnnualized)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">TRI à la {returnYears}e année</p>
+                <p className="font-semibold">{formatPercent(multiYearIRR)}</p>
               </div>
             </div>
           </div>
@@ -394,7 +445,12 @@ const PropertyReport = ({
 
           <div className="flex justify-center gap-4 mb-8">
             <button
-              onClick={() => onViewAmortization(reportProperty, reportAnalysis)}
+              onClick={() =>
+                onViewAmortization(
+                  { ...reportProperty, appreciationRate: valueGrowth / 100 },
+                  reportAnalysis,
+                )
+              }
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
               Amortissement
