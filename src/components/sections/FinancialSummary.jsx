@@ -36,6 +36,12 @@ export default function FinancialSummary({ analysis, advancedExpenses = false })
             </span>
           </div>
           <div className="flex justify-between">
+            <span className="text-gray-600">Dépenses totales SCHL:</span>
+            <span className="font-medium text-red-600">
+              {formatMoney(analysis?.schlTotalExpenses)}
+            </span>
+          </div>
+          <div className="flex justify-between">
             <span className="text-gray-600">Dépenses totales:</span>
             <span className="font-medium text-red-600">
               {formatMoney(analysis?.totalExpenses)}
@@ -89,7 +95,7 @@ export default function FinancialSummary({ analysis, advancedExpenses = false })
         <div className="flex justify-between">
           <span className="text-gray-600">Dépenses totales:</span>
           <span className="font-medium text-red-600">
-            {formatMoney(analysis?.operatingExpensesTotal)}
+            {formatMoney(analysis?.totalExpenses)}
           </span>
         </div>
         <div className="flex justify-between border-t pt-3">

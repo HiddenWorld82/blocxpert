@@ -279,6 +279,7 @@ const calculateRentability = (
     vacancyAmount,
     operatingExpensesSCHL,
     operatingExpensesTotal,
+    schlTotalExpenses,
     totalExpenses,
     netOperatingIncome,
     effectiveNetIncome,
