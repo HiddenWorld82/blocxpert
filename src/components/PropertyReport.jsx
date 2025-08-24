@@ -418,16 +418,16 @@ const PropertyReport = ({
                 />
               </div>
             </div>
-            <div className="flex items-center gap-6">
-              <div>
-                <p className="text-sm text-gray-500">Rendement global</p>
+            <div className="flex items-center justify-center gap-6">
+              <div className="text-center">
+                <p className="text-sm text-gray-500">Rendement global {returnYears} an(s)</p>
                 <p className="font-semibold">{formatPercent(multiYearReturn)}</p>
               </div>
-              <div>
+              <div className="text-center">
                 <p className="text-sm text-gray-500">Rendement annualisé</p>
                 <p className="font-semibold">{formatPercent(multiYearAnnualized)}</p>
               </div>
-              <div>
+              <div className="text-center">
                 <p className="text-sm text-gray-500">TRI à la {returnYears}e année</p>
                 <p className="font-semibold">{formatPercent(multiYearIRR)}</p>
               </div>
