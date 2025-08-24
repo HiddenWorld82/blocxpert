@@ -1,9 +1,37 @@
 // utils/calculateReturnAfterYears.js
-// Calculate overall and annualized return after a number of years
+// Calculate overall, annualized and internal rates of return after a number of years
+
+function computeIRR(cashFlows) {
+  // Bisection method to find rate that sets NPV to zero
+  const npv = (rate) =>
+    cashFlows.reduce((acc, cf, idx) => acc + cf / Math.pow(1 + rate, idx), 0);
+
+  let low = -0.9999;
+  let high = 1;
+  let npvLow = npv(low);
+  let npvHigh = npv(high);
+  if (npvLow * npvHigh > 0) return 0; // Cannot find a valid IRR
+
+  let mid = 0;
+  for (let i = 0; i < 1000; i++) {
+    mid = (low + high) / 2;
+    const npvMid = npv(mid);
+    if (Math.abs(npvMid) < 1e-7) break;
+    if (npvMid * npvLow < 0) {
+      high = mid;
+      npvHigh = npvMid;
+    } else {
+      low = mid;
+      npvLow = npvMid;
+    }
+  }
+  return mid;
+}
+
 export default function calculateReturnAfterYears(property, analysis, years) {
   const nYears = parseInt(years, 10);
   if (!analysis || !property || !nYears || nYears <= 0) {
-    return { totalReturn: 0, annualizedReturn: 0, valueGenerated: 0 };
+    return { totalReturn: 0, annualizedReturn: 0, internalRateOfReturn: 0, valueGenerated: 0 };
   }
 
   const cashFlow = analysis.cashFlow || 0; // annual cash flow
@@ -43,5 +71,15 @@ export default function calculateReturnAfterYears(property, analysis, years) {
     ? (Math.pow(1 + totalReturn / 100, 1 / nYears) - 1) * 100
     : 0;
 
-  return { totalReturn, annualizedReturn, valueGenerated };
+  // Build cash flow array for IRR calculation
+  const cashFlows = [-totalInvestment];
+  for (let i = 1; i <= nYears; i++) {
+    cashFlows.push(cashFlow);
+  }
+  if (cashFlows.length > 1) {
+    cashFlows[nYears] += principalPaid + appreciationAmount;
+  }
+  const irr = totalInvestment > 0 ? computeIRR(cashFlows) * 100 : 0;
+
+  return { totalReturn, annualizedReturn, internalRateOfReturn: irr, valueGenerated };
 }

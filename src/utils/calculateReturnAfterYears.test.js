@@ -6,8 +6,9 @@ import calculateReturnAfterYears from './calculateReturnAfterYears.js';
 // Cash flow: 1000$/year, purchase price: 100000$, appreciation 3%
 // After 5 years: cash flow 5000, appreciation ~15927, total value ~20927 => 20.927% return
 // Annualized return ≈ 3.88%
+// IRR ≈ -28.43%
 
-test('calculates multi-year and annualized returns', () => {
+test('calculates multi-year, annualized and internal rate returns', () => {
   const property = {
     purchasePrice: 100000,
     mortgageRate: 5,
@@ -21,7 +22,8 @@ test('calculates multi-year and annualized returns', () => {
     totalLoanAmount: 0,
   };
 
-  const { totalReturn, annualizedReturn } = calculateReturnAfterYears(property, analysis, 5);
+  const { totalReturn, annualizedReturn, internalRateOfReturn } = calculateReturnAfterYears(property, analysis, 5);
   assert.ok(Math.abs(totalReturn - 20.927) < 0.01);
   assert.ok(Math.abs(annualizedReturn - 3.88) < 0.01);
+  assert.ok(Math.abs(internalRateOfReturn + 28.43) < 0.01);
 });
