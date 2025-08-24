@@ -175,7 +175,9 @@ const quebec = {
           heatPump: 190,
         },
       },
-  },
+    },
+  };
+const schlExpenses = {
   NB: atlantic,
   NS: atlantic,
   PE: atlantic,
