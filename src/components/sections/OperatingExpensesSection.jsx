@@ -42,8 +42,8 @@ export default function OperatingExpensesSection({
   const conciergePerUnit = parseFloat(expenses.concierge) || 0;
   const maintenanceTotal = parseFloat(expenses.maintenance) * numberOfUnits;
   const conciergeTotal = parseFloat(expenses.concierge) * numberOfUnits;
-  const otherCostRate = schlConfig?.otherCostRate || 0;
-  const otherExpensesDefault = effectiveRevenue * otherCostRate / 100;
+  const otherCostRate = advancedExpenses ? (schlConfig?.otherCostRate || 0) : 0;
+  const otherExpensesDefault = advancedExpenses ? effectiveRevenue * otherCostRate / 100 : 0;
   const otherExpenses =
     expenses.otherExpenses !== undefined && expenses.otherExpenses !== ""
       ? parseFloat(expenses.otherExpenses)
@@ -143,7 +143,23 @@ export default function OperatingExpensesSection({
         "garbage",
         "hotWater",
         "otherExpenses",
-      ].reduce((sum, key) => sum + (parseFloat(expenses[key]) || 0), 0) + managementFee + vacancyAmount + maintenanceTotal + conciergeTotal + replacementReserve
+      ].reduce(
+        (sum, key) => {
+          if (otherCostRate > 0 && [
+            "landscaping",
+            "snowRemoval",
+            "extermination",
+            "fireInspection",
+            "advertising",
+            "legal",
+            "accounting",
+          ].includes(key)) {
+            return sum;
+          }
+          return sum + (key === "otherExpenses" ? otherExpenses : (parseFloat(expenses[key]) || 0));
+        },
+        0,
+      ) + managementFee + vacancyAmount + maintenanceTotal + conciergeTotal + replacementReserve
     : [
         "municipalTaxes",
         "schoolTaxes",
@@ -290,65 +306,89 @@ export default function OperatingExpensesSection({
     <div className="border rounded-lg p-6">
       <h2 className="text-lg font-semibold mb-4 text-red-600 flex items-center"> <TrendingUp className="w-5 h-5 mr-2" />Dépenses d'exploitation</h2>
       <div className="grid grid-cols-2 gap-4">
-        {fields.map(({ field, label }) => (
-          <div key={field} className="col-span-1">
-            <label className="block text-sm font-medium mb-1">{label}</label>
-            <FormattedNumberInput
-              value={expenses[field] || ""}
-              onChange={(val) => handleChange(field, val)}
-              className={`w-full border rounded p-2 ${readOnly ? 'bg-gray-100' : ''}`}
-              placeholder="0"
-              type={
-                field === "vacancyRate" || field === "managementRate"
-                  ? "percentage"
-                  : integerFields.includes(field)
-                  ? "number"
-                  : "currency"
-              }
-              disabled={readOnly}
-              readOnly={readOnly}
-            />
-            {field === "vacancyRate" && (
-              <p className="text-xs text-gray-500 mt-1">
-                {expenses.vacancyRate
-                  ? `${expenses.vacancyRate}% de ${formatCurrency(totalRevenue)} = ${formatCurrency(vacancyAmount)}`
-                  : ''}
-              </p>
-            )}
-            {field === "managementRate" && (
-              <p className="text-xs text-gray-500 mt-1">
-                {expenses.managementRate
-                  ? `${expenses.managementRate}% de ${formatCurrency(effectiveRevenue)} = ${formatCurrency(managementFee)}`
-                  : ''}
-              </p>
-            )}
-            {field === "maintenance" && (
-              <p className="text-xs text-gray-500 mt-1">
-                {expenses.maintenance
-                  ? `${formatCurrency(maintenancePerUnit)} × ${numberOfUnits} = ${formatCurrency(maintenanceTotal)}`
-                  : ''}
-              </p>
-            )}
-            {field === "concierge" && (
-              <p className="text-xs text-gray-500 mt-1">
-                {expenses.concierge
-                  ? `${formatCurrency(conciergePerUnit)} × ${numberOfUnits} = ${formatCurrency(conciergeTotal)}`
-                  : ''}
-              </p>
-            )}
-            {rrBreakdown[field]?.value > 0 && (
-              <p className="text-xs text-gray-500 mt-1">
-                {`${formatCurrency(rrBreakdown[field].rate)} × ${
-                  rrBreakdown[field].multiplier > 1
-                    ? rrBreakdown[field].multiplier + ' × '
-                    : ''
-                }${rrBreakdown[field].count} = ${formatCurrency(
-                  rrBreakdown[field].value
-                )}`}
-              </p>
-            )}
-          </div>
-        ))}
+        {fields.map(({ field, label }) => {
+          const isDisabled = otherCostRate > 0 && [
+            "landscaping",
+            "snowRemoval",
+            "extermination",
+            "fireInspection",
+            "advertising",
+            "legal",
+            "accounting",
+          ].includes(field);
+
+          return (
+            <div key={field} className="col-span-1">
+              <label className="block text-sm font-medium mb-1">{label}</label>
+              <FormattedNumberInput
+                value={field === "otherExpenses"
+                  ? (expenses.otherExpenses !== undefined && expenses.otherExpenses !== ""
+                      ? expenses.otherExpenses
+                      : otherExpensesDefault)
+                  : (expenses[field] || "")}
+                onChange={(val) => handleChange(field, val)}
+                className={`w-full border rounded p-2 ${(readOnly || isDisabled) ? 'bg-gray-100' : ''}`}
+                placeholder="0"
+                type={
+                  field === "vacancyRate" || field === "managementRate"
+                    ? "percentage"
+                    : integerFields.includes(field)
+                    ? "number"
+                    : "currency"
+                }
+                disabled={readOnly || isDisabled}
+                readOnly={readOnly || isDisabled}
+              />
+              {field === "vacancyRate" && (
+                <p className="text-xs text-gray-500 mt-1">
+                  {expenses.vacancyRate
+                    ? `${expenses.vacancyRate}% de ${formatCurrency(totalRevenue)} = ${formatCurrency(vacancyAmount)}`
+                    : ''}
+                </p>
+              )}
+              {field === "managementRate" && (
+                <p className="text-xs text-gray-500 mt-1">
+                  {expenses.managementRate
+                    ? `${expenses.managementRate}% de ${formatCurrency(effectiveRevenue)} = ${formatCurrency(managementFee)}`
+                    : ''}
+                </p>
+              )}
+              {field === "maintenance" && (
+                <p className="text-xs text-gray-500 mt-1">
+                  {expenses.maintenance
+                    ? `${formatCurrency(maintenancePerUnit)} × ${numberOfUnits} = ${formatCurrency(maintenanceTotal)}`
+                    : ''}
+                </p>
+              )}
+              {field === "concierge" && (
+                <p className="text-xs text-gray-500 mt-1">
+                  {expenses.concierge
+                    ? `${formatCurrency(conciergePerUnit)} × ${numberOfUnits} = ${formatCurrency(conciergeTotal)}`
+                    : ''}
+                </p>
+              )}
+              {field === "otherExpenses" && otherCostRate > 0 && (
+                <p className="text-xs text-gray-500 mt-1">
+                  {`${otherCostRate}% de ${formatCurrency(effectiveRevenue)} = ${formatCurrency(otherExpensesDefault)}`}
+                </p>
+              )}
+              {isDisabled && (
+                <p className="text-xs text-gray-500 mt-1">Inclus dans Autres dépenses</p>
+              )}
+              {rrBreakdown[field]?.value > 0 && (
+                <p className="text-xs text-gray-500 mt-1">
+                  {`${formatCurrency(rrBreakdown[field].rate)} × ${
+                    rrBreakdown[field].multiplier > 1
+                      ? rrBreakdown[field].multiplier + ' × '
+                      : ''
+                  }${rrBreakdown[field].count} = ${formatCurrency(
+                    rrBreakdown[field].value
+                  )}`}
+                </p>
+              )}
+            </div>
+          );
+        })}
         <div className="col-span-1">
           <label className="block text-sm font-medium mb-1">Réserve de remplacement</label>
           <FormattedNumberInput

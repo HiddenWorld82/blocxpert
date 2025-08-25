@@ -51,8 +51,9 @@ const calculateRentability = (
 
   let operatingExpensesSCHL = 0;
   let operatingExpensesTotal = 0;
+
   if (advancedExpenses) {
-    operatingExpensesSCHL =
+    const baseExpenses =
       (parseFloat(property.municipalTaxes) || 0) +
       (parseFloat(property.schoolTaxes) || 0) +
       (parseFloat(property.heating) || 0) +
@@ -60,44 +61,32 @@ const calculateRentability = (
       (parseFloat(property.insurance) || 0) +
       (numberOfUnits * (parseFloat(property.maintenance) || 0)) +
       (effectiveGrossRevenue * (parseFloat(property.managementRate) || 0) / 100) +
-      (numberOfUnits * (parseFloat(property.concierge) || 0)) +
-      //(parseFloat(property.landscaping) || 0) +
-      //(parseFloat(property.snowRemoval) || 0) +
-      //(parseFloat(property.extermination) || 0) +
-      //(parseFloat(property.fireInspection) || 0) +
-      //(parseFloat(property.advertising) || 0) +
-      //(parseFloat(property.legal) || 0) +
-      //(parseFloat(property.accounting) || 0) +
-      //(parseFloat(property.elevator) || 0) +
-      //(parseFloat(property.cableInternet) || 0) +
-      //(parseFloat(property.appliances) || 0) +
-      //(parseFloat(property.garbage) || 0) +
-      //(parseFloat(property.washerDryer) || 0) +
-      //(parseFloat(property.hotWater) || 0) +
+      (numberOfUnits * (parseFloat(property.concierge) || 0));
+
+    const schlOtherCosts = otherCostRate > 0
+      ? otherCostAmount
+      :
+        (parseFloat(property.landscaping) || 0) +
+        (parseFloat(property.snowRemoval) || 0) +
+        (parseFloat(property.extermination) || 0) +
+        (parseFloat(property.fireInspection) || 0) +
+        (parseFloat(property.advertising) || 0) +
+        (parseFloat(property.legal) || 0) +
+        (parseFloat(property.accounting) || 0);
+
+    operatingExpensesSCHL = baseExpenses + schlOtherCosts +
       (parseFloat(property.otherExpenses) || 0) +
       replacementReserve;
-    operatingExpensesTotal =
-      (parseFloat(property.municipalTaxes) || 0) +
-      (parseFloat(property.schoolTaxes) || 0) +
-      (parseFloat(property.heating) || 0) +
-      (parseFloat(property.electricity) || 0) +
-      (parseFloat(property.insurance) || 0) +
-      (numberOfUnits * (parseFloat(property.maintenance) || 0)) +
-      (effectiveGrossRevenue * (parseFloat(property.managementRate) || 0) / 100) +
-      (numberOfUnits * (parseFloat(property.concierge) || 0)) +
-      (parseFloat(property.landscaping) || 0) +
-      (parseFloat(property.snowRemoval) || 0) +
-      (parseFloat(property.extermination) || 0) +
-      (parseFloat(property.fireInspection) || 0) +
-      (parseFloat(property.advertising) || 0) +
-      (parseFloat(property.legal) || 0) +
-      (parseFloat(property.accounting) || 0) +
+
+    const totalOtherCosts = schlOtherCosts +
       (parseFloat(property.elevator) || 0) +
       (parseFloat(property.cableInternet) || 0) +
       (parseFloat(property.appliances) || 0) +
       (parseFloat(property.garbage) || 0) +
       (parseFloat(property.washerDryer) || 0) +
-      (parseFloat(property.hotWater) || 0) +
+      (parseFloat(property.hotWater) || 0);
+
+    operatingExpensesTotal = baseExpenses + totalOtherCosts +
       (parseFloat(property.otherExpenses) || 0) +
       replacementReserve;
   } else {
@@ -109,7 +98,7 @@ const calculateRentability = (
       (effectiveGrossRevenue * (parseFloat(property.managementRate) || 0) / 100) +
       (numberOfUnits * (parseFloat(property.concierge) || 0)) +
       (parseFloat(property.electricityHeating) || 0) +
-      otherCostAmount +
+      (parseFloat(property.otherExpenses) || 0) +
       replacementReserve;
 
     // Lorsque les dépenses avancées ne sont pas utilisées, les dépenses
