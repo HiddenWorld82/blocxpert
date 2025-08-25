@@ -72,14 +72,6 @@ const calculateRentability = (
       (parseFloat(property.legal) || 0) +
       (parseFloat(property.accounting) || 0);
 
-    const schlOtherCosts = otherCostRate > 0
-      ? Math.max(otherCostAmount, actualOtherCosts)
-      : actualOtherCosts;
-
-    operatingExpensesSCHL = baseExpenses + schlOtherCosts +
-      (parseFloat(property.otherExpenses) || 0) +
-      replacementReserve;
-
     const totalOtherCosts = actualOtherCosts +
       (parseFloat(property.elevator) || 0) +
       (parseFloat(property.cableInternet) || 0) +
@@ -87,6 +79,16 @@ const calculateRentability = (
       (parseFloat(property.garbage) || 0) +
       (parseFloat(property.washerDryer) || 0) +
       (parseFloat(property.hotWater) || 0);
+
+    const schlOtherCosts = Math.max(
+      otherCostRate > 0 ? otherCostAmount : 0,
+      totalOtherCosts,
+      vacancyAmount,
+    );
+
+    operatingExpensesSCHL = baseExpenses + schlOtherCosts +
+      (parseFloat(property.otherExpenses) || 0) +
+      replacementReserve;
 
     operatingExpensesTotal = baseExpenses + totalOtherCosts +
       (parseFloat(property.otherExpenses) || 0) +
@@ -111,7 +113,9 @@ const calculateRentability = (
   /**const totalExpenses = operatingExpensesSCHL + vacancyAmount;
   const netOperatingIncome = totalGrossRevenue - totalExpenses;
   const effectiveNetIncome = totalGrossRevenue - operatingExpensesTotal - vacancyAmount;**/
-  const schlTotalExpenses = operatingExpensesSCHL + vacancyAmount;
+  const schlTotalExpenses = advancedExpenses
+    ? operatingExpensesSCHL
+    : operatingExpensesSCHL + vacancyAmount;
   const totalExpenses = operatingExpensesTotal + vacancyAmount;
   const netOperatingIncome = totalGrossRevenue - schlTotalExpenses;
   const effectiveNetIncome = totalGrossRevenue - totalExpenses;

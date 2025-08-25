@@ -150,11 +150,11 @@ test('Private financing uses interest-only payments and RPV', () => {
   assert.equal(result.loanPaydownReturn, 0);
 });
 
-test('SCHL other expenses use the higher of standard rate or actual costs', () => {
+test('SCHL other expenses use the highest of standard rate, vacancy, or actual costs', () => {
   const baseProperty = {
     purchasePrice: 1_000_000,
     annualRent: 100_000,
-    vacancyRate: 0,
+    vacancyRate: 5,
     municipalTaxes: 0,
     schoolTaxes: 0,
     insurance: 0,
@@ -182,18 +182,20 @@ test('SCHL other expenses use the higher of standard rate or actual costs', () =
     accounting: 100,
   };
   const resultLow = calculateRentability(lowCosts, true);
-  assert.equal(resultLow.operatingExpensesSCHL, 1000);
+  // Vacancy (5% of 100k = 5k) exceeds other costs and standard rate
+  assert.equal(resultLow.operatingExpensesSCHL, 5000);
 
   const highCosts = {
     ...baseProperty,
-    landscaping: 300,
-    snowRemoval: 400,
-    extermination: 200,
-    fireInspection: 200,
-    advertising: 200,
-    legal: 200,
-    accounting: 200,
+    landscaping: 1000,
+    snowRemoval: 1000,
+    extermination: 1000,
+    fireInspection: 1000,
+    advertising: 1000,
+    legal: 1000,
+    accounting: 1000,
   };
   const resultHigh = calculateRentability(highCosts, true);
-  assert.equal(resultHigh.operatingExpensesSCHL, 1700);
+  // Total other costs (7k) exceed vacancy and standard rate
+  assert.equal(resultHigh.operatingExpensesSCHL, 7000);
 });

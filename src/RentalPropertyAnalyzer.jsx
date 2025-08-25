@@ -85,22 +85,28 @@ const RentalPropertyAnalyzer = () => {
       'cmhcTax',
       'welcomeTax',
     ];
-    const propertyData = fieldsToSave.reduce((acc, key) => ({
-      ...acc,
-      [key]: currentProperty[key],
-    }), {});
+    const baseProperty = { structureType: 'woodFrame', ...currentProperty };
+    const propertyData = fieldsToSave.reduce((acc, key) => {
+      const value = baseProperty[key];
+      if (value !== undefined) acc[key] = value;
+      return acc;
+    }, {});
     const propertyWithAnalysis = {
       ...propertyData,
       advancedExpenses,
       ...analysis,
       uid: currentUser.uid,
     };
+    const cleanProperty = Object.fromEntries(
+      Object.entries(propertyWithAnalysis).filter(([, v]) => v !== undefined)
+    );
     if (currentProperty.id) {
-      await updateProperty(currentProperty.id, propertyWithAnalysis);
-      setCurrentProperty({ ...currentProperty, ...propertyWithAnalysis });
+      
+      await updateProperty(currentProperty.id, cleanProperty);
+      setCurrentProperty({ ...currentProperty, ...cleanProperty });
     } else {
-      const newId = await saveProperty(propertyWithAnalysis);
-      setCurrentProperty({ ...propertyWithAnalysis, id: newId });
+      const newId = await saveProperty(cleanProperty);
+      setCurrentProperty({ ...cleanProperty, id: newId });
     }
     setCurrentStep('dashboard');
   };
