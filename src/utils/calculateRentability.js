@@ -36,6 +36,9 @@ const calculateRentability = (
     }
   }
 
+  const otherCostRate = schlConfig?.otherCostRate || 0;
+  const otherCostAmount = effectiveGrossRevenue * otherCostRate / 100;
+
   const rrRates = schlConfig?.replacementReserve || {};
   const replacementReserve =
     ((parseInt(property.numHeatPumps) || 0) * (rrRates.heatPump || 0)) +
@@ -106,7 +109,7 @@ const calculateRentability = (
       (effectiveGrossRevenue * (parseFloat(property.managementRate) || 0) / 100) +
       (numberOfUnits * (parseFloat(property.concierge) || 0)) +
       (parseFloat(property.electricityHeating) || 0) +
-      (parseFloat(property.otherExpenses) || 0) +
+      otherCostAmount +
       replacementReserve;
 
     // Lorsque les dépenses avancées ne sont pas utilisées, les dépenses

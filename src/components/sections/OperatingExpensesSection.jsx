@@ -42,6 +42,12 @@ export default function OperatingExpensesSection({
   const conciergePerUnit = parseFloat(expenses.concierge) || 0;
   const maintenanceTotal = parseFloat(expenses.maintenance) * numberOfUnits;
   const conciergeTotal = parseFloat(expenses.concierge) * numberOfUnits;
+  const otherCostRate = schlConfig?.otherCostRate || 0;
+  const otherExpensesDefault = effectiveRevenue * otherCostRate / 100;
+  const otherExpenses =
+    expenses.otherExpenses !== undefined && expenses.otherExpenses !== ""
+      ? parseFloat(expenses.otherExpenses)
+      : otherExpensesDefault;
 
   const numHeatPumps = parseInt(expenses.numHeatPumps) || 0;
   const numElevators = parseInt(expenses.numElevators) || 0;
@@ -144,8 +150,7 @@ export default function OperatingExpensesSection({
         "insurance",
         "electricityHeating",
         "management",
-        "otherExpenses",
-    ].reduce((sum, key) => sum + (parseFloat(expenses[key]) || 0), 0) + managementFee + vacancyAmount + maintenanceTotal + conciergeTotal + replacementReserve
+    ].reduce((sum, key) => sum + (parseFloat(expenses[key]) || 0), 0) + managementFee + vacancyAmount + maintenanceTotal + conciergeTotal + replacementReserve + otherExpenses
 
   useEffect(() => {
     if (!advancedExpenses) {
@@ -177,7 +182,11 @@ export default function OperatingExpensesSection({
             <div key={field} className="col-span-1">
               <label className="block text-sm font-medium mb-1">{label}</label>
               <FormattedNumberInput
-                value={expenses[field] || ""}
+                value={field === "otherExpenses"
+                  ? (expenses.otherExpenses !== undefined && expenses.otherExpenses !== ""
+                      ? expenses.otherExpenses
+                      : otherExpensesDefault)
+                  : (expenses[field] || "")}
                 onChange={(val) => handleChange(field, val)}
                 className={`w-full border rounded p-2 ${readOnly ? 'bg-gray-100' : ''}`}
                 placeholder="0"
@@ -213,6 +222,11 @@ export default function OperatingExpensesSection({
                   : ''}
                 </p>
               )}
+            {field === "otherExpenses" && otherCostRate > 0 && (
+              <p className="text-xs text-gray-500 mt-1">
+                {`${otherCostRate}% de ${formatCurrency(effectiveRevenue)} = ${formatCurrency(otherExpensesDefault)}`}
+              </p>
+            )}
             </div>
           ))}
         </div>
