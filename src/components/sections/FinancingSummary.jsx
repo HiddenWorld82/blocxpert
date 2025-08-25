@@ -62,7 +62,9 @@ export default function FinancingSummary({
             </span>
           </div>
         )}
-        {financing.financingType === "cmhc_aph" && financing.aphPoints && (
+        {financing.financingType === "cmhc_aph" &&
+          financing.aphPoints &&
+          !isRenewal && (
           <div className="flex justify-between">
             <span className="text-gray-600">Points APH:</span>
             <span className="font-medium">{financing.aphPoints}</span>
@@ -82,7 +84,7 @@ export default function FinancingSummary({
             <span className="font-medium">{financing.amortization} ans</span>
           </div>
         )}
-        {financing.debtCoverageRatio && (
+        {financing.debtCoverageRatio && !isRenewal && (
           <div className="flex justify-between">
             <span className="text-gray-600">Ratio couverture dette:</span>
             <span className="font-medium">{financing.debtCoverageRatio}</span>
@@ -100,12 +102,14 @@ export default function FinancingSummary({
             <span className="font-medium">{formatMoney(analysis.originationFee)}</span>
           </div>
         )}
-        <div className="flex justify-between">
-          <span className="text-gray-600">{purchaseLabel}:</span>
-          <span className="font-medium">
-            {formatMoney(parseFloat(currentProperty?.purchasePrice) || 0)}
-          </span>
-        </div>
+        {!isRenewal && (
+          <div className="flex justify-between">
+            <span className="text-gray-600">{purchaseLabel}:</span>
+            <span className="font-medium">
+              {formatMoney(parseFloat(currentProperty?.purchasePrice) || 0)}
+            </span>
+          </div>
+        )}
         {!isRenewal && (
           <div className="flex justify-between">
             <span className="text-gray-600">Valeur d'emprunt:</span>
