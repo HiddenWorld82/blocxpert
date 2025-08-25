@@ -70,6 +70,7 @@ const PropertyReport = ({
   const [incomeGrowth, setIncomeGrowth] = useState(2);
   const [expenseGrowth, setExpenseGrowth] = useState(2.5);
   const [valueGrowth, setValueGrowth] = useState(3);
+  const [showIRRInfo, setShowIRRInfo] = useState(false);
   const {
     totalReturn: multiYearReturn,
     annualizedReturn: multiYearAnnualized,
@@ -373,9 +374,10 @@ const PropertyReport = ({
           />
 
           <div className="mb-8">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Rendement après {returnYears} années
-            </label>
+            <h3 className="text-lg font-medium text-gray-700 mb-1">Rendements futurs</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Ajustez les hypothèses pour estimer les rendements après {returnYears} ans.
+            </p>
             <div className="grid md:grid-cols-4 gap-4 mb-4">
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Années</label>
@@ -388,7 +390,7 @@ const PropertyReport = ({
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Augmentation revenus (%)</label>
+                <label className="block text-xs text-gray-500 mb-1">Croissance des revenus (%)</label>
                 <input
                   type="number"
                   step="0.1"
@@ -398,7 +400,7 @@ const PropertyReport = ({
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Augmentation dépenses (%)</label>
+                <label className="block text-xs text-gray-500 mb-1">Croissance des dépenses (%)</label>
                 <input
                   type="number"
                   step="0.1"
@@ -408,7 +410,7 @@ const PropertyReport = ({
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Augmentation valeur (%)</label>
+                <label className="block text-xs text-gray-500 mb-1">Appréciation de la valeur (%)</label>
                 <input
                   type="number"
                   step="0.1"
@@ -420,15 +422,26 @@ const PropertyReport = ({
             </div>
             <div className="flex items-center justify-center gap-6">
               <div className="text-center">
-                <p className="text-sm text-gray-500">Rendement global {returnYears} an(s)</p>
+                <p className="text-sm text-gray-500">Rendement global sur {returnYears} an(s)</p>
                 <p className="font-semibold">{formatPercent(multiYearReturn)}</p>
               </div>
               <div className="text-center">
                 <p className="text-sm text-gray-500">Rendement annualisé</p>
                 <p className="font-semibold">{formatPercent(multiYearAnnualized)}</p>
               </div>
-              <div className="text-center">
-                <p className="text-sm text-gray-500">TRI à la {returnYears}e année</p>
+              <div className="text-center relative">
+                <button
+                  type="button"
+                  onClick={() => setShowIRRInfo(!showIRRInfo)}
+                  className="text-sm text-gray-500 underline cursor-pointer"
+                >
+                  TRI à la {returnYears}e année
+                </button>
+                {showIRRInfo && (
+                  <div className="absolute z-10 left-1/2 -translate-x-1/2 mt-2 w-64 p-2 bg-white border rounded shadow-lg text-xs text-gray-700">
+                    Le taux de rendement interne (TRI) est le taux d'actualisation qui rend la valeur actuelle nette de l'investissement nulle.
+                  </div>
+                )}
                 <p className="font-semibold">{formatPercent(multiYearIRR)}</p>
               </div>
             </div>
