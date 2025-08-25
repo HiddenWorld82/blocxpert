@@ -149,3 +149,51 @@ test('Private financing uses interest-only payments and RPV', () => {
   assert.equal(Math.round(result.acquisitionCosts), 12000);
   assert.equal(result.loanPaydownReturn, 0);
 });
+
+test('SCHL other expenses use the higher of standard rate or actual costs', () => {
+  const baseProperty = {
+    purchasePrice: 1_000_000,
+    annualRent: 100_000,
+    vacancyRate: 0,
+    municipalTaxes: 0,
+    schoolTaxes: 0,
+    insurance: 0,
+    maintenance: 0,
+    managementRate: 0,
+    concierge: 0,
+    otherExpenses: 0,
+    financingType: 'conventional',
+    mortgageRate: 5,
+    qualificationRate: 5,
+    amortization: 25,
+    province: 'ON',
+    structureType: 'woodFrame',
+    numberOfUnits: 1,
+  };
+
+  const lowCosts = {
+    ...baseProperty,
+    landscaping: 100,
+    snowRemoval: 100,
+    extermination: 100,
+    fireInspection: 100,
+    advertising: 100,
+    legal: 100,
+    accounting: 100,
+  };
+  const resultLow = calculateRentability(lowCosts, true);
+  assert.equal(resultLow.operatingExpensesSCHL, 1000);
+
+  const highCosts = {
+    ...baseProperty,
+    landscaping: 300,
+    snowRemoval: 400,
+    extermination: 200,
+    fireInspection: 200,
+    advertising: 200,
+    legal: 200,
+    accounting: 200,
+  };
+  const resultHigh = calculateRentability(highCosts, true);
+  assert.equal(resultHigh.operatingExpensesSCHL, 1700);
+});

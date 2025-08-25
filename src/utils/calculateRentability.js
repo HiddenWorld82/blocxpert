@@ -63,22 +63,24 @@ const calculateRentability = (
       (effectiveGrossRevenue * (parseFloat(property.managementRate) || 0) / 100) +
       (numberOfUnits * (parseFloat(property.concierge) || 0));
 
+    const actualOtherCosts =
+      (parseFloat(property.landscaping) || 0) +
+      (parseFloat(property.snowRemoval) || 0) +
+      (parseFloat(property.extermination) || 0) +
+      (parseFloat(property.fireInspection) || 0) +
+      (parseFloat(property.advertising) || 0) +
+      (parseFloat(property.legal) || 0) +
+      (parseFloat(property.accounting) || 0);
+
     const schlOtherCosts = otherCostRate > 0
-      ? otherCostAmount
-      :
-        (parseFloat(property.landscaping) || 0) +
-        (parseFloat(property.snowRemoval) || 0) +
-        (parseFloat(property.extermination) || 0) +
-        (parseFloat(property.fireInspection) || 0) +
-        (parseFloat(property.advertising) || 0) +
-        (parseFloat(property.legal) || 0) +
-        (parseFloat(property.accounting) || 0);
+      ? Math.max(otherCostAmount, actualOtherCosts)
+      : actualOtherCosts;
 
     operatingExpensesSCHL = baseExpenses + schlOtherCosts +
       (parseFloat(property.otherExpenses) || 0) +
       replacementReserve;
 
-    const totalOtherCosts = schlOtherCosts +
+    const totalOtherCosts = actualOtherCosts +
       (parseFloat(property.elevator) || 0) +
       (parseFloat(property.cableInternet) || 0) +
       (parseFloat(property.appliances) || 0) +
