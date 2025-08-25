@@ -19,8 +19,9 @@ export default function RenewScenarioForm({
 }) {
   const [scenario, setScenario] = useState({
     title: "",
-    marketValue: "",
-    netIncomeIncreasePct: "",
+    revenueGrowthPct: "",
+    expenseGrowthPct: "",
+    valueAppreciationPct: "",
     financing: {},
     parentScenarioId: "",
     ...initialScenario,
@@ -43,8 +44,9 @@ export default function RenewScenarioForm({
   useEffect(() => {
     setScenario({
       title: "",
-      marketValue: "",
-      netIncomeIncreasePct: "",
+      revenueGrowthPct: "",
+      expenseGrowthPct: "",
+      valueAppreciationPct: "",
       financing: {},
       parentScenarioId: "",
       ...initialScenario,
@@ -70,15 +72,6 @@ export default function RenewScenarioForm({
       setScenario((prev) => ({ ...prev, title: newTitle }));
     }
   }, [scenario.financing.term, scenario.financing.mortgageRate]);
-  useEffect(() => {
-    if (!property?.purchasePrice) return;
-    const purchasePrice = parseFloat(property.purchasePrice) || 0;
-    const term = parseFloat(parentScenario?.financing?.term) || 0;
-    const estimated = Math.round(
-      purchasePrice * Math.pow(1 + 0.03, term)
-    ).toString();
-    setScenario((prev) => ({ ...prev, marketValue: estimated }));
-  }, [property?.purchasePrice, parentScenario?.financing?.term]);
 
   const parentProperty = useMemo(() => {
     if (!property) return null;
@@ -133,14 +126,18 @@ export default function RenewScenarioForm({
 
   const analysisProperty = useMemo(() => {
     if (!property) return null;
-    const pct =
-      (parseFloat(parseLocaleNumber(scenario.netIncomeIncreasePct)) || 0) / 100;
+    const revenuePct =
+      (parseFloat(parseLocaleNumber(scenario.revenueGrowthPct)) || 0) / 100;
+    const expensePct =
+      (parseFloat(parseLocaleNumber(scenario.expenseGrowthPct)) || 0) / 100;
+    const appreciationPct =
+      (parseFloat(parseLocaleNumber(scenario.valueAppreciationPct)) || 0) / 100;
     const termYears = parseInt(parentScenario?.financing?.term) || 0;
+    const revenueFactor = Math.pow(1 + revenuePct, Math.max(termYears, 0));
+    const expenseFactor = Math.pow(1 + expensePct, Math.max(termYears, 0));
+    const purchasePrice = parseFloat(property.purchasePrice) || 0;
     const marketValue =
-      parseFloat(parseLocaleNumber(scenario.marketValue)) ||
-      parseFloat(property.purchasePrice) ||
-      0;
-    const growthFactor = Math.pow(1 + pct, Math.max(termYears, 0));
+      purchasePrice * Math.pow(1 + appreciationPct, Math.max(termYears, 0));
     const revenueFields = [
       "annualRent",
       "parkingRevenue",
@@ -174,10 +171,16 @@ export default function RenewScenarioForm({
       "hotWater",
     ];
     const scaled = {};
-    [...revenueFields, ...expenseFields].forEach((field) => {
+    revenueFields.forEach((field) => {
       const value = parseFloat(property[field]);
       if (!isNaN(value)) {
-        scaled[field] = value * growthFactor;
+        scaled[field] = value * revenueFactor;
+      }
+    });
+    expenseFields.forEach((field) => {
+      const value = parseFloat(property[field]);
+      if (!isNaN(value)) {
+        scaled[field] = value * expenseFactor;
       }
     });
     const acquisitionCostFields = [
@@ -201,8 +204,9 @@ export default function RenewScenarioForm({
     return { ...propertyWithoutCosts, ...scaled, purchasePrice: marketValue };
   }, [
     property,
-    scenario.marketValue,
-    scenario.netIncomeIncreasePct,
+    scenario.revenueGrowthPct,
+    scenario.expenseGrowthPct,
+    scenario.valueAppreciationPct,
     parentScenario?.financing?.term,
   ]);
 
@@ -273,7 +277,9 @@ export default function RenewScenarioForm({
     }
     const loanPaydownReturn =
       totalInvestment > 0 ? (principalPaidYear1 / totalInvestment) * 100 : 0;
-    const appreciationRate = 0.03;
+    const appreciationRate =
+      (parseFloat(parseLocaleNumber(scenario.valueAppreciationPct)) || 0) /
+      100;
     const appreciationReturn =
       totalInvestment > 0
         ? ((purchasePrice * appreciationRate) / totalInvestment) * 100
@@ -310,10 +316,11 @@ export default function RenewScenarioForm({
     existingLoanBalance,
     existingLoanPrincipal,
     analysisProperty?.purchasePrice,
+    scenario.valueAppreciationPct,
   ]);
 
   const handleSave = async () => {
-    const { id, ...dataWithoutId } = scenario;
+    const { id, marketValue, netIncomeIncreasePct, ...dataWithoutId } = scenario;
     const data = {
       ...dataWithoutId,
       type: "renewal",
@@ -348,8 +355,8 @@ export default function RenewScenarioForm({
               <h2 className="text-lg font-semibold mb-4 text-gray-700">
                 Paramètres du scénario
               </h2>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="md:col-span-3">
                   <label className="block text-sm font-medium mb-1">Titre</label>
                   <input
                     type="text"
@@ -360,26 +367,35 @@ export default function RenewScenarioForm({
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">
-                    % augmentation revenus net
+                    Croissance des revenus (%)
                   </label>
                   <FormattedNumberInput
-                    value={scenario.netIncomeIncreasePct || ""}
-                    onChange={(val) => handleChange("netIncomeIncreasePct", val)}
+                    value={scenario.revenueGrowthPct || ""}
+                    onChange={(val) => handleChange("revenueGrowthPct", val)}
                     className="w-full border rounded p-2"
                     type="percentage"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">
-                    Valeur marchande à l'échéance
+                    Croissance des dépenses (%)
                   </label>
                   <FormattedNumberInput
-                    value={scenario.marketValue || ""}
-                    onChange={() => {}}
-                    className="w-full border rounded p-2 bg-gray-100"
-                    type="currency"
-                    readOnly
-                    disabled
+                    value={scenario.expenseGrowthPct || ""}
+                    onChange={(val) => handleChange("expenseGrowthPct", val)}
+                    className="w-full border rounded p-2"
+                    type="percentage"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Appréciation de la valeur (%)
+                  </label>
+                  <FormattedNumberInput
+                    value={scenario.valueAppreciationPct || ""}
+                    onChange={(val) => handleChange("valueAppreciationPct", val)}
+                    className="w-full border rounded p-2"
+                    type="percentage"
                   />
                 </div>
               </div>
