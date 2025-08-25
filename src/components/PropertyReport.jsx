@@ -372,6 +372,14 @@ const PropertyReport = ({
                 : "acquisition"
             }
           />
+          <div className="grid md:grid-cols-2 gap-8 mb-8">
+            <FinancialSummary analysis={reportAnalysis} advancedExpenses={advancedExpenses} />
+            <FinancingSummary
+              analysis={reportAnalysis}
+              currentProperty={reportProperty}
+              scenarioType="initialFinancing"
+            />
+          </div>
 
           <div className="mb-8">
             <h3 className="text-lg font-medium text-gray-700 mb-1">Rendements futurs</h3>
@@ -445,15 +453,6 @@ const PropertyReport = ({
                 <p className="font-semibold">{formatPercent(multiYearIRR)}</p>
               </div>
             </div>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8 mb-8">
-            <FinancialSummary analysis={reportAnalysis} advancedExpenses={advancedExpenses} />
-            <FinancingSummary
-              analysis={reportAnalysis}
-              currentProperty={reportProperty}
-              scenarioType="initialFinancing"
-            />
           </div>
 
           <div className="flex justify-center gap-4 mb-8">
