@@ -73,6 +73,17 @@ const RentalPropertyAnalyzer = () => {
       'hotWater',
       'operatingExpenses',
       'otherExpenses',
+      'structureType',
+      'numFridges',
+      'numStoves',
+      'numDishwashers',
+      'numWashers',
+      'numDryers',
+      'numHeatPumps',
+      'numElevators',
+      'cmhcAnalysis',
+      'cmhcTax',
+      'welcomeTax',
     ];
     const propertyData = fieldsToSave.reduce((acc, key) => ({
       ...acc,
