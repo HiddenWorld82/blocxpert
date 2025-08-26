@@ -1,8 +1,16 @@
 // components/HomeScreen.jsx
 import React from 'react';
-import { Calculator, Plus, Home, TrendingUp, FileText, X } from 'lucide-react';
+import {
+  Calculator,
+  Plus,
+  Home,
+  TrendingUp,
+  FileText,
+  X,
+  Share2,
+} from 'lucide-react';
 
-const HomeScreen = ({ properties, onNew, onSelect, onDelete }) => {
+const HomeScreen = ({ properties, onNew, onSelect, onDelete, onShare }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4">
       <div className="max-w-6xl mx-auto">
@@ -86,6 +94,16 @@ const HomeScreen = ({ properties, onNew, onSelect, onDelete }) => {
                     className="relative border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
                     onClick={() => onSelect(property)}
                   >
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onShare?.(property.id);
+                      }}
+                      className="absolute top-2 right-8 text-blue-600 hover:text-blue-800"
+                      aria-label="Partager"
+                    >
+                      <Share2 size={16} />
+                    </button>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();

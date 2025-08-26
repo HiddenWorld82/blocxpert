@@ -1,5 +1,5 @@
 // Nouveau fichier principal : RentalPropertyAnalyzer.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PropertyForm from './components/PropertyForm';
 import PropertyReport from './components/PropertyReport';
 import HomeScreen from './components/HomeScreen';
@@ -9,7 +9,13 @@ import FinancingScenarioForm from './components/FinancingScenarioForm';
 import useRentabilityCalculator from './hooks/useRentabilityCalculator';
 import defaultProperty from './defaults/defaultProperty';
 import { useAuth } from './contexts/AuthContext';
-import { saveProperty, updateProperty, deleteProperty } from './services/dataService';
+import {
+  saveProperty,
+  updateProperty,
+  deleteProperty,
+  exportProperty,
+  importSharedProperty,
+} from './services/dataService';
 import Header from './components/Header';
 
 const RentalPropertyAnalyzer = () => {
@@ -32,6 +38,41 @@ const RentalPropertyAnalyzer = () => {
     lockedFields,
     setCurrentProperty,
   );
+
+  useEffect(() => {
+    const importShared = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const shared = params.get('share');
+      if (shared && currentUser) {
+        try {
+          const data = JSON.parse(decodeURIComponent(atob(shared)));
+          await importSharedProperty(data, currentUser.uid);
+          alert('Immeuble importé avec succès');
+        } catch (e) {
+          console.error("Erreur d'import", e);
+        } finally {
+          params.delete('share');
+          const newUrl = `${window.location.pathname}${
+            params.toString() ? `?${params.toString()}` : ''
+          }`;
+          window.history.replaceState({}, '', newUrl);
+        }
+      }
+    };
+    importShared();
+  }, [currentUser]);
+
+  const handleShare = async (propertyId) => {
+    try {
+      const data = await exportProperty(propertyId);
+      const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
+      const link = `${window.location.origin}/?share=${encoded}`;
+      await navigator.clipboard.writeText(link);
+      alert('Lien de partage copié dans le presse-papiers');
+    } catch (e) {
+      console.error('Erreur lors du partage', e);
+    }
+  };
 
   const handleSave = async () => {
     const fieldsToSave = [
@@ -141,6 +182,7 @@ const RentalPropertyAnalyzer = () => {
                 setCurrentStep('dashboard');
               }}
               onDelete={deleteProperty}
+              onShare={handleShare}
             />
           )}
           {currentStep === 'form' && (

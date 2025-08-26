@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
 const SignupPage = () => {
@@ -8,13 +8,14 @@ const SignupPage = () => {
   const [error, setError] = useState('');
   const { signup, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     try {
       await signup(email, password);
-      navigate('/');
+      navigate(`/${location.search}`);
     } catch {
       setError("Impossible de créer le compte");
     }
@@ -24,7 +25,7 @@ const SignupPage = () => {
     setError('');
     try {
       await loginWithGoogle();
-      navigate('/');
+      navigate(`/${location.search}`);
     } catch {
       setError("Impossible de se connecter avec Google");
     }
@@ -72,7 +73,7 @@ const SignupPage = () => {
         </button>
         <div className="text-sm text-center">
           Déjà un compte?{' '}
-          <Link to="/login" className="text-blue-600 hover:underline">
+          <Link to={`/login${location.search}`} className="text-blue-600 hover:underline">
             Se connecter
           </Link>
         </div>
