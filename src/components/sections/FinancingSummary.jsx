@@ -102,14 +102,12 @@ export default function FinancingSummary({
             <span className="font-medium">{formatMoney(analysis.originationFee)}</span>
           </div>
         )}
-        {!isRenewal && (
-          <div className="flex justify-between">
-            <span className="text-gray-600">{purchaseLabel}:</span>
-            <span className="font-medium">
-              {formatMoney(parseFloat(currentProperty?.purchasePrice) || 0)}
-            </span>
-          </div>
-        )}
+        <div className="flex justify-between">
+          <span className="text-gray-600">{purchaseLabel}:</span>
+          <span className="font-medium">
+            {formatMoney(parseFloat(currentProperty?.purchasePrice) || 0)}
+          </span>
+        </div>
         {!isRenewal && (
           <div className="flex justify-between">
             <span className="text-gray-600">Valeur d'emprunt:</span>

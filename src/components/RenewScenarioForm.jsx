@@ -19,9 +19,9 @@ export default function RenewScenarioForm({
 }) {
   const [scenario, setScenario] = useState({
     title: "",
-    revenueGrowthPct: "",
-    expenseGrowthPct: "",
-    valueAppreciationPct: "",
+    revenueGrowthPct: "2",
+    expenseGrowthPct: "2.5",
+    valueAppreciationPct: "3",
     financing: {},
     parentScenarioId: "",
     ...initialScenario,
@@ -44,9 +44,9 @@ export default function RenewScenarioForm({
   useEffect(() => {
     setScenario({
       title: "",
-      revenueGrowthPct: "",
-      expenseGrowthPct: "",
-      valueAppreciationPct: "",
+      revenueGrowthPct: "2",
+      expenseGrowthPct: "2.5",
+      valueAppreciationPct: "3",
       financing: {},
       parentScenarioId: "",
       ...initialScenario,
