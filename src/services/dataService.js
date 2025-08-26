@@ -10,6 +10,8 @@ import {
   doc,
   query,
   where,
+  getDoc,
+  getDocs,
 } from 'firebase/firestore';
 
 const propertiesCollection = collection(firestore, 'properties');
@@ -110,5 +112,41 @@ export const deleteScenario = async (propertyId, id) => {
     id
   );
   await deleteDoc(scenarioRef);
+};
+
+export const exportProperty = async (propertyId) => {
+  const propertyRef = doc(firestore, 'properties', propertyId);
+  const propertySnap = await getDoc(propertyRef);
+  if (!propertySnap.exists()) return null;
+  const property = { id: propertySnap.id, ...propertySnap.data() };
+  const scenariosCollection = collection(
+    firestore,
+    'properties',
+    propertyId,
+    'scenarios'
+  );
+  const scenariosSnap = await getDocs(scenariosCollection);
+  const scenarios = scenariosSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  return { property, scenarios };
+};
+
+export const importSharedProperty = async (data, uid) => {
+  const { property, scenarios } = data;
+  const { id: _oldId, uid: _oldUid, ...propertyData } = property;
+  const newPropertyId = await saveProperty({ ...propertyData, uid });
+  const idMap = {};
+  for (const sc of scenarios || []) {
+    const { id: oldId, parentScenarioId, ...scData } = sc;
+    const newId = await saveScenario(newPropertyId, scData);
+    idMap[oldId] = { newId, parentOldId: parentScenarioId };
+  }
+  for (const { newId, parentOldId } of Object.values(idMap)) {
+    if (parentOldId && idMap[parentOldId]) {
+      await updateScenario(newPropertyId, newId, {
+        parentScenarioId: idMap[parentOldId].newId,
+      });
+    }
+  }
+  return newPropertyId;
 };
 

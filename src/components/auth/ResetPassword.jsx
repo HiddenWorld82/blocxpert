@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
 const ResetPassword = () => {
@@ -7,6 +7,7 @@ const ResetPassword = () => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const { resetPassword } = useAuth();
+  const location = useLocation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -45,7 +46,7 @@ const ResetPassword = () => {
           </button>
         </form>
         <div className="text-sm text-center">
-          <Link to="/login" className="text-blue-600 hover:underline">
+          <Link to={`/login${location.search}`} className="text-blue-600 hover:underline">
             Retour à la connexion
           </Link>
         </div>

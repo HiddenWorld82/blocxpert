@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
 const LoginPage = () => {
@@ -8,13 +8,14 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     try {
       await login(email, password);
-      navigate('/');
+      navigate(`/${location.search}`);
     } catch {
       setError('Impossible de se connecter');
     }
@@ -24,7 +25,7 @@ const LoginPage = () => {
     setError('');
     try {
       await loginWithGoogle();
-      navigate('/');
+      navigate(`/${location.search}`);
     } catch {
       setError('Impossible de se connecter avec Google');
     }
@@ -71,10 +72,13 @@ const LoginPage = () => {
           Continuer avec Google
         </button>
         <div className="flex justify-between text-sm">
-          <Link to="/reset-password" className="text-blue-600 hover:underline">
+          <Link
+            to={`/reset-password${location.search}`}
+            className="text-blue-600 hover:underline"
+          >
             Mot de passe oublié?
           </Link>
-          <Link to="/signup" className="text-blue-600 hover:underline">
+          <Link to={`/signup${location.search}`} className="text-blue-600 hover:underline">
             Créer un compte
           </Link>
         </div>
