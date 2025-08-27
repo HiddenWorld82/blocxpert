@@ -99,7 +99,7 @@ const HomeScreen = ({ properties, onNew, onSelect, onDelete, onShare }) => {
                         e.stopPropagation();
                         onShare?.(property.id);
                       }}
-                      className="absolute top-2 right-8 text-blue-600 hover:text-blue-800"
+                      className="absolute top-2 right-10 text-blue-600 hover:text-blue-800"
                       aria-label="Partager"
                     >
                       <Share2 size={16} />
@@ -128,9 +128,6 @@ const HomeScreen = ({ properties, onNew, onSelect, onDelete, onShare }) => {
                       <div className="text-right">
                         <div className={`text-lg font-semibold ${property.effectiveNetIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                           {property.effectiveNetIncome >= 0 ? '+' : ''}{Math.round(property.effectiveNetIncome).toLocaleString('fr-CA')}$ /an
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          Rendement après 1 an: {property.totalReturn?.toFixed(1) || 'N/A'}%
                         </div>
                       </div>
                     </div>
