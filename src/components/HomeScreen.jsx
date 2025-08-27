@@ -9,6 +9,7 @@ import {
   X,
   Share2,
 } from 'lucide-react';
+import PropertyPortfolio from './PropertyPortfolio';
 
 const HomeScreen = ({ properties, onNew, onSelect, onDelete, onShare }) => {
   return (
@@ -137,6 +138,8 @@ const HomeScreen = ({ properties, onNew, onSelect, onDelete, onShare }) => {
             </div>
           </div>
         )}
+
+        <PropertyPortfolio />
       </div>
     </div>
   );
