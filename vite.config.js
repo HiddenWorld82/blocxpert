@@ -7,7 +7,9 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     allowedHosts: [
-      '4e68af31b28b.ngrok-free.app'
+      '4e68af31b28b.ngrok-free.app',
+      'bluebird-emerging-incredibly.ngrok.app',
+      'blocxpert.dmii.ca'
     ]
   }
 })
