@@ -44,6 +44,15 @@ const PropertyPortfolio = () => {
     );
   }
 
+  if (reportProperty) {
+    return (
+      <PortfolioPropertyReport
+        property={reportProperty}
+        onClose={() => setReportProperty(null)}
+      />
+    );
+  }
+
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
       <div className="flex justify-between items-center mb-6">
@@ -87,12 +96,6 @@ const PropertyPortfolio = () => {
             </li>
           ))}
         </ul>
-      )}
-      {reportProperty && (
-        <PortfolioPropertyReport
-          property={reportProperty}
-          onClose={() => setReportProperty(null)}
-        />
       )}
     </div>
   );

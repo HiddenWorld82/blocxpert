@@ -8,7 +8,7 @@ import {
   Percent,
 } from "lucide-react";
 
-export default function KeyIndicators({ analysis, variant = "acquisition" }) {
+export default function KeyIndicators({ analysis, variant = "acquisition", exclude = [] }) {
   if (!analysis) return null;
 
   const formatPercent = (value) =>
@@ -133,9 +133,11 @@ export default function KeyIndicators({ analysis, variant = "acquisition" }) {
       ),
   };
 
-  const visibleCards = filterConfig[variant]
-    ? cards.filter(filterConfig[variant])
-    : cards;
+  const visibleCards = cards.filter((card) => {
+    if (exclude.includes(card.key)) return false;
+    const variantFilter = filterConfig[variant];
+    return variantFilter ? variantFilter(card) : true;
+  });
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
