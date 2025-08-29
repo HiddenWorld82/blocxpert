@@ -170,7 +170,7 @@ const PortfolioPropertyReport = ({ property, onClose }) => {
               <div>
                 <div className="grid md:grid-cols-4 gap-4">
                   <div>
-                    <span className="text-gray-600">Prix d'achat:</span>
+                    <span className="text-gray-600">Valeur estimée de l'immeuble:</span>
                     <div className="font-semibold">
                       {formatCurrency(Number(property.purchasePrice) || 0)}
                     </div>
@@ -203,12 +203,12 @@ const PortfolioPropertyReport = ({ property, onClose }) => {
                       <div className="font-semibold">
                         {property.financingType === 'conventional' && 'Conventionnel'}
                         {property.financingType === 'cmhc' && 'SCHL'}
-                        {property.financingType === 'cmhc_aph' && `SCHL APH (${property.aphPoints} pts)`}
+                        {property.financingType === 'cmhc_aph' && 'SCHL APH Select'}
                       </div>
                     </div>
                   )}
                   <div>
-                    <span className="text-gray-600">Prêt maximal:</span>
+                    <span className="text-gray-600">Solde du prêt:</span>
                     <div className="font-semibold">
                       {formatCurrency(analysis.maxLoanAmount)}
                     </div>
@@ -222,15 +222,15 @@ const PortfolioPropertyReport = ({ property, onClose }) => {
                     </div>
                   )}
                   <div>
-                    <span className="text-gray-600">Mise de fonds:</span>
+                    <span className="text-gray-600">Service de la dette:</span>
                     <div className="font-semibold">
-                      {formatCurrency(analysis.downPayment)}
+                      {formatCurrency(analysis.annualDebtService)}
                     </div>
                   </div>
                   <div>
-                    <span className="text-gray-600">Investissement total:</span>
+                    <span className="text-gray-600">Cashflow:</span>
                     <div className="font-semibold">
-                      {formatCurrency(analysis.totalInvestment)}
+                      {formatCurrency(analysis.cashFlow)}
                     </div>
                   </div>
                 </div>
