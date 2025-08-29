@@ -9,6 +9,7 @@ export default function BasicInfo({
   advancedExpenses,
   readOnly = false,
   disablePlaceAutocomplete = false,
+  purchasePriceLabel = "Prix d'achat",
 }) {
   const handleChange = (field, value) => {
     onChange({ ...property, [field]: value });
@@ -125,7 +126,7 @@ export default function BasicInfo({
           </div>
         )}
         <div>
-          <label className="block text-sm font-medium mb-1">Prix d'achat</label>
+          <label className="block text-sm font-medium mb-1">{purchasePriceLabel}</label>
           <FormattedNumberInput
             value={property.purchasePrice || ""}
             onChange={(val) => handleChange("purchasePrice", val)}
