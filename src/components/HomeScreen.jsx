@@ -6,7 +6,7 @@ import {
   Home,
   TrendingUp,
   FileText,
-  X,
+  Trash2,
   Share2,
 } from 'lucide-react';
 import PropertyPortfolio from './PropertyPortfolio';
@@ -100,7 +100,7 @@ const HomeScreen = ({ properties, onNew, onSelect, onDelete, onShare }) => {
                         e.stopPropagation();
                         onShare?.(property.id);
                       }}
-                      className="absolute top-2 right-10 text-blue-600 hover:text-blue-800"
+                      className="absolute top-0 right-10 text-blue-600 hover:text-blue-800"
                       aria-label="Partager"
                     >
                       <Share2 size={16} />
@@ -110,10 +110,10 @@ const HomeScreen = ({ properties, onNew, onSelect, onDelete, onShare }) => {
                         e.stopPropagation();
                         onDelete?.(property.id);
                       }}
-                      className="absolute top-2 right-2 text-red-600 hover:text-red-800"
+                      className="absolute top-0 right-2 text-red-600 hover:text-red-800"
                       aria-label="Supprimer"
                     >
-                      <X size={16} />
+                      <Trash2 size={16} />
                     </button>
                     <div className="flex justify-between items-start">
                       <div>
