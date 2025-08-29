@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import KeyIndicators from './sections/KeyIndicators';
 import FinancialSummary from './sections/FinancialSummary';
 import FinancingSummary from './sections/FinancingSummary';
@@ -83,9 +83,38 @@ const PortfolioPropertyReport = ({ property, onClose }) => {
     totalLoanAmount: balance,
   };
 
-  const future = useMemo(
-    () => calculateReturnAfterYears(property, analysis, 5, 0.02, 0.025, 0.03),
-    [property, analysis],
+  const averageRentPerDoor =
+    ((Number(property.annualRent) || 0) /
+      (Number(property.numberOfUnits) || 1)) /
+    12;
+
+  const [returnYears, setReturnYears] = useState(5);
+  const [incomeGrowth, setIncomeGrowth] = useState(2);
+  const [expenseGrowth, setExpenseGrowth] = useState(2.5);
+  const [valueGrowth, setValueGrowth] = useState(3);
+  const [showIRRInfo, setShowIRRInfo] = useState(false);
+  const {
+    totalReturn: multiYearReturn,
+    annualizedReturn: multiYearAnnualized,
+    internalRateOfReturn: multiYearIRR,
+  } = useMemo(
+    () =>
+      calculateReturnAfterYears(
+        property,
+        analysis,
+        returnYears,
+        incomeGrowth / 100,
+        expenseGrowth / 100,
+        valueGrowth / 100,
+      ),
+    [
+      property,
+      analysis,
+      returnYears,
+      incomeGrowth,
+      expenseGrowth,
+      valueGrowth,
+    ],
   );
 
   const fullAddress = [
@@ -112,23 +141,101 @@ const PortfolioPropertyReport = ({ property, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-auto">
-      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-4xl">
-        <div ref={reportRef} className="space-y-6">
-          <div>
-            <h3 className="text-xl font-semibold mb-1">
-              Rapport d'Analyse de Rentabilité
+    <div className="min-h-screen bg-gray-50 p-4">
+      <div className="max-w-6xl mx-auto">
+        <div ref={reportRef} className="bg-white rounded-lg shadow-lg p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-semibold">Rapport d'Analyse de Rentabilité</h2>
+            <div className="flex gap-2">
+              <button
+                onClick={onClose}
+                className="text-gray-600 hover:text-gray-800"
+              >
+                ← Retour
+              </button>
+              <button
+                onClick={handleGeneratePDF}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+              >
+                Générer PDF
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-6 mb-6">
+            <h3 className="text-xl font-semibold mb-2">
+              {fullAddress || 'Propriété à analyser'}
             </h3>
-            <p className="text-sm text-gray-600">
-              {fullAddress}
-            </p>
-            <p className="text-sm text-gray-600">
-              {property.numberOfUnits} unités • Revenus :
-              {' '}
-              {formatCurrency(property.annualRent)} • Dépenses :
-              {' '}
-              {formatCurrency(property.annualExpenses)}
-            </p>
+            <div className="space-y-4 text-sm">
+              <div>
+                <div className="grid md:grid-cols-4 gap-4">
+                  <div>
+                    <span className="text-gray-600">Prix d'achat:</span>
+                    <div className="font-semibold">
+                      {formatCurrency(Number(property.purchasePrice) || 0)}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Nb d'unités:</span>
+                    <div className="font-semibold">
+                      {property.numberOfUnits || 'N/A'}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Prix par porte:</span>
+                    <div className="font-semibold">
+                      {formatCurrency(Math.round(analysis.pricePerUnit || 0))}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Loyer moyen par porte:</span>
+                    <div className="font-semibold">
+                      {formatCurrency(averageRentPerDoor)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div className="grid md:grid-cols-4 gap-4">
+                  {property.financingType !== 'private' && (
+                    <div>
+                      <span className="text-gray-600">Financement:</span>
+                      <div className="font-semibold">
+                        {property.financingType === 'conventional' && 'Conventionnel'}
+                        {property.financingType === 'cmhc' && 'SCHL'}
+                        {property.financingType === 'cmhc_aph' && `SCHL APH (${property.aphPoints} pts)`}
+                      </div>
+                    </div>
+                  )}
+                  <div>
+                    <span className="text-gray-600">Prêt maximal:</span>
+                    <div className="font-semibold">
+                      {formatCurrency(analysis.maxLoanAmount)}
+                    </div>
+                  </div>
+                  {property.financingType === 'private' && (
+                    <div>
+                      <span className="text-gray-600">Ratio prêt-valeur:</span>
+                      <div className="font-semibold">
+                        {formatPercent(analysis.loanValueRatio)}
+                      </div>
+                    </div>
+                  )}
+                  <div>
+                    <span className="text-gray-600">Mise de fonds:</span>
+                    <div className="font-semibold">
+                      {formatCurrency(analysis.downPayment)}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Investissement total:</span>
+                    <div className="font-semibold">
+                      {formatCurrency(analysis.totalInvestment)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <KeyIndicators
@@ -136,9 +243,10 @@ const PortfolioPropertyReport = ({ property, onClose }) => {
             variant={
               property.financingType === 'private' ? 'private' : 'acquisition'
             }
+            exclude={['mrb', 'mrn', 'tga']}
           />
 
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 gap-8 mb-8">
             <FinancialSummary analysis={analysis} />
             <FinancingSummary
               analysis={analysis}
@@ -148,30 +256,93 @@ const PortfolioPropertyReport = ({ property, onClose }) => {
             />
           </div>
 
-          <div className="bg-white rounded-lg p-6">
-            <h4 className="text-lg font-semibold mb-2">
-              Rendements futurs (5 ans)
-            </h4>
-            <p className="text-sm text-gray-700">
-              Valeur totale : {formatCurrency(future.totalReturn)} • Rendement
-              annualisé : {formatPercent(future.annualizedReturn)}
+          <div className="mb-8">
+            <h3 className="text-lg font-medium text-gray-700 mb-1">Rendements futurs</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Ajustez les hypothèses pour estimer les rendements après {returnYears} ans.
             </p>
+            <div className="grid md:grid-cols-4 gap-4 mb-4">
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Années</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={returnYears}
+                  onChange={(e) => setReturnYears(parseInt(e.target.value) || 0)}
+                  className="w-full px-2 py-1 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Croissance des revenus (%)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={incomeGrowth}
+                  onChange={(e) =>
+                    setIncomeGrowth(parseFloat(e.target.value) || 0)
+                  }
+                  className="w-full px-2 py-1 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Croissance des dépenses (%)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={expenseGrowth}
+                  onChange={(e) =>
+                    setExpenseGrowth(parseFloat(e.target.value) || 0)
+                  }
+                  className="w-full px-2 py-1 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Appréciation de la valeur (%)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={valueGrowth}
+                  onChange={(e) =>
+                    setValueGrowth(parseFloat(e.target.value) || 0)
+                  }
+                  className="w-full px-2 py-1 border rounded"
+                />
+              </div>
+            </div>
+            <div className="flex items-center justify-center gap-6">
+              <div className="text-center">
+                <p className="text-sm text-gray-500">
+                  Rendement global sur {returnYears} an(s)
+                </p>
+                <p className="font-semibold">
+                  {formatPercent(multiYearReturn)}
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-gray-500">Rendement annualisé</p>
+                <p className="font-semibold">
+                  {formatPercent(multiYearAnnualized)}
+                </p>
+              </div>
+              <div className="text-center relative">
+                <button
+                  type="button"
+                  onClick={() => setShowIRRInfo(!showIRRInfo)}
+                  className="text-sm text-gray-500 underline cursor-pointer"
+                >
+                  TRI à la {returnYears}e année
+                </button>
+                {showIRRInfo && (
+                  <div className="absolute z-10 left-1/2 -translate-x-1/2 mt-2 w-64 p-2 bg-white border rounded shadow-lg text-xs text-gray-700">
+                    Le taux de rendement interne (TRI) est le taux d'actualisation qui rend la valeur actuelle nette de l'investissement nulle.
+                  </div>
+                )}
+                <p className="font-semibold">
+                  {formatPercent(multiYearIRR)}
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
-
-        <div className="flex justify-end gap-2 mt-6">
-          <button
-            onClick={handleGeneratePDF}
-            className="px-4 py-2 bg-blue-600 text-white rounded"
-          >
-            Générer PDF
-          </button>
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-200 rounded"
-          >
-            Fermer
-          </button>
         </div>
       </div>
     </div>
