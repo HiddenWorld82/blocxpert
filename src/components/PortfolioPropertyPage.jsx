@@ -4,10 +4,21 @@ import RevenueSection from './sections/RevenueSection';
 import OperatingExpensesSection from './sections/OperatingExpensesSection';
 import CurrentFinancingSection from './sections/CurrentFinancingSection';
 import defaultProperty from '../defaults/defaultProperty';
+import calculateRentability from '../utils/calculateRentability';
 
 const PortfolioPropertyPage = ({ onSave, onCancel, initialData = {} }) => {
   const [property, setProperty] = useState({ ...defaultProperty, ...initialData });
   const [advanced, setAdvanced] = useState(false);
+
+  const handleSave = () => {
+    const analysis = calculateRentability(property, advanced);
+    onSave({
+      ...property,
+      advancedExpenses: advanced,
+      annualRent: Number(property.annualRent) || 0,
+      annualExpenses: analysis.totalExpenses,
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -56,7 +67,7 @@ const PortfolioPropertyPage = ({ onSave, onCancel, initialData = {} }) => {
                 Annuler
               </button>
               <button
-                onClick={() => onSave(property)}
+                onClick={handleSave}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
                 Sauvegarder
