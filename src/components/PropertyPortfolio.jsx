@@ -26,13 +26,15 @@ const PropertyPortfolio = () => {
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-      <h2 className="text-2xl font-semibold mb-4">Mon Parc Immobilier</h2>
-      <button
-        onClick={() => setShowForm(true)}
-        className="bg-blue-600 text-white px-4 py-2 rounded-lg mb-6 hover:bg-blue-700 transition-colors"
-      >
-        <Plus className="inline-block mr-1" /> Ajouter
-      </button>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-semibold">Mon Parc Immobilier</h2>
+        <button
+          onClick={() => setShowForm(true)}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          <Plus className="inline-block mr-1" /> Ajouter
+        </button>
+      </div>
       {properties.length > 0 && (
         <ul className="space-y-4">
           {properties.map((p) => (
