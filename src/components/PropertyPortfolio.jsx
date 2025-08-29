@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Plus, Trash2, FileText } from 'lucide-react';
-import PortfolioPropertyForm from './PortfolioPropertyForm';
+import PortfolioPropertyPage from './PortfolioPropertyPage';
 import PortfolioPropertyReport from './PortfolioPropertyReport';
 
 const PropertyPortfolio = () => {
@@ -9,7 +9,7 @@ const PropertyPortfolio = () => {
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [showForm, setShowForm] = useState(false);
+  const [view, setView] = useState('list');
   const [reportProperty, setReportProperty] = useState(null);
 
   useEffect(() => {
@@ -17,19 +17,39 @@ const PropertyPortfolio = () => {
   }, [properties]);
 
   const handleAdd = (data) => {
-    setProperties((prev) => [...prev, { id: Date.now(), ...data }]);
+    const cleaned = {
+      ...data,
+      annualRent: Number(data.annualRent) || 0,
+      annualExpenses: Number(data.annualExpenses) || 0,
+      financedAmount: Number(data.financedAmount) || 0,
+      interestRate: Number(data.interestRate) || 0,
+      amortization: Number(data.amortization) || 0,
+    };
+    setProperties((prev) => [...prev, { id: Date.now(), ...cleaned }]);
   };
 
   const removeProperty = (id) => {
     setProperties((prev) => prev.filter((p) => p.id !== id));
   };
 
+  if (view === 'form') {
+    return (
+      <PortfolioPropertyPage
+        onSave={(data) => {
+          handleAdd(data);
+          setView('list');
+        }}
+        onCancel={() => setView('list')}
+      />
+    );
+  }
+
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-semibold">Mon Parc Immobilier</h2>
         <button
-          onClick={() => setShowForm(true)}
+          onClick={() => setView('form')}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
         >
           <Plus className="inline-block mr-1" /> Ajouter
@@ -43,7 +63,7 @@ const PropertyPortfolio = () => {
               className="border rounded-lg p-4 flex justify-between items-start"
             >
               <div>
-                <h3 className="font-semibold">{p.name}</h3>
+                <h3 className="font-semibold">{p.name || p.address}</h3>
                 <p className="text-sm text-gray-600">
                   Revenus: {p.annualRent.toLocaleString('fr-CA')} $ • Dépenses: {p.annualExpenses.toLocaleString('fr-CA')} $
                 </p>
@@ -67,15 +87,6 @@ const PropertyPortfolio = () => {
             </li>
           ))}
         </ul>
-      )}
-      {showForm && (
-        <PortfolioPropertyForm
-          onSave={(data) => {
-            handleAdd(data);
-            setShowForm(false);
-          }}
-          onCancel={() => setShowForm(false)}
-        />
       )}
       {reportProperty && (
         <PortfolioPropertyReport
