@@ -50,14 +50,13 @@ const PortfolioPropertyReport = ({ property, onClose }) => {
   if (!property) return null;
 
   const baseAnalysis = useMemo(
-    () => calculateRentability(property, false),
+    () => calculateRentability(property, property.advancedExpenses),
     [property],
   );
 
   const { payment, balance, balanceAfterYear } = calculateMortgage(property);
   const annualDebtService = payment * 12;
-  const netIncome =
-    (Number(property.annualRent) || 0) - (Number(property.annualExpenses) || 0);
+  const netIncome = baseAnalysis.effectiveNetIncome;
   const cashflow = netIncome - annualDebtService;
   const equity = (Number(property.purchasePrice) || 0) - balance;
   const principalYear = (Number(property.financedAmount) || 0) - balanceAfterYear;

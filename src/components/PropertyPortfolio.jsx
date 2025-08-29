@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Plus, Trash2, FileText } from 'lucide-react';
 import PortfolioPropertyPage from './PortfolioPropertyPage';
 import PortfolioPropertyReport from './PortfolioPropertyReport';
+import calculateRentability from '../utils/calculateRentability';
 
 const PropertyPortfolio = () => {
   const [properties, setProperties] = useState(() => {
@@ -17,10 +18,11 @@ const PropertyPortfolio = () => {
   }, [properties]);
 
   const handleAdd = (data) => {
+    const analysis = calculateRentability(data, data.advancedExpenses);
     const cleaned = {
       ...data,
       annualRent: Number(data.annualRent) || 0,
-      annualExpenses: Number(data.annualExpenses) || 0,
+      annualExpenses: Number(data.annualExpenses ?? analysis.totalExpenses) || 0,
       financedAmount: Number(data.financedAmount) || 0,
       interestRate: Number(data.interestRate) || 0,
       amortization: Number(data.amortization) || 0,
