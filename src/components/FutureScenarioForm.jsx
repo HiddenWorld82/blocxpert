@@ -59,6 +59,7 @@ export default function FutureScenarioForm({
       parentScenarioId: "",
       ...initialScenario,
     });
+    lastMarketValueEstimateRef.current = initialScenario.marketValue || "";
   }, [initialScenario.id]);
 
   const handleFinancingChange = (financing) => {
