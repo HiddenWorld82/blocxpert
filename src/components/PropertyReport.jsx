@@ -77,6 +77,25 @@ const PropertyReport = ({
     () => subScenarios.find((s) => s.id === selectedSubScenarioId),
     [subScenarios, selectedSubScenarioId]
   );
+  const subScenarioAnalysis = useMemo(() => {
+    if (!selectedSubScenario) return null;
+    const overrides = {};
+    if (selectedSubScenario.type === 'refinancing') {
+      Object.assign(
+        overrides,
+        selectedSubScenario.financing,
+        selectedSubScenario.financingFees,
+      );
+    } else if (selectedSubScenario.type === 'optimization') {
+      Object.assign(
+        overrides,
+        selectedSubScenario.revenue,
+        selectedSubScenario.operatingExpenses,
+      );
+    }
+    const scenarioProperty = { ...reportProperty, ...overrides };
+    return calculateRentability(scenarioProperty, advancedExpenses);
+  }, [selectedSubScenario, reportProperty, advancedExpenses]);
   const [showIRRInfo, setShowIRRInfo] = useState(false);
   const {
     totalReturn: multiYearReturn,
@@ -91,6 +110,8 @@ const PropertyReport = ({
         incomeGrowth / 100,
         expenseGrowth / 100,
         valueGrowth / 100,
+        selectedSubScenario,
+        subScenarioAnalysis,
       ),
     [
       reportProperty,
@@ -99,6 +120,8 @@ const PropertyReport = ({
       incomeGrowth,
       expenseGrowth,
       valueGrowth,
+      selectedSubScenario,
+      subScenarioAnalysis,
     ],
   );
 
@@ -549,6 +572,8 @@ const PropertyReport = ({
                 onViewAmortization(
                   { ...reportProperty, appreciationRate: valueGrowth / 100 },
                   reportAnalysis,
+                  selectedSubScenario,
+                  subScenarioAnalysis,
                 )
               }
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"

@@ -152,8 +152,18 @@ const RentalPropertyAnalyzer = () => {
     setCurrentStep('dashboard');
   };
 
-  const handleViewAmortization = (property, analysisData) => {
-    setAmortizationData({ property, analysis: analysisData });
+  const handleViewAmortization = (
+    property,
+    analysisData,
+    scenarioData,
+    scenarioAnalysis,
+  ) => {
+    setAmortizationData({
+      property,
+      analysis: analysisData,
+      scenario: scenarioData,
+      scenarioAnalysis,
+    });
     setCurrentStep('amortization');
   };
 
@@ -242,6 +252,8 @@ const RentalPropertyAnalyzer = () => {
             <AmortizationPage
               analysis={amortizationData?.analysis || analysis}
               currentProperty={amortizationData?.property || currentProperty}
+              scenario={amortizationData?.scenario}
+              scenarioAnalysis={amortizationData?.scenarioAnalysis}
               setCurrentStep={setCurrentStep}
             />
           )}
