@@ -19,6 +19,12 @@ const AmortizationPage = ({
   let cumulativePrincipal = 0;
   const appreciationRate = parseFloat(currentProperty.appreciationRate) || 0.03;
   const purchasePrice = parseFloat(currentProperty.purchasePrice) || 0;
+  const monthlyAppreciationFactor = Math.pow(1 + appreciationRate, 1 / 12);
+  let propertyValue = purchasePrice;
+  const baseCosts = analysis.acquisitionCosts || 0;
+  const scenarioCosts = scenarioAnalysis?.acquisitionCosts || 0;
+  const additionalCosts = Math.max(scenarioCosts - baseCosts, 0);
+  let totalCosts = baseCosts;
   const rows = [];
 
   const refinanceMonth = scenario
@@ -37,7 +43,19 @@ const AmortizationPage = ({
     ? refinanceMonth + newAmortYears * 12
     : amortYears * 12;
 
+  if (scenario && refinanceMonth === 0 && newLoanAmount > propertyValue) {
+    propertyValue = newLoanAmount;
+    totalCosts += additionalCosts;
+  }
+
   for (let month = 1; month <= totalMonths; month++) {
+    propertyValue *= monthlyAppreciationFactor;
+    if (scenario && month === refinanceMonth) {
+      if (newLoanAmount > propertyValue) {
+        propertyValue = newLoanAmount;
+      }
+      totalCosts += additionalCosts;
+    }
     const useScenario = scenario && month > refinanceMonth;
     if (scenario && month === refinanceMonth + 1) {
       balance = newLoanAmount;
@@ -48,8 +66,7 @@ const AmortizationPage = ({
     const principal = Math.min(payment - interest, balance);
     balance -= principal;
     cumulativePrincipal += principal;
-    const propertyValue = purchasePrice * Math.pow(1 + appreciationRate, month / 12);
-    const equity = propertyValue - balance - analysis.acquisitionCosts;
+    const equity = propertyValue - balance - totalCosts;
     rows.push({
       month,
       balance,
