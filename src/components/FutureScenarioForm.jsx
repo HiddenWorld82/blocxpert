@@ -22,7 +22,9 @@ export default function FutureScenarioForm({
     title: "",
     refinanceYears: "",
     marketValue: "",
-    netIncomeIncreasePct: "",
+    revenueGrowthPct: "2",
+    expenseGrowthPct: "2.5",
+    valueAppreciationPct: "3",
     financing: {},
     financingFees: {},
     parentScenarioId: "",
@@ -53,7 +55,9 @@ export default function FutureScenarioForm({
       title: "",
       refinanceYears: "",
       marketValue: "",
-      netIncomeIncreasePct: "",
+      revenueGrowthPct: "2",
+      expenseGrowthPct: "2.5",
+      valueAppreciationPct: "3",
       financing: {},
       financingFees: {},
       parentScenarioId: "",
@@ -90,8 +94,11 @@ export default function FutureScenarioForm({
     );
     if (!years) return;
     const purchasePrice = parseFloat(property.purchasePrice) || 0;
+    const appreciationPct =
+      (parseFloat(parseLocaleNumber(scenario.valueAppreciationPct)) || 0) /
+      100;
     const estimated = Math.round(
-      purchasePrice * Math.pow(1 + 0.03, years)
+      purchasePrice * Math.pow(1 + appreciationPct, years)
     ).toString();
     if (
       !scenario.marketValue ||
@@ -100,18 +107,27 @@ export default function FutureScenarioForm({
       setScenario((prev) => ({ ...prev, marketValue: estimated }));
     }
     lastMarketValueEstimateRef.current = estimated;
-  }, [scenario.refinanceYears, property?.purchasePrice]);
+  }, [
+    scenario.refinanceYears,
+    property?.purchasePrice,
+    scenario.valueAppreciationPct,
+  ]);
 
   const analysisProperty = useMemo(() => {
     if (!property) return null;
-    const pct =
-      (parseFloat(parseLocaleNumber(scenario.netIncomeIncreasePct)) || 0) / 100;
+    const revenuePct =
+      (parseFloat(parseLocaleNumber(scenario.revenueGrowthPct)) || 0) / 100;
+    const expensePct =
+      (parseFloat(parseLocaleNumber(scenario.expenseGrowthPct)) || 0) / 100;
+    const appreciationPct =
+      (parseFloat(parseLocaleNumber(scenario.valueAppreciationPct)) || 0) / 100;
+    const years = parseFloat(parseLocaleNumber(scenario.refinanceYears)) || 0;
+    const revenueFactor = Math.pow(1 + revenuePct, Math.max(years, 0));
+    const expenseFactor = Math.pow(1 + expensePct, Math.max(years, 0));
+    const purchasePrice = parseFloat(property.purchasePrice) || 0;
     const marketValue =
       parseFloat(parseLocaleNumber(scenario.marketValue)) ||
-      parseFloat(property.purchasePrice) ||
-      0;
-    const years = parseFloat(parseLocaleNumber(scenario.refinanceYears)) || 0;
-    const growthFactor = Math.pow(1 + pct, Math.max(years, 0));
+      purchasePrice * Math.pow(1 + appreciationPct, Math.max(years, 0));
     const revenueFields = [
       "annualRent",
       "parkingRevenue",
@@ -145,10 +161,16 @@ export default function FutureScenarioForm({
       "hotWater",
     ];
     const scaled = {};
-    [...revenueFields, ...expenseFields].forEach((field) => {
+    revenueFields.forEach((field) => {
       const value = parseFloat(property[field]);
       if (!isNaN(value)) {
-        scaled[field] = value * growthFactor;
+        scaled[field] = value * revenueFactor;
+      }
+    });
+    expenseFields.forEach((field) => {
+      const value = parseFloat(property[field]);
+      if (!isNaN(value)) {
+        scaled[field] = value * expenseFactor;
       }
     });
     const acquisitionCostFields = [
@@ -174,10 +196,12 @@ export default function FutureScenarioForm({
       ...scaled,
       purchasePrice: marketValue,
     };
-    }, [
+  }, [
     property,
+    scenario.revenueGrowthPct,
+    scenario.expenseGrowthPct,
+    scenario.valueAppreciationPct,
     scenario.marketValue,
-    scenario.netIncomeIncreasePct,
     scenario.refinanceYears,
   ]);
 
@@ -416,8 +440,8 @@ export default function FutureScenarioForm({
               <h2 className="text-lg font-semibold mb-4 text-gray-700">
                 Paramètres du scénario
               </h2>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="md:col-span-3">
                   <label className="block text-sm font-medium mb-1">Titre</label>
                   <input
                     type="text"
@@ -445,10 +469,28 @@ export default function FutureScenarioForm({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">% augmentation revenus net</label>
+                  <label className="block text-sm font-medium mb-1">Croissance des revenus (%)</label>
                   <FormattedNumberInput
-                    value={scenario.netIncomeIncreasePct || ""}
-                    onChange={(val) => handleChange("netIncomeIncreasePct", val)}
+                    value={scenario.revenueGrowthPct || ""}
+                    onChange={(val) => handleChange("revenueGrowthPct", val)}
+                    className="w-full border rounded p-2"
+                    type="percentage"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Croissance des dépenses (%)</label>
+                  <FormattedNumberInput
+                    value={scenario.expenseGrowthPct || ""}
+                    onChange={(val) => handleChange("expenseGrowthPct", val)}
+                    className="w-full border rounded p-2"
+                    type="percentage"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Appréciation de la valeur (%)</label>
+                  <FormattedNumberInput
+                    value={scenario.valueAppreciationPct || ""}
+                    onChange={(val) => handleChange("valueAppreciationPct", val)}
                     className="w-full border rounded p-2"
                     type="percentage"
                   />
