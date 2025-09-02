@@ -31,7 +31,7 @@ export default function FutureScenarioForm({
     ...initialScenario,
   });
 
-  const [lockedFields] = useState({
+  const [lockedFields, setLockedFields] = useState({
     debtCoverage: true,
   });
 
@@ -67,7 +67,12 @@ export default function FutureScenarioForm({
       parseLocaleNumber(initialScenario.marketValue) || "";
   }, [initialScenario.id]);
 
-  const handleFinancingChange = (financing) => {
+  const handleFinancingChange = (financing, field) => {
+    if (field === "debtCoverageRatio") {
+      setLockedFields((prev) => ({ ...prev, debtCoverage: false }));
+    } else if (field === "financingType") {
+      setLockedFields((prev) => ({ ...prev, debtCoverage: true }));
+    }
     setScenario((prev) => ({ ...prev, financing }));
   };
 
@@ -386,7 +391,11 @@ export default function FutureScenarioForm({
         financing: { ...prev.financing, debtCoverageRatio: newRatio },
       }));
     }
-  }, [scenario.financing.financingType, property?.numberOfUnits]);
+  }, [
+    scenario.financing.financingType,
+    property?.numberOfUnits,
+    lockedFields.debtCoverage,
+  ]);
 
   const handleSave = async () => {
     const { id, ...dataWithoutId } = scenario;

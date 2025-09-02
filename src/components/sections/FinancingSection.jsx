@@ -17,7 +17,7 @@ export default function FinancingSection({
   lockedFields = {},
 }) {
   const handleChange = (field, value) => {
-    onChange({ ...financing, [field]: value });
+    onChange({ ...financing, [field]: value }, field);
   };
 
   return (

@@ -25,7 +25,7 @@ export default function FinancingScenarioForm({
     ...initialScenario,
   });
 
-  const [lockedFields] = useState({
+  const [lockedFields, setLockedFields] = useState({
     debtCoverage: true,
     welcomeTax: true,
   });
@@ -39,7 +39,12 @@ export default function FinancingScenarioForm({
     });
   }, [initialScenario.id]);
 
-  const handleFinancingChange = (financing) => {
+  const handleFinancingChange = (financing, field) => {
+    if (field === "debtCoverageRatio") {
+      setLockedFields((prev) => ({ ...prev, debtCoverage: false }));
+    } else if (field === "financingType") {
+      setLockedFields((prev) => ({ ...prev, debtCoverage: true }));
+    }
     setScenario((prev) => ({ ...prev, financing }));
   };
 
@@ -184,7 +189,6 @@ export default function FinancingScenarioForm({
     scenario.financing.financingType,
     property?.numberOfUnits,
     lockedFields.debtCoverage,
-    scenario.financing.debtCoverageRatio,
   ]);
 
   const handleSave = async () => {
