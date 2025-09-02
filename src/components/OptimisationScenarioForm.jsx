@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import FinancingSection from "./sections/FinancingSection";
 import FinancingFeesSection from "./sections/FinancingFeesSection";
 import RevenueSection from "./sections/RevenueSection";
@@ -54,6 +54,7 @@ export default function OptimisationScenarioForm({
   });
 
   const [parentScenario, setParentScenario] = useState(null);
+  const lastMarketValueEstimateRef = useRef("");
 
   useEffect(() => {
     if (!propertyId) return;
@@ -69,6 +70,8 @@ export default function OptimisationScenarioForm({
 
   useEffect(() => {
     setScenario(buildScenarioState(initialScenario));
+    lastMarketValueEstimateRef.current =
+      parseLocaleNumber(initialScenario.marketValue) || "";
   }, [initialScenario.id]);
 
   const handleFinancingChange = (financing) => {
@@ -128,16 +131,24 @@ export default function OptimisationScenarioForm({
   };
 
   useEffect(() => {
+    if (!property?.purchasePrice) return;
+    const years = Math.max(
+      parseFloat(parseLocaleNumber(scenario.refinanceYears)) || 0,
+      0,
+    );
+    if (!years) return;
     if (!property?.purchasePrice || !scenario.refinanceYears) return;
     const purchasePrice = parseFloat(property.purchasePrice) || 0;
-    const years = Math.max(parseFloat(parseLocaleNumber(scenario.refinanceYears)) || 0, 0);
     const estimated = Math.round(
       purchasePrice * Math.pow(1 + 0.03, years)
     ).toString();
-    setScenario((prev) => ({
-      ...prev,
-      marketValue: prev.marketValue || estimated,
-    }));
+    if (
+      !scenario.marketValue ||
+      scenario.marketValue === lastMarketValueEstimateRef.current
+    ) {
+      setScenario((prev) => ({ ...prev, marketValue: estimated }));
+    }
+    lastMarketValueEstimateRef.current = estimated;
   }, [scenario.refinanceYears, property?.purchasePrice]);
 
   const analysisProperty = useMemo(() => {

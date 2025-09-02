@@ -59,7 +59,8 @@ export default function FutureScenarioForm({
       parentScenarioId: "",
       ...initialScenario,
     });
-    lastMarketValueEstimateRef.current = initialScenario.marketValue || "";
+    lastMarketValueEstimateRef.current =
+      parseLocaleNumber(initialScenario.marketValue) || "";
   }, [initialScenario.id]);
 
   const handleFinancingChange = (financing) => {
@@ -82,22 +83,23 @@ export default function FutureScenarioForm({
   };
 
   useEffect(() => {
-    if (!property?.purchasePrice || !scenario.refinanceYears) return;
+    if (!property?.purchasePrice) return;
+    const years = Math.max(
+      parseFloat(parseLocaleNumber(scenario.refinanceYears)) || 0,
+      0,
+    );
+    if (!years) return;
     const purchasePrice = parseFloat(property.purchasePrice) || 0;
-    const years = Math.max(parseFloat(parseLocaleNumber(scenario.refinanceYears)) || 0, 0);
     const estimated = Math.round(
       purchasePrice * Math.pow(1 + 0.03, years)
     ).toString();
-    setScenario((prev) => {
-      const shouldUpdate =
-        !prev.marketValue ||
-        prev.marketValue === lastMarketValueEstimateRef.current;
-      lastMarketValueEstimateRef.current = estimated;
-      return {
-        ...prev,
-        marketValue: shouldUpdate ? estimated : prev.marketValue,
-      };
-    });
+    if (
+      !scenario.marketValue ||
+      scenario.marketValue === lastMarketValueEstimateRef.current
+    ) {
+      setScenario((prev) => ({ ...prev, marketValue: estimated }));
+    }
+    lastMarketValueEstimateRef.current = estimated;
   }, [scenario.refinanceYears, property?.purchasePrice]);
 
   const analysisProperty = useMemo(() => {
