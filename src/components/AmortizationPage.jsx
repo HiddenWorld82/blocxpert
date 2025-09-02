@@ -31,6 +31,7 @@ const AmortizationPage = ({
     ? (parseFloat(scenario.refinanceYears) || 0) * 12
     : 0;
   const newLoanAmount = scenarioAnalysis?.totalLoanAmount || 0;
+  const newEconomicValue = scenarioAnalysis?.economicValue || 0;
   const newMonthlyPayment = scenarioAnalysis?.monthlyPayment || 0;
   const newMortgageRate = parseFloat(scenario?.financing?.mortgageRate) || 0;
   const newAmortYears = parseInt(scenario?.financing?.amortization) || 0;
@@ -43,16 +44,20 @@ const AmortizationPage = ({
     ? refinanceMonth + newAmortYears * 12
     : amortYears * 12;
 
-  if (scenario && refinanceMonth === 0 && newLoanAmount > propertyValue) {
-    propertyValue = newLoanAmount;
+  if (
+    scenario &&
+    refinanceMonth === 0 &&
+    (newEconomicValue > propertyValue || newLoanAmount > propertyValue)
+  ) {
+    propertyValue = Math.max(newEconomicValue, newLoanAmount);
     totalCosts += additionalCosts;
   }
 
   for (let month = 1; month <= totalMonths; month++) {
     propertyValue *= monthlyAppreciationFactor;
     if (scenario && month === refinanceMonth) {
-      if (newLoanAmount > propertyValue) {
-        propertyValue = newLoanAmount;
+      if (newEconomicValue > propertyValue || newLoanAmount > propertyValue) {
+        propertyValue = Math.max(newEconomicValue, newLoanAmount);
       }
       totalCosts += additionalCosts;
     }
