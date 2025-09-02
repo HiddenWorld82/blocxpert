@@ -1,20 +1,51 @@
 import React from 'react';
 
-const AmortizationPage = ({ analysis, currentProperty, setCurrentStep }) => {
+const AmortizationPage = ({
+  analysis,
+  currentProperty,
+  setCurrentStep,
+  scenario,
+  scenarioAnalysis,
+}) => {
   const loanAmount = analysis.totalLoanAmount || 0;
   const monthlyPayment = analysis.monthlyPayment || 0;
   const mortgageRate = parseFloat(currentProperty.mortgageRate) || 0;
   const amortYears = parseInt(currentProperty.amortization) || 0;
-  const totalMonths = amortYears * 12;
-  const monthlyRate = Math.pow(1 + mortgageRate / 100 / 2, 1 / 6) - 1;
+  const monthlyRate =
+    currentProperty.financingType === 'private'
+      ? mortgageRate / 100 / 12
+      : Math.pow(1 + mortgageRate / 100 / 2, 1 / 6) - 1;
   let balance = loanAmount;
   let cumulativePrincipal = 0;
   const appreciationRate = parseFloat(currentProperty.appreciationRate) || 0.03;
   const purchasePrice = parseFloat(currentProperty.purchasePrice) || 0;
   const rows = [];
+
+  const refinanceMonth = scenario
+    ? (parseFloat(scenario.refinanceYears) || 0) * 12
+    : 0;
+  const newLoanAmount = scenarioAnalysis?.totalLoanAmount || 0;
+  const newMonthlyPayment = scenarioAnalysis?.monthlyPayment || 0;
+  const newMortgageRate = parseFloat(scenario?.financing?.mortgageRate) || 0;
+  const newAmortYears = parseInt(scenario?.financing?.amortization) || 0;
+  const newMonthlyRate =
+    scenario?.financing?.financingType === 'private'
+      ? newMortgageRate / 100 / 12
+      : Math.pow(1 + newMortgageRate / 100 / 2, 1 / 6) - 1;
+
+  const totalMonths = scenario
+    ? refinanceMonth + newAmortYears * 12
+    : amortYears * 12;
+
   for (let month = 1; month <= totalMonths; month++) {
-    const interest = balance * monthlyRate;
-    const principal = Math.min(monthlyPayment - interest, balance);
+    const useScenario = scenario && month > refinanceMonth;
+    if (scenario && month === refinanceMonth + 1) {
+      balance = newLoanAmount;
+    }
+    const rate = useScenario ? newMonthlyRate : monthlyRate;
+    const payment = useScenario ? newMonthlyPayment : monthlyPayment;
+    const interest = balance * rate;
+    const principal = Math.min(payment - interest, balance);
     balance -= principal;
     cumulativePrincipal += principal;
     const propertyValue = purchasePrice * Math.pow(1 + appreciationRate, month / 12);
@@ -81,7 +112,16 @@ const AmortizationPage = ({ analysis, currentProperty, setCurrentStep }) => {
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.month} className={r.month % 12 === 0 ? "border-t bg-gray-200" : "border-t"}>
+                <tr
+                  key={r.month}
+                  className={
+                    scenario && r.month === refinanceMonth
+                      ? 'border-t bg-green-200'
+                      : r.month % 12 === 0
+                      ? 'border-t bg-gray-200'
+                      : 'border-t'
+                  }
+                >
                   <td className="px-2 py-1 text-center">{r.month}</td>
                   <td className="px-2 py-1 text-center">{formatMoney(r.balance)}</td>
                   <td className="px-2 py-1 text-center">{formatMoney(r.interest)}</td>

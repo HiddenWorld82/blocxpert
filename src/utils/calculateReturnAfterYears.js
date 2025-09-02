@@ -35,6 +35,8 @@ export default function calculateReturnAfterYears(
   incomeIncreaseRate = 0.02,
   expenseIncreaseRate = 0.025,
   valueIncreaseRate = 0.03,
+  scenario = null,
+  scenarioAnalysis = null,
 ) {
   const nYears = parseInt(years, 10);
   if (!analysis || !property || !nYears || nYears <= 0) {
@@ -53,42 +55,60 @@ export default function calculateReturnAfterYears(
   const purchasePrice = parseFloat(property.purchasePrice) || 0;
   const mortgageRate = (parseFloat(property.mortgageRate) || 5.5) / 100;
   const amortizationYears = parseInt(property.amortization) || 25;
-  const totalPayments = amortizationYears * 12;
 
-  let monthlyRate = Math.pow(1 + mortgageRate / 2, 1 / 6) - 1;
+  let baseMonthlyRate = Math.pow(1 + mortgageRate / 2, 1 / 6) - 1;
   if (property.financingType === 'private') {
-    monthlyRate = mortgageRate / 12;
+    baseMonthlyRate = mortgageRate / 12;
   }
 
   const monthlyPayment = analysis.monthlyPayment || 0;
   const totalLoanAmount = analysis.totalLoanAmount || 0;
 
-  let principalPaid = 0;
-  let balance = totalLoanAmount;
-  if (monthlyPayment > 0 && totalLoanAmount > 0) {
-    const months = Math.min(nYears * 12, totalPayments);
-    for (let i = 0; i < months && balance > 0; i++) {
-      const interest = balance * monthlyRate;
-      const principal = monthlyPayment - interest;
-      principalPaid += principal;
-      balance -= principal;
-    }
+  const refYears = scenario
+    ? Math.min(parseFloat(scenario.refinanceYears) || 0, nYears)
+    : 0;
+  const scenarioMortgageRate = scenario && scenario.financing
+    ? (parseFloat(scenario.financing.mortgageRate) || 0) / 100
+    : mortgageRate;
+  let scenarioMonthlyRate = Math.pow(1 + scenarioMortgageRate / 2, 1 / 6) - 1;
+  if (scenario && scenario.financing?.financingType === 'private') {
+    scenarioMonthlyRate = scenarioMortgageRate / 12;
   }
+  const scenarioMonthlyPayment = scenarioAnalysis?.monthlyPayment || monthlyPayment;
+  const scenarioAnnualDebtService =
+    scenarioAnalysis?.annualDebtService || annualDebtService;
 
   // Calculate cash flows with annual increases
   let revenue = baseRevenue;
   let expenses = baseExpenses;
   let cashFlowTotal = 0;
   const cashFlows = [-totalInvestment];
+  let balance = totalLoanAmount;
+  let principalPaid = 0;
   for (let year = 1; year <= nYears; year++) {
     if (year > 1) {
       revenue *= 1 + incomeIncreaseRate;
       expenses *= 1 + expenseIncreaseRate;
     }
-    const netIncome = revenue - expenses;
-    const annualCashFlow = netIncome - annualDebtService;
-    cashFlowTotal += annualCashFlow;
-    cashFlows.push(annualCashFlow);
+    const useScenario = scenario && year > refYears;
+    const annualCF =
+      revenue - expenses - (useScenario ? scenarioAnnualDebtService : annualDebtService);
+    cashFlowTotal += annualCF;
+    cashFlows.push(annualCF);
+
+    const currentMonthlyRate = useScenario ? scenarioMonthlyRate : baseMonthlyRate;
+    const currentMonthlyPayment = useScenario
+      ? scenarioMonthlyPayment
+      : monthlyPayment;
+    for (let m = 0; m < 12 && balance > 0; m++) {
+      const interest = balance * currentMonthlyRate;
+      const principal = Math.min(currentMonthlyPayment - interest, balance);
+      principalPaid += principal;
+      balance -= principal;
+    }
+    if (year === refYears && scenarioAnalysis) {
+      balance = scenarioAnalysis.totalLoanAmount || balance;
+    }
   }
 
   const propertyValue =
