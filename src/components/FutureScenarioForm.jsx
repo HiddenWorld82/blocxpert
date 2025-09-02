@@ -452,23 +452,6 @@ export default function FutureScenarioForm({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Refinancement dans (années)</label>
-                  <FormattedNumberInput
-                    value={scenario.refinanceYears || ""}
-                    onChange={(val) => handleChange("refinanceYears", val)}
-                    className="w-full border rounded p-2"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Nouvelle valeur marchande</label>
-                  <FormattedNumberInput
-                    value={scenario.marketValue || ""}
-                    onChange={(val) => handleChange("marketValue", val)}
-                    className="w-full border rounded p-2"
-                    type="currency"
-                  />
-                </div>
-                <div>
                   <label className="block text-sm font-medium mb-1">Croissance des revenus (%)</label>
                   <FormattedNumberInput
                     value={scenario.revenueGrowthPct || ""}
@@ -493,6 +476,23 @@ export default function FutureScenarioForm({
                     onChange={(val) => handleChange("valueAppreciationPct", val)}
                     className="w-full border rounded p-2"
                     type="percentage"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Refinancement dans (années)</label>
+                  <FormattedNumberInput
+                    value={scenario.refinanceYears || ""}
+                    onChange={(val) => handleChange("refinanceYears", val)}
+                    className="w-full border rounded p-2"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Nouvelle valeur marchande</label>
+                  <FormattedNumberInput
+                    value={scenario.marketValue || ""}
+                    onChange={(val) => handleChange("marketValue", val)}
+                    className="w-full border rounded p-2"
+                    type="currency"
                   />
                 </div>
               </div>
