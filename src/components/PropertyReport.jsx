@@ -12,6 +12,7 @@ import OptimisationScenarioForm from './OptimisationScenarioForm';
 import calculateRentability from '../utils/calculateRentability';
 import calculateReturnAfterYears from '../utils/calculateReturnAfterYears';
 import { getScenarios } from '../services/dataService';
+import { getAphMaxLtvRatio } from '../utils/cmhc';
 
 const PropertyReport = ({
   currentProperty,
@@ -79,23 +80,160 @@ const PropertyReport = ({
   );
   const subScenarioAnalysis = useMemo(() => {
     if (!selectedSubScenario) return null;
-    const overrides = {};
     if (selectedSubScenario.type === 'refinancing') {
-      Object.assign(
-        overrides,
-        selectedSubScenario.financing,
-        selectedSubScenario.financingFees,
+      const years = parseFloat(selectedSubScenario.refinanceYears) || 0;
+      const revenueFactor = Math.pow(
+        1 + (parseFloat(selectedSubScenario.revenueGrowthPct) || 0) / 100,
+        years,
       );
+      const expenseFactor = Math.pow(
+        1 + (parseFloat(selectedSubScenario.expenseGrowthPct) || 0) / 100,
+        years,
+      );
+      const appreciationPct =
+        (parseFloat(selectedSubScenario.valueAppreciationPct) || 0) / 100;
+      const purchasePrice = parseFloat(currentProperty.purchasePrice) || 0;
+      const marketValue =
+        parseFloat(selectedSubScenario.marketValue) ||
+        purchasePrice * Math.pow(1 + appreciationPct, years);
+
+      const revenueFields = [
+        'annualRent',
+        'parkingRevenue',
+        'internetRevenue',
+        'storageRevenue',
+        'otherRevenue',
+      ];
+      const expenseFields = [
+        'municipalTaxes',
+        'schoolTaxes',
+        'insurance',
+        'electricityHeating',
+        'maintenance',
+        'concierge',
+        'operatingExpenses',
+        'otherExpenses',
+        'heating',
+        'electricity',
+        'landscaping',
+        'snowRemoval',
+        'extermination',
+        'fireInspection',
+        'advertising',
+        'legal',
+        'accounting',
+        'elevator',
+        'cableInternet',
+        'appliances',
+        'garbage',
+        'washerDryer',
+        'hotWater',
+      ];
+      const acquisitionCostFields = [
+        'inspection',
+        'environmental1',
+        'environmental2',
+        'environmental3',
+        'otherFees',
+        'appraiser',
+        'notary',
+        'renovations',
+        'cmhcAnalysis',
+        'cmhcTax',
+        'welcomeTax',
+        'expertises',
+      ];
+      const baseProp = { ...currentProperty };
+      acquisitionCostFields.forEach((f) => delete baseProp[f]);
+      const scaled = {};
+      revenueFields.forEach((f) => {
+        const val = parseFloat(baseProp[f]);
+        if (!isNaN(val)) scaled[f] = val * revenueFactor;
+      });
+      expenseFields.forEach((f) => {
+        const val = parseFloat(baseProp[f]);
+        if (!isNaN(val)) scaled[f] = val * expenseFactor;
+      });
+      const scenarioProperty = {
+        ...baseProp,
+        ...scaled,
+        purchasePrice: marketValue,
+        ...selectedSubScenario.financing,
+        ...selectedSubScenario.financingFees,
+        ignoreLTV: true,
+      };
+
+      let initialLoanAmount = 0;
+      const principal = reportAnalysis?.maxLoanAmount || 0;
+      if (['cmhc', 'cmhc_aph'].includes(currentProperty.financingType)) {
+        const ltvRatio = purchasePrice > 0 ? (principal / purchasePrice) * 100 : 0;
+        const points = parseInt(currentProperty.aphPoints) || 0;
+        const effectiveLtv =
+          currentProperty.financingType === 'cmhc_aph'
+            ? Math.min(ltvRatio, getAphMaxLtvRatio(points) * 100)
+            : ltvRatio;
+        let premiumRate = 0;
+        if (currentProperty.financingType === 'cmhc_aph' && effectiveLtv > 85) {
+          premiumRate = effectiveLtv <= 90 ? 0.059 : 0.0615;
+        } else {
+          const brackets = [
+            { ltv: 65, rate: 0.026 },
+            { ltv: 70, rate: 0.0285 },
+            { ltv: 75, rate: 0.0335 },
+            { ltv: 80, rate: 0.0435 },
+            { ltv: 85, rate: 0.0535 },
+          ];
+          const b = brackets.find((br) => effectiveLtv <= br.ltv);
+          premiumRate = b?.rate || brackets.at(-1).rate;
+        }
+        const amortYears = parseInt(currentProperty.amortization) || 25;
+        if (amortYears > 25) {
+          premiumRate += ((amortYears - 25) / 5) * 0.0025;
+        }
+        if (currentProperty.financingType === 'cmhc_aph') {
+          const rebate =
+            points >= 100 ? 0.3 : points >= 70 ? 0.2 : points >= 50 ? 0.1 : 0;
+          premiumRate *= 1 - rebate;
+        }
+        const premium = principal * premiumRate;
+        const totalLoanAmount = principal + premium;
+        const mortgageRate = (parseFloat(currentProperty.mortgageRate) || 0) / 100;
+        let monthlyRate =
+          currentProperty.financingType === 'private'
+            ? mortgageRate / 12
+            : Math.pow(1 + mortgageRate / 2, 1 / 6) - 1;
+        const totalPayments = amortYears * 12;
+        const paymentsMade = Math.min(years * 12, totalPayments);
+        if (monthlyRate > 0) {
+          const balance =
+            totalLoanAmount *
+            (Math.pow(1 + monthlyRate, totalPayments) -
+              Math.pow(1 + monthlyRate, paymentsMade)) /
+            (Math.pow(1 + monthlyRate, totalPayments) - 1);
+          const factor = balance / totalLoanAmount;
+          initialLoanAmount = principal * factor;
+        } else {
+          initialLoanAmount = principal;
+        }
+      }
+      return calculateRentability(scenarioProperty, advancedExpenses, {
+        initialLoanAmount,
+      });
     } else if (selectedSubScenario.type === 'optimization') {
-      Object.assign(
-        overrides,
-        selectedSubScenario.revenue,
-        selectedSubScenario.operatingExpenses,
-      );
+      const scenarioProperty = {
+        ...currentProperty,
+        ...selectedSubScenario.revenue,
+        ...selectedSubScenario.operatingExpenses,
+      };
+      return calculateRentability(scenarioProperty, advancedExpenses);
     }
-    const scenarioProperty = { ...reportProperty, ...overrides };
-    return calculateRentability(scenarioProperty, advancedExpenses);
-  }, [selectedSubScenario, reportProperty, advancedExpenses]);
+    return null;
+  }, [
+    selectedSubScenario,
+    currentProperty,
+    reportAnalysis,
+    advancedExpenses,
+  ]);
   const [showIRRInfo, setShowIRRInfo] = useState(false);
   const {
     totalReturn: multiYearReturn,
