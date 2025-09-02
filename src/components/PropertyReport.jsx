@@ -1,5 +1,5 @@
 // components/PropertyReport.jsx
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import KeyIndicators from './sections/KeyIndicators';
 import FinancialSummary from './sections/FinancialSummary';
 import FinancingSummary from './sections/FinancingSummary';
@@ -11,6 +11,7 @@ import RenewScenarioForm from './RenewScenarioForm';
 import OptimisationScenarioForm from './OptimisationScenarioForm';
 import calculateRentability from '../utils/calculateRentability';
 import calculateReturnAfterYears from '../utils/calculateReturnAfterYears';
+import { getScenarios } from '../services/dataService';
 
 const PropertyReport = ({
   currentProperty,
@@ -70,6 +71,12 @@ const PropertyReport = ({
   const [incomeGrowth, setIncomeGrowth] = useState(2);
   const [expenseGrowth, setExpenseGrowth] = useState(2.5);
   const [valueGrowth, setValueGrowth] = useState(3);
+  const [subScenarios, setSubScenarios] = useState([]);
+  const [selectedSubScenarioId, setSelectedSubScenarioId] = useState('');
+  const selectedSubScenario = useMemo(
+    () => subScenarios.find((s) => s.id === selectedSubScenarioId),
+    [subScenarios, selectedSubScenarioId]
+  );
   const [showIRRInfo, setShowIRRInfo] = useState(false);
   const {
     totalReturn: multiYearReturn,
@@ -100,6 +107,35 @@ const PropertyReport = ({
   const reportRef = useRef(null);
 
   const baseScenarioId = scenario ? scenario.parentScenarioId || scenario.id : null;
+
+  useEffect(() => {
+    if (!currentProperty?.id || !baseScenarioId) return;
+    const unsub = getScenarios(
+      currentProperty.id,
+      (scs) =>
+        setSubScenarios(
+          scs.filter((s) => ['refinancing', 'optimization'].includes(s.type))
+        ),
+      baseScenarioId,
+    );
+    return () => unsub && unsub();
+  }, [currentProperty?.id, baseScenarioId]);
+
+  useEffect(() => {
+    if (!selectedSubScenario) return;
+    if (selectedSubScenario.type === 'refinancing') {
+      setIncomeGrowth(parseFloat(selectedSubScenario.revenueGrowthPct) || 0);
+      setExpenseGrowth(parseFloat(selectedSubScenario.expenseGrowthPct) || 0);
+      setValueGrowth(parseFloat(selectedSubScenario.valueAppreciationPct) || 0);
+    } else if (selectedSubScenario.type === 'optimization') {
+      setIncomeGrowth(null);
+      setExpenseGrowth(null);
+      setValueGrowth(null);
+    }
+  }, [selectedSubScenario]);
+
+  const isRefinancing = selectedSubScenario?.type === 'refinancing';
+  const isOptimization = selectedSubScenario?.type === 'optimization';
 
   const handleGeneratePDF = () => {
     if (!reportRef.current) return;
@@ -386,6 +422,22 @@ const PropertyReport = ({
             <p className="text-sm text-gray-500 mb-4">
               Ajustez les hypothèses pour estimer les rendements après {returnYears} ans.
             </p>
+            <div className="mb-4">
+              <label className="block text-xs text-gray-500 mb-1">Sous-scénario</label>
+              <select
+                value={selectedSubScenarioId}
+                onChange={(e) => setSelectedSubScenarioId(e.target.value)}
+                className="w-full px-2 py-1 border rounded"
+              >
+                <option value="">Aucun</option>
+                {subScenarios.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.title || 'Sans titre'}{' '}
+                    {s.type === 'refinancing' ? '(Refinancement)' : '(Optimisation)'}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className="grid md:grid-cols-4 gap-4 mb-4">
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Années</label>
@@ -399,33 +451,69 @@ const PropertyReport = ({
               </div>
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Croissance des revenus (%)</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={incomeGrowth}
-                  onChange={(e) => setIncomeGrowth(parseFloat(e.target.value) || 0)}
-                  className="w-full px-2 py-1 border rounded"
-                />
+                {isOptimization ? (
+                  <input
+                    type="text"
+                    disabled
+                    value="S/O"
+                    className="w-full px-2 py-1 border rounded bg-gray-100 text-center"
+                  />
+                ) : (
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={incomeGrowth ?? ''}
+                    onChange={(e) =>
+                      setIncomeGrowth(parseFloat(e.target.value) || 0)
+                    }
+                    disabled={isRefinancing}
+                    className="w-full px-2 py-1 border rounded"
+                  />
+                )}
               </div>
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Croissance des dépenses (%)</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={expenseGrowth}
-                  onChange={(e) => setExpenseGrowth(parseFloat(e.target.value) || 0)}
-                  className="w-full px-2 py-1 border rounded"
-                />
+                {isOptimization ? (
+                  <input
+                    type="text"
+                    disabled
+                    value="S/O"
+                    className="w-full px-2 py-1 border rounded bg-gray-100 text-center"
+                  />
+                ) : (
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={expenseGrowth ?? ''}
+                    onChange={(e) =>
+                      setExpenseGrowth(parseFloat(e.target.value) || 0)
+                    }
+                    disabled={isRefinancing}
+                    className="w-full px-2 py-1 border rounded"
+                  />
+                )}
               </div>
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Appréciation de la valeur (%)</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={valueGrowth}
-                  onChange={(e) => setValueGrowth(parseFloat(e.target.value) || 0)}
-                  className="w-full px-2 py-1 border rounded"
-                />
+                {isOptimization ? (
+                  <input
+                    type="text"
+                    disabled
+                    value="S/O"
+                    className="w-full px-2 py-1 border rounded bg-gray-100 text-center"
+                  />
+                ) : (
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={valueGrowth ?? ''}
+                    onChange={(e) =>
+                      setValueGrowth(parseFloat(e.target.value) || 0)
+                    }
+                    disabled={isRefinancing}
+                    className="w-full px-2 py-1 border rounded"
+                  />
+                )}
               </div>
             </div>
             <div className="flex items-center justify-center gap-6">
