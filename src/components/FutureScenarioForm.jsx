@@ -478,6 +478,8 @@ export default function FutureScenarioForm({
                     type="percentage"
                   />
                 </div>
+              </div>
+              <div className="grid md:grid-cols-2 gap-4 mt-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">Refinancement dans (années)</label>
                   <FormattedNumberInput
