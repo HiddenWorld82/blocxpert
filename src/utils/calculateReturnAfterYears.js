@@ -72,9 +72,12 @@ export default function calculateReturnAfterYears(
   if (scenario && scenario.financing?.financingType === 'private') {
     scenarioMonthlyRate = scenarioMortgageRate / 12;
   }
-  const scenarioMonthlyPayment = scenarioAnalysis?.monthlyPayment || monthlyPayment;
-  const scenarioAnnualDebtService =
-    scenarioAnalysis?.annualDebtService || annualDebtService;
+  const scenarioMonthlyPayment = scenario
+    ? scenarioAnalysis?.monthlyPayment ?? 0
+    : monthlyPayment;
+  const scenarioAnnualDebtService = scenario
+    ? scenarioAnalysis?.annualDebtService ?? scenarioMonthlyPayment * 12
+    : annualDebtService;
 
   // Calculate cash flows with annual increases
   let revenue = baseRevenue;
