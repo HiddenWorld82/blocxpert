@@ -121,3 +121,49 @@ test('equity withdrawal from refinancing affects IRR beyond refinance year', () 
   );
   assert.ok(Math.abs(scenarioRes.internalRateOfReturn - 3.9224) < 0.01);
 });
+
+test('uses scenario debt values when provided, even if zero', () => {
+  const property = {
+    purchasePrice: 100000,
+    mortgageRate: 5,
+    amortization: 25,
+    financingType: 'conventional',
+  };
+  const analysis = {
+    cashFlow: 2000,
+    effectiveGrossRevenue: 12000,
+    operatingExpensesTotal: 4000,
+    annualDebtService: 6000,
+    totalInvestment: 100000,
+    monthlyPayment: 500,
+    totalLoanAmount: 0,
+  };
+
+  const scenario = {
+    refinanceYears: 1,
+    financing: { financingType: 'conventional', mortgageRate: 5 },
+    type: 'refinancing',
+  };
+  const scenarioAnalysis = {
+    annualDebtService: 0,
+    totalLoanAmount: 0,
+    monthlyPayment: 0,
+  };
+
+  const baseRes = calculateReturnAfterYears(property, analysis, 2, 0, 0, 0);
+  const scenarioRes = calculateReturnAfterYears(
+    property,
+    analysis,
+    2,
+    0,
+    0,
+    0,
+    scenario,
+    scenarioAnalysis,
+  );
+
+  assert.ok(
+    Math.abs(scenarioRes.totalReturn - baseRes.totalReturn) > 1e-6,
+  );
+  assert.ok(scenarioRes.totalReturn > baseRes.totalReturn);
+});
