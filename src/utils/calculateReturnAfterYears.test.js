@@ -75,3 +75,49 @@ test('scenario after evaluation period does not impact IRR', () => {
     Math.abs(baseRes.internalRateOfReturn - scenarioRes.internalRateOfReturn) < 1e-6,
   );
 });
+
+test('equity withdrawal from refinancing affects IRR beyond refinance year', () => {
+  const property = {
+    purchasePrice: 100000,
+    mortgageRate: 5,
+    amortization: 25,
+    financingType: 'conventional',
+  };
+  const analysis = {
+    cashFlow: 1000,
+    effectiveGrossRevenue: 5000,
+    operatingExpensesTotal: 4000,
+    annualDebtService: 0,
+    totalInvestment: 100000,
+    monthlyPayment: 0,
+    totalLoanAmount: 0,
+  };
+
+  const scenario = {
+    refinanceYears: 5,
+    financing: { financingType: 'conventional', mortgageRate: 4 },
+    type: 'refinancing',
+  };
+  const scenarioAnalysis = {
+    annualDebtService: 0,
+    totalLoanAmount: 50000,
+    monthlyPayment: 0,
+  };
+
+  const baseRes = calculateReturnAfterYears(property, analysis, 6, 0, 0, 0.03);
+  const scenarioRes = calculateReturnAfterYears(
+    property,
+    analysis,
+    6,
+    0,
+    0,
+    0.03,
+    scenario,
+    scenarioAnalysis,
+  );
+
+  assert.ok(
+    Math.abs(scenarioRes.internalRateOfReturn - baseRes.internalRateOfReturn) > 1e-6,
+  );
+  assert.ok(Math.abs(scenarioRes.internalRateOfReturn - 3.9224) < 0.01);
+});
