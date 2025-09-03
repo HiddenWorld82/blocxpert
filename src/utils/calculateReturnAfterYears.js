@@ -64,9 +64,7 @@ export default function calculateReturnAfterYears(
   const monthlyPayment = analysis.monthlyPayment || 0;
   const totalLoanAmount = analysis.totalLoanAmount || 0;
 
-  const refYears = scenario
-    ? Math.min(parseFloat(scenario.refinanceYears) || 0, nYears)
-    : 0;
+  const refYears = scenario ? parseFloat(scenario.refinanceYears) || 0 : 0;
   const scenarioMortgageRate = scenario && scenario.financing
     ? (parseFloat(scenario.financing.mortgageRate) || 0) / 100
     : mortgageRate;

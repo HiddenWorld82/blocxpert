@@ -30,3 +30,48 @@ test('calculates multi-year, annualized and internal rate returns', () => {
   assert.ok(Math.abs(annualizedReturn - 3.88) < 0.01);
   assert.ok(Math.abs(internalRateOfReturn - 3.94) < 0.01);
 });
+
+test('scenario after evaluation period does not impact IRR', () => {
+  const property = {
+    purchasePrice: 100000,
+    mortgageRate: 5,
+    amortization: 25,
+    financingType: 'conventional',
+  };
+  const analysis = {
+    cashFlow: 1000,
+    effectiveGrossRevenue: 5000,
+    operatingExpensesTotal: 4000,
+    annualDebtService: 0,
+    totalInvestment: 100000,
+    monthlyPayment: 0,
+    totalLoanAmount: 0,
+  };
+
+  const scenario = {
+    refinanceYears: 5,
+    financing: { financingType: 'conventional', mortgageRate: 4 },
+    type: 'refinancing',
+  };
+  const scenarioAnalysis = {
+    annualDebtService: 500,
+    totalLoanAmount: 80000,
+    monthlyPayment: 40,
+  };
+
+  const baseRes = calculateReturnAfterYears(property, analysis, 3, 0, 0, 0.03);
+  const scenarioRes = calculateReturnAfterYears(
+    property,
+    analysis,
+    3,
+    0,
+    0,
+    0.03,
+    scenario,
+    scenarioAnalysis,
+  );
+
+  assert.ok(
+    Math.abs(baseRes.internalRateOfReturn - scenarioRes.internalRateOfReturn) < 1e-6,
+  );
+});
