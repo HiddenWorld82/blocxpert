@@ -104,8 +104,13 @@ export default function calculateReturnAfterYears(
       principalPaid += principal;
       balance -= principal;
     }
-    if (year === refYears && scenarioAnalysis) {
-      balance = scenarioAnalysis.totalLoanAmount || balance;
+    if (year === refYears && scenarioAnalysis && nYears > refYears) {
+      const newLoanAmount = scenarioAnalysis.totalLoanAmount || 0;
+      const equityWithdraw = newLoanAmount - balance;
+      cashFlowTotal += equityWithdraw;
+      cashFlows[year] += equityWithdraw;
+      balance = newLoanAmount;
+      principalPaid = 0;
     }
   }
 
