@@ -107,12 +107,15 @@ export default function calculateReturnAfterYears(
       principalPaid += principal;
       balance -= principal;
     }
-    if (year === refYears && scenarioAnalysis && nYears > refYears) {
-      const newLoanAmount = scenarioAnalysis.totalLoanAmount || 0;
-      const equityWithdraw = newLoanAmount - balance;
+    if (year === refYears && scenarioAnalysis && nYears >= refYears) {
+      const totalNewLoan = scenarioAnalysis.totalLoanAmount || 0;
+      const cmhcPremium = scenarioAnalysis.cmhcPremium || 0;
+      const baseNewLoan =
+        scenarioAnalysis.maxLoanAmount ?? totalNewLoan - cmhcPremium;
+      const equityWithdraw = baseNewLoan - balance;
       cashFlowTotal += equityWithdraw;
       cashFlows[year] += equityWithdraw;
-      balance = newLoanAmount;
+      balance = totalNewLoan;
       principalPaid = 0;
     }
   }
