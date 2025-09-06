@@ -167,3 +167,47 @@ test('uses scenario debt values when provided, even if zero', () => {
   );
   assert.ok(scenarioRes.totalReturn > baseRes.totalReturn);
 });
+
+test('equity withdrawal uses max loan amount excluding premiums', () => {
+  const property = {
+    purchasePrice: 100000,
+    mortgageRate: 5,
+    amortization: 25,
+    financingType: 'conventional',
+  };
+  const analysis = {
+    cashFlow: 1000,
+    effectiveGrossRevenue: 5000,
+    operatingExpensesTotal: 4000,
+    annualDebtService: 0,
+    totalInvestment: 100000,
+    monthlyPayment: 0,
+    totalLoanAmount: 0,
+  };
+
+  const scenario = {
+    refinanceYears: 5,
+    financing: { financingType: 'conventional', mortgageRate: 4 },
+    type: 'refinancing',
+  };
+  const scenarioAnalysis = {
+    annualDebtService: 0,
+    totalLoanAmount: 55000,
+    monthlyPayment: 0,
+    maxLoanAmount: 50000,
+    cmhcPremium: 5000,
+  };
+
+  const scenarioRes = calculateReturnAfterYears(
+    property,
+    analysis,
+    6,
+    0,
+    0,
+    0.03,
+    scenario,
+    scenarioAnalysis,
+  );
+
+  assert.ok(Math.abs(scenarioRes.internalRateOfReturn - 3.118) < 0.01);
+});
