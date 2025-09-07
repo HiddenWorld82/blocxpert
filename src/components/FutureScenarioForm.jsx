@@ -235,9 +235,9 @@ export default function FutureScenarioForm({
     return calculateRentability(parentProperty, advancedExpenses);
   }, [parentProperty, advancedExpenses]);
 
-  const { existingLoanBalance, existingLoanPrincipal } = useMemo(() => {
+  const { existingLoanBalance } = useMemo(() => {
     if (!parentAnalysis)
-      return { existingLoanBalance: 0, existingLoanPrincipal: 0 };
+      return { existingLoanBalance: 0 };
     const principal = parentAnalysis.maxLoanAmount || 0;
     // Recalculate initial CMHC premium from scratch
     let premium = 0;
@@ -291,30 +291,26 @@ export default function FutureScenarioForm({
       totalPayments,
     );
     if (monthlyRate <= 0)
-      return { existingLoanBalance: totalLoanAmount, existingLoanPrincipal: principal };
+      return { existingLoanBalance: totalLoanAmount };
     const balance =
       totalLoanAmount *
       (Math.pow(1 + monthlyRate, totalPayments) -
         Math.pow(1 + monthlyRate, paymentsMade)) /
       (Math.pow(1 + monthlyRate, totalPayments) - 1);
-    const factor = balance / totalLoanAmount;
-    return {
-      existingLoanBalance: balance,
-      existingLoanPrincipal: principal * factor,
-    };
+    return { existingLoanBalance: balance };
   }, [parentAnalysis, parentProperty, scenario.refinanceYears]);
 
   const analysis = useMemo(() => {
     if (!combinedProperty) return null;
     return calculateRentability(combinedProperty, advancedExpenses, {
       initialLoanAmount: ["cmhc", "cmhc_aph"].includes(parentProperty?.financingType)
-        ? existingLoanPrincipal
+        ? existingLoanBalance
         : 0,
     });
   }, [
     combinedProperty,
     advancedExpenses,
-    existingLoanPrincipal,
+    existingLoanBalance,
     parentProperty?.financingType,
   ]);
 

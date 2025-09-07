@@ -271,10 +271,15 @@ export default function OptimisationScenarioForm({
     if (!combinedProperty) return null;
     return calculateRentability(combinedProperty, advancedExpenses, {
       initialLoanAmount: ["cmhc", "cmhc_aph"].includes(parentProperty?.financingType)
-        ? parentAnalysis?.maxLoanAmount || 0
+        ? existingLoanBalance
         : 0,
     });
-  }, [combinedProperty, advancedExpenses, parentAnalysis, parentProperty?.financingType]);
+  }, [
+    combinedProperty,
+    advancedExpenses,
+    existingLoanBalance,
+    parentProperty?.financingType,
+  ]);
 
   const cmhcPremium = analysis?.cmhcPremium || 0;
 

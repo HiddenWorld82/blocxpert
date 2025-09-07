@@ -235,13 +235,13 @@ export default function RenewScenarioForm({
     if (!combinedProperty) return null;
     return calculateRentability(combinedProperty, advancedExpenses, {
       initialLoanAmount: ["cmhc", "cmhc_aph"].includes(parentProperty?.financingType)
-        ? existingLoanPrincipal
+        ? existingLoanBalance
         : 0,
     });
   }, [
     combinedProperty,
     advancedExpenses,
-    existingLoanPrincipal,
+    existingLoanBalance,
     parentProperty?.financingType,
   ]);
 
