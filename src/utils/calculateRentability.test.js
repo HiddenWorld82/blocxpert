@@ -31,6 +31,43 @@ test('CMHC premium is based on the difference between new and initial loan', () 
   assert.ok(Math.abs(withInitial.cmhcPremium - expectedPremium) < 1e-6);
 });
 
+test('Refinancing only charges premium on additional balance', () => {
+  const property = {
+    purchasePrice: 1_000_000,
+    annualRent: 200_000,
+    vacancyRate: 0,
+    municipalTaxes: 0,
+    schoolTaxes: 0,
+    insurance: 0,
+    maintenance: 0,
+    managementRate: 0,
+    concierge: 0,
+    electricityHeating: 0,
+    otherExpenses: 0,
+    financingType: 'cmhc',
+    debtCoverageRatio: 1.1,
+    mortgageRate: 5,
+    qualificationRate: 5,
+    amortization: 25,
+  };
+
+  const base = calculateRentability(property, false, { initialLoanAmount: 0 });
+  const rate = property.mortgageRate / 100;
+  const monthlyRate = Math.pow(1 + rate / 2, 1 / 6) - 1;
+  const totalPayments = (parseInt(property.amortization) || 25) * 12;
+  const paymentsMade = 5 * 12;
+  const balance =
+    base.totalLoanAmount *
+    ((Math.pow(1 + monthlyRate, totalPayments) -
+      Math.pow(1 + monthlyRate, paymentsMade)) /
+      (Math.pow(1 + monthlyRate, totalPayments) - 1));
+
+  const refProperty = { ...property, annualRent: 400_000, ignoreLTV: true };
+  const result = calculateRentability(refProperty, false, { initialLoanAmount: balance });
+  const expectedPremium = (result.maxLoanAmount - balance) * 0.0535;
+  assert.ok(Math.abs(result.cmhcPremium - expectedPremium) < 1e-6);
+});
+
 test('economic value uses correct loan-to-value ratio', () => {
   const baseProperty = {
     purchasePrice: 1_000_000,

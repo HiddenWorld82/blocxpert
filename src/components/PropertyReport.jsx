@@ -210,8 +210,7 @@ const PropertyReport = ({
             (Math.pow(1 + monthlyRate, totalPayments) -
               Math.pow(1 + monthlyRate, paymentsMade)) /
             (Math.pow(1 + monthlyRate, totalPayments) - 1);
-          const factor = balance / totalLoanAmount;
-          initialLoanAmount = principal * factor;
+          initialLoanAmount = balance;
         } else {
           initialLoanAmount = principal;
         }
