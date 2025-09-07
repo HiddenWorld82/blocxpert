@@ -163,9 +163,13 @@ const PropertyReport = ({
         ignoreLTV: true,
       };
 
-      let initialLoanAmount = 0;
+      let initialLoanAmount =
+        parseFloat(selectedSubScenario.financing?.existingLoanBalance) || 0;
       const principal = reportAnalysis?.maxLoanAmount || 0;
-      if (['cmhc', 'cmhc_aph'].includes(currentProperty.financingType)) {
+      if (
+        initialLoanAmount === 0 &&
+        ['cmhc', 'cmhc_aph'].includes(currentProperty.financingType)
+      ) {
         const ltvRatio = purchasePrice > 0 ? (principal / purchasePrice) * 100 : 0;
         const points = parseInt(currentProperty.aphPoints) || 0;
         const effectiveLtv =
