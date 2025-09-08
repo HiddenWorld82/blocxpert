@@ -8,8 +8,8 @@ import {
   FileText,
   Trash2,
   Share2,
+  DollarSign,
 } from 'lucide-react';
-import PropertyPortfolio from './PropertyPortfolio';
 
 const HomeScreen = ({ properties, onNew, onSelect, onDelete, onShare }) => {
   return (
@@ -69,8 +69,8 @@ const HomeScreen = ({ properties, onNew, onSelect, onDelete, onShare }) => {
           </div>
         ) : (
           <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold">Mes Analyses</h2>
+            <div className="flex flex-col items-center mb-6 md:flex-row md:justify-between md:items-center">
+              <h2 className="text-2xl font-semibold mb-4 md:mb-0">Mes Analyses</h2>
               <button
                 onClick={onNew}
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
@@ -79,7 +79,7 @@ const HomeScreen = ({ properties, onNew, onSelect, onDelete, onShare }) => {
                 Nouvelle analyse
               </button>
             </div>
-            <div className="grid gap-4">
+            <div className="grid gap-4 md:grid-cols-2">
               {properties.map((property, index) => {
                 const fullAddress = [
                   property.address,
@@ -92,7 +92,7 @@ const HomeScreen = ({ properties, onNew, onSelect, onDelete, onShare }) => {
                 return (
                   <div
                     key={index}
-                    className="relative border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                    className="relative border rounded-lg p-4 bg-gray-50 hover:shadow-md transition-shadow cursor-pointer"
                     onClick={() => onSelect(property)}
                   >
                     <button
@@ -100,7 +100,7 @@ const HomeScreen = ({ properties, onNew, onSelect, onDelete, onShare }) => {
                         e.stopPropagation();
                         onShare?.(property.id);
                       }}
-                      className="absolute top-0 right-10 text-blue-600 hover:text-blue-800"
+                      className="absolute top-2 right-10 text-blue-600 hover:text-blue-800"
                       aria-label="Partager"
                     >
                       <Share2 size={16} />
@@ -110,27 +110,37 @@ const HomeScreen = ({ properties, onNew, onSelect, onDelete, onShare }) => {
                         e.stopPropagation();
                         onDelete?.(property.id);
                       }}
-                      className="absolute top-0 right-2 text-red-600 hover:text-red-800"
+                      className="absolute top-2 right-2 text-red-600 hover:text-red-800"
                       aria-label="Supprimer"
                     >
                       <Trash2 size={16} />
                     </button>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-semibold text-lg">
-                          {fullAddress || 'Adresse non spécifiée'}
-                        </h3>
-                        <p className="text-gray-600">
-                          {property.numberOfUnits} unités •
-                          {Number(property.purchasePrice).toLocaleString('fr-CA')}$ •
-                          {(property.purchasePrice / property.numberOfUnits).toLocaleString('fr-CA')}$/porte
-                        </p>
+                    <h3 className="font-semibold text-lg mb-3">
+                      {fullAddress || 'Adresse non spécifiée'}
+                    </h3>
+                    <div className="flex flex-wrap text-sm text-gray-600 gap-y-1 mb-2">
+                      <div className="w-1/2 flex items-center">
+                        <Home className="w-4 h-4 mr-1 text-blue-600" />
+                        {property.numberOfUnits} unités
                       </div>
-                      <div className="text-right">
-                        <div className={`text-lg font-semibold ${property.effectiveNetIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {property.effectiveNetIncome >= 0 ? '+' : ''}{Math.round(property.effectiveNetIncome).toLocaleString('fr-CA')}$ /an
-                        </div>
+                      <div className="w-1/2 flex items-center">
+                        <DollarSign className="w-4 h-4 mr-1 text-green-600" />
+                        {Number(property.purchasePrice).toLocaleString('fr-CA')}$
                       </div>
+                      <div className="w-1/2 flex items-center">
+                        <Calculator className="w-4 h-4 mr-1 text-purple-600" />
+                        {(property.purchasePrice / property.numberOfUnits).toLocaleString('fr-CA')}$/porte
+                      </div>
+                    </div>
+                    <div
+                      className={`mt-2 inline-block px-2 py-1 text-sm font-medium rounded ${
+                        property.effectiveNetIncome >= 0
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-red-100 text-red-700'
+                      }`}
+                    >
+                      {property.effectiveNetIncome >= 0 ? '+' : ''}
+                      {Math.round(property.effectiveNetIncome).toLocaleString('fr-CA')}$ /an
                     </div>
                   </div>
                 );
