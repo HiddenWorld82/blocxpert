@@ -4,6 +4,7 @@ import {
   duplicateScenario,
   deleteScenario,
 } from "../services/dataService";
+import { Eye, Pencil, Copy, Trash2 } from "lucide-react";
 
 const typeLabels = {
   initialFinancing: "Financement initial",
@@ -21,6 +22,18 @@ export default function ScenarioList({
   parentScenarioId = null,
 }) {
   const [scenarios, setScenarios] = useState([]);
+
+  const ActionButton = ({ label, icon: Icon, onClick, className }) => (
+    <button
+      onClick={onClick}
+      className={`p-2 rounded hover:bg-gray-100 ${className}`}
+      aria-label={label}
+      title={label}
+    >
+      <Icon className="w-5 h-5" />
+      <span className="sr-only">{label}</span>
+    </button>
+  );
 
   useEffect(() => {
     if (!propertyId) return;
@@ -68,36 +81,36 @@ export default function ScenarioList({
               {list.map((s) => (
                 <div
                   key={s.id}
-                  className="flex justify-between items-center p-2 bg-white rounded shadow"
+                  className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 p-2 bg-white rounded shadow"
                 >
                   <span>{s.title || "Sans titre"}</span>
                   <div className="flex gap-2">
                     {onView && (
-                      <button
+                      <ActionButton
+                        label="Voir le rapport"
+                        icon={Eye}
                         onClick={() => onView(s)}
-                        className="text-indigo-600 hover:underline"
-                      >
-                        Voir le rapport
-                      </button>
+                        className="text-indigo-600 hover:text-indigo-800"
+                      />
                     )}
-                    <button
+                    <ActionButton
+                      label="Modifier"
+                      icon={Pencil}
                       onClick={() => onEdit && onEdit(s)}
-                      className="text-blue-600 hover:underline"
-                    >
-                      Modifier
-                    </button>
-                    <button
+                      className="text-blue-600 hover:text-blue-800"
+                    />
+                    <ActionButton
+                      label="Dupliquer"
+                      icon={Copy}
                       onClick={() => handleDuplicate(s)}
-                      className="text-green-600 hover:underline"
-                    >
-                      Dupliquer
-                    </button>
-                    <button
+                      className="text-green-600 hover:text-green-800"
+                    />
+                    <ActionButton
+                      label="Supprimer"
+                      icon={Trash2}
                       onClick={() => handleDelete(s.id)}
-                      className="text-red-600 hover:underline"
-                    >
-                      Supprimer
-                    </button>
+                      className="text-red-600 hover:text-red-800"
+                    />
                   </div>
                 </div>
               ))}
@@ -119,43 +132,43 @@ export default function ScenarioList({
         );
         return (
           <div key={init.id} className="space-y-2">
-            <div className="flex justify-between items-center p-2 bg-white rounded shadow">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 p-2 bg-white rounded shadow">
               <span>{init.title || "Sans titre"}</span>
               <div className="flex gap-2">
                 {onView && (
-                  <button
+                  <ActionButton
+                    label="Voir le rapport"
+                    icon={Eye}
                     onClick={() => onView(init)}
-                    className="text-indigo-600 hover:underline"
-                  >
-                    Voir le rapport
-                  </button>
+                    className="text-indigo-600 hover:text-indigo-800"
+                  />
                 )}
-                <button
+                <ActionButton
+                  label="Modifier"
+                  icon={Pencil}
                   onClick={() => onEdit && onEdit(init)}
-                  className="text-blue-600 hover:underline"
-                >
-                  Modifier
-                </button>
-                <button
+                  className="text-blue-600 hover:text-blue-800"
+                />
+                <ActionButton
+                  label="Dupliquer"
+                  icon={Copy}
                   onClick={() => handleDuplicate(init)}
-                  className="text-green-600 hover:underline"
-                >
-                  Dupliquer
-                </button>
-                <button
+                  className="text-green-600 hover:text-green-800"
+                />
+                <ActionButton
+                  label="Supprimer"
+                  icon={Trash2}
                   onClick={() => handleDelete(init.id)}
-                  className="text-red-600 hover:underline"
-                >
-                  Supprimer
-                </button>
+                  className="text-red-600 hover:text-red-800"
+                />
               </div>
             </div>
             {children.length > 0 && (
-              <div className="pl-4 space-y-2">
+              <div className="sm:pl-4 space-y-2">
                 {children.map((s) => (
                   <div
                     key={s.id}
-                    className="flex justify-between items-center p-2 bg-gray-50 rounded shadow"
+                    className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 p-2 bg-gray-50 rounded shadow"
                   >
                     <span>
                       {s.title || "Sans titre"} (
@@ -163,31 +176,31 @@ export default function ScenarioList({
                     </span>
                     <div className="flex gap-2">
                       {onView && (
-                        <button
+                        <ActionButton
+                          label="Voir le rapport"
+                          icon={Eye}
                           onClick={() => onView(s)}
-                          className="text-indigo-600 hover:underline"
-                        >
-                          Voir le rapport
-                        </button>
+                          className="text-indigo-600 hover:text-indigo-800"
+                        />
                       )}
-                      <button
+                      <ActionButton
+                        label="Modifier"
+                        icon={Pencil}
                         onClick={() => onEdit && onEdit(s)}
-                        className="text-blue-600 hover:underline"
-                      >
-                        Modifier
-                      </button>
-                      <button
+                        className="text-blue-600 hover:text-blue-800"
+                      />
+                      <ActionButton
+                        label="Dupliquer"
+                        icon={Copy}
                         onClick={() => handleDuplicate(s)}
-                        className="text-green-600 hover:underline"
-                      >
-                        Dupliquer
-                      </button>
-                      <button
+                        className="text-green-600 hover:text-green-800"
+                      />
+                      <ActionButton
+                        label="Supprimer"
+                        icon={Trash2}
                         onClick={() => handleDelete(s.id)}
-                        className="text-red-600 hover:underline"
-                      >
-                        Supprimer
-                      </button>
+                        className="text-red-600 hover:text-red-800"
+                      />
                     </div>
                   </div>
                 ))}
