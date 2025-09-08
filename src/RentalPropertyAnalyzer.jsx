@@ -6,6 +6,7 @@ import HomeScreen from './components/HomeScreen';
 import AmortizationPage from './components/AmortizationPage';
 import BuildingDashboard from './components/BuildingDashboard';
 import FinancingScenarioForm from './components/FinancingScenarioForm';
+import AboutPage from './components/AboutPage';
 import useRentabilityCalculator from './hooks/useRentabilityCalculator';
 import defaultProperty from './defaults/defaultProperty';
 import { useAuth } from './contexts/AuthContext';
@@ -193,6 +194,7 @@ const RentalPropertyAnalyzer = () => {
               }}
               onDelete={deleteProperty}
               onShare={handleShare}
+              onAbout={() => setCurrentStep('about')}
             />
           )}
           {currentStep === 'form' && (
@@ -256,6 +258,9 @@ const RentalPropertyAnalyzer = () => {
               scenarioAnalysis={amortizationData?.scenarioAnalysis}
               setCurrentStep={setCurrentStep}
             />
+          )}
+          {currentStep === 'about' && (
+            <AboutPage onBack={() => setCurrentStep('home')} />
           )}
         </>
       )}
