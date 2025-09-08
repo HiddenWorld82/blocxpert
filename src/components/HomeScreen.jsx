@@ -139,7 +139,7 @@ const HomeScreen = ({ properties, onNew, onSelect, onDelete, onShare }) => {
           </div>
         )}
 
-        <!--<PropertyPortfolio />-->
+        
       </div>
     </div>
   );
