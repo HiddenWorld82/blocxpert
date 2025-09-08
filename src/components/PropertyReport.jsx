@@ -365,7 +365,10 @@ const PropertyReport = ({
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-6xl mx-auto">
-        <div ref={reportRef} className="bg-white rounded-lg shadow-lg p-6">
+        <div
+          ref={reportRef}
+          className="bg-white rounded-lg shadow-lg p-4 sm:p-6"
+        >
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-semibold">Rapport d'Analyse de Rentabilité</h2>
             <div className="flex gap-2">
@@ -393,14 +396,14 @@ const PropertyReport = ({
             </div>
           </div>
 
-          <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-6 mb-6">
+          <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-4 sm:p-6 mb-6">
             <h3 className="text-xl font-semibold mb-2">
               {fullAddress || 'Propriété à analyser'}
             </h3>
             {advancedExpenses ? (
               <div className="space-y-4 text-sm">
                 <div>
-                  <div className="grid md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
                       <span className="text-gray-600">Prix demandé:</span>
                       <div className="font-semibold">
@@ -426,7 +429,7 @@ const PropertyReport = ({
                   </div>
                 </div>
                 <div>
-                  <div className="grid md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     {reportProperty.financingType !== 'private' && (
                     <div>
                       <span className="text-gray-600">Revenus totaux:</span>
@@ -462,7 +465,7 @@ const PropertyReport = ({
                   </div>
                 </div>
                 <div>
-                  <div className="grid md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     {reportProperty.financingType !== 'private' && (
                     <div>
                       <span className="text-gray-600">Financement:</span>
@@ -505,7 +508,7 @@ const PropertyReport = ({
             ) : (
               <div className="space-y-4 text-sm">
                 <div>
-                  <div className="grid md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
                       <span className="text-gray-600">Prix d'achat:</span>
                       <div className="font-semibold">
@@ -529,7 +532,7 @@ const PropertyReport = ({
                   </div>
                 </div>
                 <div>
-                  <div className="grid md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     {reportProperty.financingType !== 'private' && (
                     <div>
                       <span className="text-gray-600">Financement:</span>
@@ -602,7 +605,7 @@ const PropertyReport = ({
                 ))}
               </select>
             </div>
-            <div className="grid md:grid-cols-4 gap-4 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Années</label>
                 <input
