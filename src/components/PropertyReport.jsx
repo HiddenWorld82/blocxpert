@@ -280,12 +280,13 @@ const PropertyReport = ({
   const baseScenarioId = scenario ? scenario.parentScenarioId || scenario.id : null;
 
   useEffect(() => {
-    if (!currentProperty?.id || !baseScenarioId) return;
-    const unsub = getScenarios(
-      currentProperty.id,
-      (scs) => setSubScenarios(scs),
-      baseScenarioId,
-    );
+    if (!currentProperty?.id) return;
+    const unsub = getScenarios(currentProperty.id, (scs) => {
+      const filtered = baseScenarioId
+        ? scs.filter((sc) => sc.parentScenarioId === baseScenarioId)
+        : scs;
+      setSubScenarios(filtered);
+    });
     return () => unsub && unsub();
   }, [currentProperty?.id, baseScenarioId]);
 
