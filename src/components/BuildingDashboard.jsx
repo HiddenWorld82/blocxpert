@@ -143,6 +143,7 @@ const BuildingDashboard = ({
             propertyId={property.id}
             onEdit={onEditScenario}
             onView={onViewScenario}
+            excludeTypes={["refinancing", "renewal", "optimization", "other"]}
           />
         </div>
       </div>
