@@ -374,9 +374,9 @@ const PropertyReport = ({
           ref={reportRef}
           className="bg-white rounded-lg shadow-lg p-4 sm:p-6"
         >
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-semibold">Rapport d'Analyse de Rentabilité</h2>
-            <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
+            <h2 className="text-xl sm:text-2xl font-semibold">Rapport d'Analyse de Rentabilité</h2>
+            <div className="flex items-center gap-2 sm:gap-4 self-end sm:self-auto">
               <button
                 onClick={() => setCurrentStep('scenario')}
                 className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
