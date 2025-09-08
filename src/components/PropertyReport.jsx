@@ -14,6 +14,13 @@ import calculateReturnAfterYears from '../utils/calculateReturnAfterYears';
 import { getScenarios } from '../services/dataService';
 import { getAphMaxLtvRatio } from '../utils/cmhc';
 
+const typeLabels = {
+  refinancing: 'Refinancement',
+  renewal: 'Renouvellement hypothécaire',
+  optimization: 'Optimisation',
+  other: 'Autres',
+};
+
 const PropertyReport = ({
   currentProperty,
   setCurrentStep,
@@ -276,10 +283,7 @@ const PropertyReport = ({
     if (!currentProperty?.id || !baseScenarioId) return;
     const unsub = getScenarios(
       currentProperty.id,
-      (scs) =>
-        setSubScenarios(
-          scs.filter((s) => ['refinancing', 'optimization'].includes(s.type))
-        ),
+      (scs) => setSubScenarios(scs),
       baseScenarioId,
     );
     return () => unsub && unsub();
@@ -599,8 +603,7 @@ const PropertyReport = ({
                 <option value="">Aucun</option>
                 {subScenarios.map((s) => (
                   <option key={s.id} value={s.id}>
-                    {s.title || 'Sans titre'}{' '}
-                    {s.type === 'refinancing' ? '(Refinancement)' : '(Optimisation)'}
+                    {s.title || 'Sans titre'} ({typeLabels[s.type] || s.type})
                   </option>
                 ))}
               </select>
