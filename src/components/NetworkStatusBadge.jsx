@@ -9,7 +9,7 @@ const NetworkStatusBadge = () => {
   const label = isOnline ? t('network.online') : t('network.offline');
 
   return (
-    <div className={`fixed top-5 left-5 px-2 py-1 rounded text-white text-sm ${color}`}>
+    <div className={`fixed top-20 left-5 px-2 py-1 rounded text-white text-sm ${color}`}>
       {label}
     </div>
   );
