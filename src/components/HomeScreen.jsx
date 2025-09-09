@@ -16,8 +16,12 @@ const HomeScreen = ({ properties, onNew, onSelect, onDelete, onShare, onAbout })
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4">
       <div className="max-w-6xl mx-auto">
         <div className="text-center py-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">
-            <Home className="inline-block mr-3 text-blue-600" />
+          <h1 className="text-4xl font-bold text-gray-800 mb-4 flex items-center justify-center">
+            <img
+              src="/rentalyzer-logo.png"
+              alt="Rentalyzer logo"
+              className="inline-block mr-3 h-12 w-12"
+            />
             Rentalyzer – Analyseur de Rentabilité Immobilière
           </h1>
           <p className="text-xl text-gray-600 mb-8">
