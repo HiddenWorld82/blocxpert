@@ -7,8 +7,10 @@ import {
   PiggyBank,
   Percent,
 } from "lucide-react";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 export default function KeyIndicators({ analysis, variant = "acquisition", exclude = [] }) {
+  const { t } = useLanguage();
   if (!analysis) return null;
 
   const formatPercent = (value) =>
@@ -27,63 +29,63 @@ export default function KeyIndicators({ analysis, variant = "acquisition", exclu
   let cards = [
     {
       key: "mrb",
-      label: "Multiplicateur de revenu brut (MRB)",
+      label: t("keyIndicators.mrb"),
       value: analysis.grossRentMultiplier?.toFixed(1) || "—",
       icon: <BarChart className="w-6 h-6 text-blue-600" />,
       color: "text-gray-700",
     },
     {
       key: "mrn",
-      label: "Multiplicateur de revenu net (MRN)",
+      label: t("keyIndicators.mrn"),
       value: analysis.netIncomeMultiplier?.toFixed(1) || "—",
       icon: <BarChart className="w-6 h-6 text-indigo-600" />,
       color: "text-gray-700",
     },
     {
       key: "tga",
-      label: "TGA (Cap Rate)",
+      label: t("keyIndicators.capRate"),
       value: formatPercent(analysis.capRate),
       icon: <TrendingUp className="w-6 h-6 text-green-600" />,
       color: analysis.capRate >= 5 ? "text-green-600" : "text-orange-600",
     },
     {
       key: "coc",
-      label: "Rendement Cash on Cash (CoC)",
+      label: t("keyIndicators.coc"),
       value: formatPercent(analysis.cashOnCashReturn),
       icon: <DollarSign className="w-6 h-6 text-emerald-600" />,
       color: analysis.cashOnCashReturn >= 8 ? "text-green-600" : "text-orange-600",
     },
     {
       key: "loanPaydownReturn",
-      label: "Rendement capitalisation du prêt (1an)",
+      label: t("keyIndicators.loanPaydownReturn"),
       value: formatPercent(analysis.loanPaydownReturn),
       icon: <PiggyBank className="w-6 h-6 text-purple-600" />,
       color: "text-gray-700",
     },
     {
       key: "appreciationReturn",
-      label: "Rendement plus-value",
+      label: t("keyIndicators.appreciationReturn"),
       value: formatPercent(analysis.appreciationReturn),
       icon: <TrendingUp className="w-6 h-6 text-amber-600" />,
       color: "text-gray-700",
     },
     {
       key: "valueGeneratedYear1",
-      label: "Valeur générée après l'an 1",
+      label: t("keyIndicators.valueGeneratedYear1"),
       value: formatMoney(analysis.valueGeneratedYear1),
       icon: <DollarSign className="w-6 h-6 text-indigo-600" />,
       color: analysis.valueGeneratedYear1 >= 0 ? "text-green-600" : "text-red-600",
     },
     {
       key: "totalReturn",
-      label: "Rendement global (1 an)",
+      label: t("keyIndicators.totalReturn"),
       value: formatPercent(analysis.totalReturn),
       icon: <TrendingUp className="w-6 h-6 text-emerald-600" />,
       color: "text-gray-700",
     },
     {
       key: "loanValueRatio",
-      label: "Ratio Prêt Valeur (RPV)",
+      label: t("keyIndicators.loanValueRatio"),
       value: formatPercent(analysis.loanValueRatio),
       icon: <Percent className="w-6 h-6 text-cyan-600" />,
       color: "text-gray-700",
@@ -94,28 +96,28 @@ export default function KeyIndicators({ analysis, variant = "acquisition", exclu
     cards = cards.concat([
       {
         key: "interestRate",
-        label: "Taux d'intérêt du prêt",
+        label: t("keyIndicators.interestRate"),
         value: formatPercent(analysis.mortgageRate),
         icon: <Percent className="w-6 h-6 text-rose-600" />,
         color: "text-gray-700",
       },
       {
         key: "monthlyInterest",
-        label: "Intérêt mensuel payé",
+        label: t("keyIndicators.monthlyInterest"),
         value: formatMoney(analysis.monthlyPayment),
         icon: <DollarSign className="w-6 h-6 text-rose-600" />,
         color: "text-gray-700",
       },
       {
         key: "annualInterest",
-        label: "Total des intérêts payables",
+        label: t("keyIndicators.totalInterest"),
         value: formatMoney(analysis.annualDebtService),
         icon: <DollarSign className="w-6 h-6 text-red-600" />,
         color: "text-gray-700",
       },
       {
         key: "capitalRequired",
-        label: "Capital nécessaire",
+        label: t("keyIndicators.capitalRequired"),
         value: formatMoney(
           (analysis.totalInvestment || 0) + (analysis.annualDebtService || 0),
         ),

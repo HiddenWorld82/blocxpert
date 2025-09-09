@@ -5,14 +5,7 @@ import {
   deleteScenario,
 } from "../services/dataService";
 import { Eye, Pencil, Copy, Trash2 } from "lucide-react";
-
-const typeLabels = {
-  initialFinancing: "Financement initial",
-  refinancing: "Refinancement",
-  renewal: "Renouvellement hypothécaire",
-  optimization: "Optimisation",
-  other: "Autres",
-};
+import { useLanguage } from "../contexts/LanguageContext";
 
 export default function ScenarioList({
   propertyId,
@@ -21,7 +14,16 @@ export default function ScenarioList({
   excludeTypes = [],
   parentScenarioId = null,
 }) {
+  const { t } = useLanguage();
   const [scenarios, setScenarios] = useState([]);
+
+  const typeLabels = {
+    initialFinancing: t("scenario.initialFinancing"),
+    refinancing: t("scenario.refinancing"),
+    renewal: t("scenario.renewal"),
+    optimization: t("scenario.optimization"),
+    other: t("scenario.other"),
+  };
 
   const ActionButton = ({ label, icon: Icon, onClick, className }) => (
     <button
@@ -83,30 +85,30 @@ export default function ScenarioList({
                   key={s.id}
                   className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 p-2 bg-white rounded shadow"
                 >
-                  <span>{s.title || "Sans titre"}</span>
+                  <span>{s.title || t('propertyReport.untitled')}</span>
                   <div className="flex gap-2">
                     {onView && (
                       <ActionButton
-                        label="Voir le rapport"
+                        label={t('scenarioList.viewReport')}
                         icon={Eye}
                         onClick={() => onView(s)}
                         className="text-indigo-600 hover:text-indigo-800"
                       />
                     )}
                     <ActionButton
-                      label="Modifier"
+                      label={t('scenarioList.edit')}
                       icon={Pencil}
                       onClick={() => onEdit && onEdit(s)}
                       className="text-blue-600 hover:text-blue-800"
                     />
                     <ActionButton
-                      label="Dupliquer"
+                      label={t('scenarioList.duplicate')}
                       icon={Copy}
                       onClick={() => handleDuplicate(s)}
                       className="text-green-600 hover:text-green-800"
                     />
                     <ActionButton
-                      label="Supprimer"
+                      label={t('scenarioList.delete')}
                       icon={Trash2}
                       onClick={() => handleDelete(s.id)}
                       className="text-red-600 hover:text-red-800"
@@ -133,30 +135,30 @@ export default function ScenarioList({
         return (
           <div key={init.id} className="space-y-2">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 p-2 bg-white rounded shadow">
-              <span>{init.title || "Sans titre"}</span>
+              <span>{init.title || t('propertyReport.untitled')}</span>
               <div className="flex gap-2">
                 {onView && (
                   <ActionButton
-                    label="Voir le rapport"
+                    label={t('scenarioList.viewReport')}
                     icon={Eye}
                     onClick={() => onView(init)}
                     className="text-indigo-600 hover:text-indigo-800"
                   />
                 )}
                 <ActionButton
-                  label="Modifier"
+                  label={t('scenarioList.edit')}
                   icon={Pencil}
                   onClick={() => onEdit && onEdit(init)}
                   className="text-blue-600 hover:text-blue-800"
                 />
                 <ActionButton
-                  label="Dupliquer"
+                  label={t('scenarioList.duplicate')}
                   icon={Copy}
                   onClick={() => handleDuplicate(init)}
                   className="text-green-600 hover:text-green-800"
                 />
                 <ActionButton
-                  label="Supprimer"
+                  label={t('scenarioList.delete')}
                   icon={Trash2}
                   onClick={() => handleDelete(init.id)}
                   className="text-red-600 hover:text-red-800"
@@ -171,32 +173,32 @@ export default function ScenarioList({
                     className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 p-2 bg-gray-50 rounded shadow"
                   >
                     <span>
-                      {s.title || "Sans titre"} (
+                      {s.title || t('propertyReport.untitled')} (
                       {typeLabels[s.type] || s.type})
                     </span>
                     <div className="flex gap-2">
                       {onView && (
                         <ActionButton
-                          label="Voir le rapport"
+                          label={t('scenarioList.viewReport')}
                           icon={Eye}
                           onClick={() => onView(s)}
                           className="text-indigo-600 hover:text-indigo-800"
                         />
                       )}
                       <ActionButton
-                        label="Modifier"
+                        label={t('scenarioList.edit')}
                         icon={Pencil}
                         onClick={() => onEdit && onEdit(s)}
                         className="text-blue-600 hover:text-blue-800"
                       />
                       <ActionButton
-                        label="Dupliquer"
+                        label={t('scenarioList.duplicate')}
                         icon={Copy}
                         onClick={() => handleDuplicate(s)}
                         className="text-green-600 hover:text-green-800"
                       />
                       <ActionButton
-                        label="Supprimer"
+                        label={t('scenarioList.delete')}
                         icon={Trash2}
                         onClick={() => handleDelete(s.id)}
                         className="text-red-600 hover:text-red-800"
