@@ -16,13 +16,14 @@ const HomeScreen = ({ properties, onNew, onSelect, onDelete, onShare, onAbout })
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4">
       <div className="max-w-6xl mx-auto">
         <div className="text-center py-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4 flex items-center justify-center">
-            <img
+          <img
               src="/rentalyzer-logo.png"
               alt="Rentalyzer logo"
-              className="inline-block mr-3 h-12 w-12"
+              width={200}
+              className="inline-block"
             />
-            Rentalyzer – Analyseur de Rentabilité Immobilière
+          <h1 className="text-4xl font-bold text-gray-800 mb-4 flex items-center justify-center">
+            Outil d'Analyse de Rentabilité Immobilière
           </h1>
           <p className="text-xl text-gray-600 mb-8">
             Rentalyzer, votre assistant intelligent pour réussir vos investissements immobiliers
