@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const AmortizationPage = ({
   analysis,
@@ -7,6 +8,7 @@ const AmortizationPage = ({
   scenario,
   scenarioAnalysis,
 }) => {
+  const { t } = useLanguage();
   const loanAmount = analysis.totalLoanAmount || 0;
   const monthlyPayment = analysis.monthlyPayment || 0;
   const mortgageRate = parseFloat(currentProperty.mortgageRate) || 0;
@@ -94,15 +96,15 @@ const AmortizationPage = ({
       <div className="min-h-screen bg-gray-50 p-4">
         <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-semibold">Tableau d'Amortissement</h2>
+            <h2 className="text-2xl font-semibold">{t('amortization.title')}</h2>
             <button
               onClick={() => setCurrentStep('report')}
               className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
             >
-              Retour
+              {t('back')}
             </button>
           </div>
-          <p className="text-center text-gray-600">Données d'amortissement indisponibles.</p>
+          <p className="text-center text-gray-600">{t('amortization.noData')}</p>
         </div>
       </div>
     );
@@ -111,25 +113,25 @@ const AmortizationPage = ({
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-semibold">Tableau d'Amortissement</h2>
+          <h2 className="text-2xl font-semibold">{t('amortization.title')}</h2>
           <button
             onClick={() => setCurrentStep('report')}
             className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
           >
-            Retour
+            {t('back')}
           </button>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead>
               <tr className="bg-gray-100">
-                <th className="px-2 py-1 text-center">Période (mois)</th>
-                <th className="px-2 py-1 text-center">Solde du prêt</th>
-                <th className="px-2 py-1 text-center">Versement intérêt</th>
-                <th className="px-2 py-1 text-center">Versement capital</th>
-                <th className="px-2 py-1 text-center">Capital cumulé</th>
-                <th className="px-2 py-1 text-center">Valeur immeuble</th>
-                <th className="px-2 py-1 text-center">Équité</th>
+                <th className="px-2 py-1 text-center">{t('amortization.period')}</th>
+                <th className="px-2 py-1 text-center">{t('amortization.loanBalance')}</th>
+                <th className="px-2 py-1 text-center">{t('amortization.interestPayment')}</th>
+                <th className="px-2 py-1 text-center">{t('amortization.principalPayment')}</th>
+                <th className="px-2 py-1 text-center">{t('amortization.cumulativePrincipal')}</th>
+                <th className="px-2 py-1 text-center">{t('amortization.propertyValue')}</th>
+                <th className="px-2 py-1 text-center">{t('amortization.equity')}</th>
               </tr>
             </thead>
             <tbody>
