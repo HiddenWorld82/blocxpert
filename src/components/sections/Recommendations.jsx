@@ -1,8 +1,10 @@
 // src/components/sections/Recommendations.jsx
 import React from "react";
 import { AlertCircle, CheckCircle, XCircle } from "lucide-react";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 export default function Recommendations({ analysis }) {
+  const { t } = useLanguage();
   const recommendations = [];
 
   // Analyse du Cap Rate
@@ -10,19 +12,19 @@ export default function Recommendations({ analysis }) {
     recommendations.push({
       type: "danger",
       icon: <XCircle className="w-5 h-5" />,
-      text: "Le taux de capitalisation est très faible. Considérez négocier le prix ou augmenter les revenus. Si l'immeuble est très récent ou qu'une forte optimisation est possible, le taux de capitalisation peut être acceptable."
+      text: t('recommendations.capRate.veryLow')
     });
   } else if (analysis?.capRate < 5) {
     recommendations.push({
       type: "warning",
       icon: <AlertCircle className="w-5 h-5" />,
-      text: "Le taux de capitalisation est acceptable mais pourrait être amélioré. Considérer une négociation du prix ou une augmentation des loyers. Si l'immeuble est récent (moins de 15 ans) ou qu'une optimisation est possible, le taux de capitalisation peut être acceptable."
+      text: t('recommendations.capRate.low')
     });
   } else {
     recommendations.push({
       type: "success",
       icon: <CheckCircle className="w-5 h-5" />,
-      text: "Bon taux de capitalisation supérieur à 5%."
+      text: t('recommendations.capRate.good')
     });
   }
 
@@ -31,19 +33,19 @@ export default function Recommendations({ analysis }) {
     recommendations.push({
       type: "danger",
       icon: <XCircle className="w-5 h-5" />,
-      text: "Cash flow négatif - l'immeuble ne s'autofinance pas. Révisez votre stratégie ou prévoyez des fonds supplémentaires."
+      text: t('recommendations.cashFlow.negative')
     });
   } else if (analysis?.cashFlow / analysis?.effectiveNetIncome < 0.02) {
     recommendations.push({
       type: "warning",
       icon: <AlertCircle className="w-5 h-5" />,
-      text: "Cash flow de positif mais très faible (inférieur à 2% des revenus net). Prévoyez une réserve pour imprévus."
+      text: t('recommendations.cashFlow.low')
     });
   } else {
     recommendations.push({
       type: "success",
       icon: <CheckCircle className="w-5 h-5" />,
-      text: "Cash flow positif permettant une bonne marge de manœuvre."
+      text: t('recommendations.cashFlow.good')
     });
   }
 
@@ -58,7 +60,7 @@ export default function Recommendations({ analysis }) {
 
   return (
     <div className="mt-8">
-      <h3 className="text-xl font-semibold mb-4">Recommandations</h3>
+      <h3 className="text-xl font-semibold mb-4">{t('recommendations.title')}</h3>
       <div className="space-y-3">
         {recommendations.map((rec, index) => (
           <div

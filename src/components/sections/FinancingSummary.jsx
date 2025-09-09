@@ -1,5 +1,6 @@
 // src/components/sections/FinancingSummary.jsx
 import React from "react";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 export default function FinancingSummary({
   analysis,
@@ -8,6 +9,7 @@ export default function FinancingSummary({
   scenarioType,
   financing = {},
 }) {
+  const { t } = useLanguage();
   const formatMoney = (value) => {
     if (value === null || value === undefined) return "—";
     return new Intl.NumberFormat("fr-CA", {
@@ -32,30 +34,32 @@ export default function FinancingSummary({
     scenarioType === undefined || scenarioType !== "initialFinancing";
   const isRenewal = scenarioType === "renewal";
   const purchaseLabel = isRefinancing
-    ? "Valeur de l'immeuble"
-    : "Prix d'achat";
-  const downPaymentLabel = isRefinancing ? "Équité figée" : "Mise de fonds";
+    ? t("financingSummary.propertyValue")
+    : t("financingSummary.purchasePrice");
+  const downPaymentLabel = isRefinancing
+    ? t("financingSummary.trappedEquity")
+    : t("financingSummary.downPayment");
   const feesLabel =
     scenarioType === "optimization"
-      ? "Frais de financement et travaux"
+      ? t("financingSummary.financingAndWorksFees")
       : isRefinancing
-      ? "Frais de financement"
-      : "Frais d'acquisition";
+      ? t("financingSummary.financingFees")
+      : t("financingSummary.acquisitionFees");
 
   const financingTypeLabels = {
-    conventional: "Conventionnel",
-    cmhc: "SCHL Standard",
-    cmhc_aph: "SCHL APH Select",
-    private: "Prêt privé",
+    conventional: t("financingSummary.conventional"),
+    cmhc: t("financingSummary.cmhc"),
+    cmhc_aph: t("financingSummary.cmhc_aph"),
+    private: t("financingSummary.private"),
   };
 
   return (
     <div className="bg-white rounded-lg p-6">
-      <h3 className="text-lg font-semibold mb-4">Résumé du Financement</h3>
+      <h3 className="text-lg font-semibold mb-4">{t('financingSummary.title')}</h3>
       <div className="space-y-3">
         {financing.financingType && (
           <div className="flex justify-between">
-            <span className="text-gray-600">Type de financement:</span>
+            <span className="text-gray-600">{t('financingSummary.financingType')}:</span>
             <span className="font-medium">
               {financingTypeLabels[financing.financingType] ||
                 financing.financingType}
@@ -66,13 +70,13 @@ export default function FinancingSummary({
           financing.aphPoints &&
           !isRenewal && (
           <div className="flex justify-between">
-            <span className="text-gray-600">Points APH:</span>
+            <span className="text-gray-600">{t('financingSummary.aphPoints')}:</span>
             <span className="font-medium">{financing.aphPoints}</span>
           </div>
         )}
         {financing.qualificationRate && (
           <div className="flex justify-between">
-            <span className="text-gray-600">Taux de qualification:</span>
+            <span className="text-gray-600">{t('financingSummary.qualificationRate')}:</span>
             <span className="font-medium">
               {formatPercent(financing.qualificationRate)}
             </span>
@@ -80,25 +84,25 @@ export default function FinancingSummary({
         )}
         {financing.amortization && (
           <div className="flex justify-between">
-            <span className="text-gray-600">Amortissement restant:</span>
+            <span className="text-gray-600">{t('financingSummary.remainingAmortization')}:</span>
             <span className="font-medium">{financing.amortization} ans</span>
           </div>
         )}
         {financing.debtCoverageRatio && !isRenewal && (
           <div className="flex justify-between">
-            <span className="text-gray-600">Ratio couverture dette:</span>
+            <span className="text-gray-600">{t('financingSummary.debtCoverageRatio')}:</span>
             <span className="font-medium">{financing.debtCoverageRatio}</span>
           </div>
         )}
         {financing.financingType === "private" && financing.ltvRatio && (
           <div className="flex justify-between">
-            <span className="text-gray-600">Ratio prêt-valeur:</span>
+            <span className="text-gray-600">{t('financingSummary.ltvRatio')}:</span>
             <span className="font-medium">{formatPercent(financing.ltvRatio)}</span>
           </div>
         )}
         {financing.financingType === "private" && analysis?.originationFee > 0 && (
           <div className="flex justify-between">
-            <span className="text-gray-600">Frais de dossier:</span>
+            <span className="text-gray-600">{t('financingSummary.originationFee')}:</span>
             <span className="font-medium">{formatMoney(analysis.originationFee)}</span>
           </div>
         )}
@@ -110,12 +114,12 @@ export default function FinancingSummary({
         </div>
         {!isRenewal && (
           <div className="flex justify-between">
-            <span className="text-gray-600">Valeur d'emprunt:</span>
+          <span className="text-gray-600">{t('financingSummary.borrowingValue')}:</span>
             <span className="font-medium">{formatMoney(analysis?.economicValue)}</span>
           </div>
         )}
         <div className="flex justify-between">
-          <span className="text-gray-600">{isRenewal ? "Solde du prêt" : "Prêt maximal"}:</span>
+          <span className="text-gray-600">{isRenewal ? t('financingSummary.loanBalance') : t('financingSummary.maxLoan')}:</span>
           <span className="font-medium">
             {formatMoney(
               isRenewal ? analysis?.totalLoanAmount : analysis?.maxLoanAmount
@@ -124,13 +128,13 @@ export default function FinancingSummary({
         </div>
         {!isRenewal && analysis?.cmhcPremium > 0 && (
           <div className="flex justify-between">
-            <span className="text-gray-600">Prime SCHL:</span>
+            <span className="text-gray-600">{t('financingSummary.cmhcPremium')}:</span>
             <span className="font-medium">{formatMoney(analysis?.cmhcPremium)}</span>
           </div>
         )}
         {!isRenewal && analysis?.cmhcPremium > 0 && (
           <div className="flex justify-between">
-            <span className="text-gray-600">Prêt total incluant prime:</span>
+            <span className="text-gray-600">{t('financingSummary.totalLoanWithPremium')}:</span>
             <span className="font-medium">{formatMoney(analysis?.totalLoanAmount)}</span>
           </div>
         )}
@@ -147,7 +151,7 @@ export default function FinancingSummary({
         {!isRenewal && (
           equityAmount !== undefined ? (
             <div className="flex justify-between border-t pt-3">
-              <span className="text-gray-600 font-semibold">Retrait d'équité:</span>
+              <span className="text-gray-600 font-semibold">{t('financingSummary.equityWithdrawal')}:</span>
               <span
                 className={`font-bold text-lg ${
                   equityAmount >= 0 ? "text-green-600" : "text-red-600"
@@ -158,7 +162,7 @@ export default function FinancingSummary({
             </div>
           ) : (
             <div className="flex justify-between border-t pt-3">
-              <span className="text-gray-600 font-semibold">Investissement total:</span>
+              <span className="text-gray-600 font-semibold">{t('financingSummary.totalInvestment')}:</span>
               <span className="font-bold text-lg">
                 {formatMoney(analysis?.totalInvestment)}
               </span>
@@ -168,8 +172,8 @@ export default function FinancingSummary({
         <div className="flex justify-between">
           <span className="text-gray-600">
             {financing.financingType === "private"
-              ? "Paiement mensuel (intérêts seulement):"
-              : "Paiement mensuel:"}
+              ? t('financingSummary.monthlyPaymentInterestOnly') + ':'
+              : t('financingSummary.monthlyPayment') + ':'}
           </span>
           <span className="font-medium">{formatMoney(analysis?.monthlyPayment)}</span>
         </div>
