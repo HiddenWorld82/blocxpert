@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from "react";
-import { TrendingUp } from 'lucide-react';
+import { TrendingUp } from "lucide-react";
 import FormattedNumberInput, { formatCurrency } from "../FormattedNumberInput";
 import schlExpenses from "../../defaults/schlExpenses";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 export default function OperatingExpensesSection({
   expenses = {},
@@ -9,6 +10,7 @@ export default function OperatingExpensesSection({
   advancedExpenses,
   readOnly = false,
 }) {
+  const { t } = useLanguage();
   const handleChange = (field, value) => {
     onChange({ ...expenses, [field]: value });
   };
@@ -179,20 +181,23 @@ export default function OperatingExpensesSection({
 
   if (!advancedExpenses) {
     const simpleFields = [
-      { field: "vacancyRate", label: "Vacances / mauvaises créances (%)" },
-      { field: "insurance", label: "Assurance" },
-      { field: "municipalTaxes", label: "Taxes municipales" },
-      { field: "schoolTaxes", label: "Taxes scolaires" },
-      { field: "electricityHeating", label: "Électricité/Chauffage" },
-      { field: "maintenance", label: "Entretien (par logement)" },
-      { field: "concierge", label: "Conciergerie (par logement)" },
-      { field: "managementRate", label: "Gestion / Administration (%)" },
-      { field: "otherExpenses", label: "Autres dépenses" },
+      { field: "vacancyRate", label: t("operatingExpenses.vacancyRate") },
+      { field: "insurance", label: t("operatingExpenses.insurance") },
+      { field: "municipalTaxes", label: t("operatingExpenses.municipalTaxes") },
+      { field: "schoolTaxes", label: t("operatingExpenses.schoolTaxes") },
+      { field: "electricityHeating", label: t("operatingExpenses.electricityHeating") },
+      { field: "maintenance", label: t("operatingExpenses.maintenancePerUnit") },
+      { field: "concierge", label: t("operatingExpenses.conciergePerUnit") },
+      { field: "managementRate", label: t("operatingExpenses.managementRate") },
+      { field: "otherExpenses", label: t("operatingExpenses.otherExpenses") },
     ];
 
     return (
       <div className="border rounded-lg p-6">
-        <h2 className="text-lg font-semibold mb-4 text-red-600 flex items-center"><TrendingUp className="w-5 h-5 mr-2" />Dépenses d'exploitation</h2>
+        <h2 className="text-lg font-semibold mb-4 text-red-600 flex items-center">
+          <TrendingUp className="w-5 h-5 mr-2" />
+          {t("operatingExpenses.title")}
+        </h2>
         <div className="grid grid-cols-2 gap-4">
           {simpleFields.map(({ field, label }) => (
             <div key={field} className="col-span-1">
@@ -247,7 +252,7 @@ export default function OperatingExpensesSection({
           ))}
         </div>
         <div className="mt-4">
-          <label className="block text-sm font-medium mb-1">Total des dépenses</label>
+          <label className="block text-sm font-medium mb-1">{t("operatingExpenses.totalExpenses")}</label>
           <FormattedNumberInput
             value={total || ""}
             onChange={() => {}}
@@ -262,34 +267,34 @@ export default function OperatingExpensesSection({
   }
 
   const fields = [
-    { field: "vacancyRate", label: "Taux de vacance (%)" },
-    { field: "insurance", label: "Assurances" },
-    { field: "municipalTaxes", label: "Taxes municipales" },
-    { field: "schoolTaxes", label: "Taxes scolaires" },
-    { field: "heating", label: "Chauffage" },
-    { field: "electricity", label: "Électricité" },
-    { field: "maintenance", label: "Entretien (par logement)" },
-    { field: "managementRate", label: "Gestion / Administration (%)" },
-    { field: "concierge", label: "Conciergerie (par logement)" },
-    { field: "landscaping", label: "Aménagement paysager" },
-    { field: "snowRemoval", label: "Déneigement" },
-    { field: "extermination", label: "Extermination" },
-    { field: "fireInspection", label: "Inspection incendie" },
-    { field: "advertising", label: "Publicité" },
-    { field: "legal", label: "Frais légaux" },
-    { field: "accounting", label: "Comptabilité" },
-    { field: "elevator", label: "Ascenseur" },
-    { field: "cableInternet", label: "Câble/Internet" },
-    { field: "garbage", label: "Ordures" },
-    { field: "hotWater", label: "Eau chaude" },
-    { field: "numHeatPumps", label: "Thermopompes murales (nombre)" },
-    { field: "numFridges", label: "Réfrigérateurs (nombre)" },
-    { field: "numStoves", label: "Cuisinières (nombre)" },
-    { field: "numDishwashers", label: "Lave-vaisselles (nombre)" },
-    { field: "numWashers", label: "Laveuses (nombre)" },
-    { field: "numDryers", label: "Sécheuses (nombre)" },
-    { field: "numElevators", label: "Ascenseurs (nombre)" },
-    { field: "otherExpenses", label: "Autres dépenses" },
+    { field: "vacancyRate", label: t("operatingExpenses.vacancyRate") },
+    { field: "insurance", label: t("operatingExpenses.insurance") },
+    { field: "municipalTaxes", label: t("operatingExpenses.municipalTaxes") },
+    { field: "schoolTaxes", label: t("operatingExpenses.schoolTaxes") },
+    { field: "heating", label: t("operatingExpenses.heating") },
+    { field: "electricity", label: t("operatingExpenses.electricity") },
+    { field: "maintenance", label: t("operatingExpenses.maintenancePerUnit") },
+    { field: "managementRate", label: t("operatingExpenses.managementRate") },
+    { field: "concierge", label: t("operatingExpenses.conciergePerUnit") },
+    { field: "landscaping", label: t("operatingExpenses.landscaping") },
+    { field: "snowRemoval", label: t("operatingExpenses.snowRemoval") },
+    { field: "extermination", label: t("operatingExpenses.extermination") },
+    { field: "fireInspection", label: t("operatingExpenses.fireInspection") },
+    { field: "advertising", label: t("operatingExpenses.advertising") },
+    { field: "legal", label: t("operatingExpenses.legal") },
+    { field: "accounting", label: t("operatingExpenses.accounting") },
+    { field: "elevator", label: t("operatingExpenses.elevator") },
+    { field: "cableInternet", label: t("operatingExpenses.cableInternet") },
+    { field: "garbage", label: t("operatingExpenses.garbage") },
+    { field: "hotWater", label: t("operatingExpenses.hotWater") },
+    { field: "numHeatPumps", label: t("operatingExpenses.numHeatPumps") },
+    { field: "numFridges", label: t("operatingExpenses.numFridges") },
+    { field: "numStoves", label: t("operatingExpenses.numStoves") },
+    { field: "numDishwashers", label: t("operatingExpenses.numDishwashers") },
+    { field: "numWashers", label: t("operatingExpenses.numWashers") },
+    { field: "numDryers", label: t("operatingExpenses.numDryers") },
+    { field: "numElevators", label: t("operatingExpenses.numElevators") },
+    { field: "otherExpenses", label: t("operatingExpenses.otherExpenses") },
   ];
 
   const integerFields = [
@@ -304,7 +309,10 @@ export default function OperatingExpensesSection({
 
   return (
     <div className="border rounded-lg p-6">
-      <h2 className="text-lg font-semibold mb-4 text-red-600 flex items-center"> <TrendingUp className="w-5 h-5 mr-2" />Dépenses d'exploitation</h2>
+      <h2 className="text-lg font-semibold mb-4 text-red-600 flex items-center">
+        <TrendingUp className="w-5 h-5 mr-2" />
+        {t("operatingExpenses.title")}
+      </h2>
       <div className="grid grid-cols-2 gap-4">
         {fields.map(({ field, label }) => {
           const isDisabled = otherCostRate > 0 && [
@@ -373,7 +381,7 @@ export default function OperatingExpensesSection({
                 </p>
               )}
               {isDisabled && (
-                <p className="text-xs text-gray-500 mt-1">Inclus dans Autres dépenses</p>
+                <p className="text-xs text-gray-500 mt-1">{t("operatingExpenses.includedInOther")}</p>
               )}
               {rrBreakdown[field]?.value > 0 && (
                 <p className="text-xs text-gray-500 mt-1">
@@ -390,7 +398,7 @@ export default function OperatingExpensesSection({
           );
         })}
         <div className="col-span-1">
-          <label className="block text-sm font-medium mb-1">Réserve de remplacement</label>
+          <label className="block text-sm font-medium mb-1">{t("operatingExpenses.replacementReserve")}</label>
           <FormattedNumberInput
             value={replacementReserve || ""}
             onChange={() => {}}
@@ -407,7 +415,7 @@ export default function OperatingExpensesSection({
         </div>
       </div>
       <div className="mt-4">
-        <label className="block text-sm font-medium mb-1">Total des dépenses</label>
+        <label className="block text-sm font-medium mb-1">{t("operatingExpenses.totalExpenses")}</label>
         <FormattedNumberInput
           value={total || ""}
           onChange={() => {}}

@@ -1,15 +1,8 @@
 // src/components/sections/AcquisitionCosts.jsx
 import React from "react";
-import {
-  Info,
-  Home,
-  DollarSign,
-  TrendingUp,
-  Briefcase,
-  Building,
-  Calculator,
-} from "lucide-react";
+import { Info, Briefcase } from "lucide-react";
 import FormattedNumberInput from "../FormattedNumberInput";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 export default function AcquisitionCosts({
   costs = {},
@@ -19,7 +12,7 @@ export default function AcquisitionCosts({
   analysis = {},
   financingType,
 }) {
-
+  const { t } = useLanguage();
   const handleChange = (field, value) => {
     onChange({ ...costs, [field]: value });
   };
@@ -30,32 +23,35 @@ export default function AcquisitionCosts({
     const fields = [
       {
         field: "expertises",
-        label: "Expertises",
-        info: "Inspection, études environnementales, évaluateur, autres tests",
+        label: t("acquisitionCosts.expertises"),
+        info: t("acquisitionCosts.expertisesInfo"),
       },
-      { field: "notary", label: "Notaire", info: "Frais de notaire" },
+      { field: "notary", label: t("acquisitionCosts.notary"), info: t("acquisitionCosts.notaryInfo") },
       ...(isCMHC
         ? [
-            { field: "cmhcAnalysis", label: "Frais d'analyse SCHL", info: "200$ par logement", locked: true },
-            { field: "cmhcTax", label: "Taxe sur la prime SCHL", info: "9% de la prime SCHL", locked: true },
+            { field: "cmhcAnalysis", label: t("acquisitionCosts.cmhcAnalysis"), info: t("acquisitionCosts.cmhcAnalysisInfo"), locked: true },
+            { field: "cmhcTax", label: t("acquisitionCosts.cmhcTax"), info: t("acquisitionCosts.cmhcTaxInfo"), locked: true },
           ]
         : []),
       {
         field: "welcomeTax",
-        label: "Taxe de bienvenue",
-        info: "Droit de mutation municipale",
+        label: t("acquisitionCosts.welcomeTax"),
+        info: t("acquisitionCosts.welcomeTaxInfo"),
         locked: lockedFields?.welcomeTax,
       },
       {
         field: "otherFees",
-        label: "Autres frais",
-        info: "Autres frais d'acquisition tel que travaux à l'acquisition, frais analyse SCHL, taxe sur prime SCHL,  etc.",
+        label: t("acquisitionCosts.otherFees"),
+        info: t("acquisitionCosts.otherFeesInfo"),
       },
     ];
 
     return (
       <div className="border rounded-lg p-6">
-        <h2 className="text-lg font-semibold mb-4 text-orange-600 flex items-center"> <Briefcase className="w-5 h-5 mr-2" />Frais d'acquisition</h2>
+        <h2 className="text-lg font-semibold mb-4 text-orange-600 flex items-center">
+          <Briefcase className="w-5 h-5 mr-2" />
+          {t("acquisitionCosts.title")}
+        </h2>
         <div className="grid grid-cols-2 gap-4">
           {fields.map(({ field, label, info, locked }) => (
             <div key={field}>
@@ -75,7 +71,7 @@ export default function AcquisitionCosts({
           ))}
         </div>
         <div className="mt-4">
-          <label className="block text-sm font-medium mb-1">Total des Frais d'Acquisition</label>
+          <label className="block text-sm font-medium mb-1">{t("acquisitionCosts.total")}</label>
           <FormattedNumberInput
             value={analysis.acquisitionCosts?.toString() || ''}
             onChange={() => {}}
@@ -90,26 +86,29 @@ export default function AcquisitionCosts({
   }
 
   const fields = [
-    { field: "inspection", label: "Inspection" },
-    { field: "environmental1", label: "Env. Phase I" },
-    { field: "environmental2", label: "Env. Phase II" },
-    { field: "environmental3", label: "Env. Phase III" },
-    { field: "appraiser", label: "Évaluateur agréé" },
+    { field: "inspection", label: t("acquisitionCosts.inspection") },
+    { field: "environmental1", label: t("acquisitionCosts.environmental1") },
+    { field: "environmental2", label: t("acquisitionCosts.environmental2") },
+    { field: "environmental3", label: t("acquisitionCosts.environmental3") },
+    { field: "appraiser", label: t("acquisitionCosts.appraiser") },
     ...(isCMHC
       ? [
-          { field: "cmhcAnalysis", label: "Frais d'analyse SCHL", locked: true },
-          { field: "cmhcTax", label: "Taxe sur la prime SCHL", locked: true },
+          { field: "cmhcAnalysis", label: t("acquisitionCosts.cmhcAnalysis"), locked: true },
+          { field: "cmhcTax", label: t("acquisitionCosts.cmhcTax"), locked: true },
         ]
       : []),
-    { field: "otherFees", label: "Autres frais" },
-    { field: "notary", label: "Notaire" },
-    { field: "welcomeTax", label: "Taxe de bienvenue", locked: lockedFields?.welcomeTax },
-    { field: "renovations", label: "Rénovations" },
+    { field: "otherFees", label: t("acquisitionCosts.otherFees") },
+    { field: "notary", label: t("acquisitionCosts.notary") },
+    { field: "welcomeTax", label: t("acquisitionCosts.welcomeTax"), locked: lockedFields?.welcomeTax },
+    { field: "renovations", label: t("acquisitionCosts.renovations") },
   ];
 
   return (
     <div className="border rounded-lg p-6">
-        <h2 className="text-lg font-semibold mb-4 text-orange-600 flex items-center"> <Briefcase className="w-5 h-5 mr-2" />Frais d'acquisition</h2>
+        <h2 className="text-lg font-semibold mb-4 text-orange-600 flex items-center">
+          <Briefcase className="w-5 h-5 mr-2" />
+          {t("acquisitionCosts.title")}
+        </h2>
       <div className="grid grid-cols-2 gap-4">
         {fields.map(({ field, label, locked }) => (
           <div key={field}>
@@ -126,7 +125,7 @@ export default function AcquisitionCosts({
         ))}
       </div>
       <div className="mt-4">
-        <label className="block text-sm font-medium mb-1">Total des Frais d'Acquisition</label>
+        <label className="block text-sm font-medium mb-1">{t("acquisitionCosts.total")}</label>
         <FormattedNumberInput
           value={analysis.acquisitionCosts?.toString() || ''}
           onChange={() => {}}

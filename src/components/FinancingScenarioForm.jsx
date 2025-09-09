@@ -8,6 +8,7 @@ import { parseLocaleNumber } from "./FormattedNumberInput";
 import calculateWelcomeTax from "../utils/calculateWelcomeTax";
 import calculateRentability from "../utils/calculateRentability";
 import { saveScenario, updateScenario } from "../services/dataService";
+import { useLanguage } from "../contexts/LanguageContext";
 
 export default function FinancingScenarioForm({
   onBack,
@@ -29,6 +30,8 @@ export default function FinancingScenarioForm({
     debtCoverage: true,
     welcomeTax: true,
   });
+
+  const { t } = useLanguage();
 
   useEffect(() => {
     setScenario({
@@ -203,7 +206,7 @@ export default function FinancingScenarioForm({
     }
   };
 
-  const titleText = "Scénario de financement";
+  const titleText = t("scenarioForm.financing.title");
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -216,7 +219,7 @@ export default function FinancingScenarioForm({
                 onClick={onBack}
                 className="text-gray-600 hover:text-gray-800"
               >
-                ← Retour
+                ← {t('back')}
               </button>
             )}
           </div>
@@ -224,14 +227,14 @@ export default function FinancingScenarioForm({
           <div className="space-y-8">
             <div className="border rounded-lg p-6">
               <h2 className="text-lg font-semibold mb-4 text-gray-700">
-                Titre du scénario
+                {t('scenarioForm.titleLabel')}
               </h2>
               <input
                 type="text"
                 value={scenario.title}
                 onChange={(e) => handleChange("title", e.target.value)}
                 className="w-full border rounded p-2"
-                placeholder="Scénario"
+                placeholder={t('scenarioForm.titlePlaceholder')}
               />
             </div>
 
@@ -280,7 +283,7 @@ export default function FinancingScenarioForm({
                   onClick={handleSave}
                   className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                 >
-                  Sauvegarder
+                  {t('save')}
                 </button>
               )}
             </div>

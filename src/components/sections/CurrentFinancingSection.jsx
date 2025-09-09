@@ -1,18 +1,23 @@
 import React from 'react';
 import FormattedNumberInput from '../FormattedNumberInput';
 import { Calculator } from 'lucide-react';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const CurrentFinancingSection = ({ financing = {}, onChange }) => {
+  const { t } = useLanguage();
   const handleChange = (field, value) => {
     onChange({ ...financing, [field]: value });
   };
 
   return (
     <div className="border rounded-lg p-6">
-      <h2 className="text-lg font-semibold mb-4 text-purple-600 flex items-center"><Calculator className="w-5 h-5 mr-2" />Financement en cours</h2>
+      <h2 className="text-lg font-semibold mb-4 text-purple-600 flex items-center">
+        <Calculator className="w-5 h-5 mr-2" />
+        {t('currentFinancing.title')}
+      </h2>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium mb-1">Type de financement</label>
+          <label className="block text-sm font-medium mb-1">{t('currentFinancing.financingType')}</label>
           <input
             type="text"
             value={financing.financingType || ''}
@@ -21,7 +26,7 @@ const CurrentFinancingSection = ({ financing = {}, onChange }) => {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Institution bancaire</label>
+          <label className="block text-sm font-medium mb-1">{t('currentFinancing.bank')}</label>
           <input
             type="text"
             value={financing.bank || ''}
@@ -30,7 +35,7 @@ const CurrentFinancingSection = ({ financing = {}, onChange }) => {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Montant financé</label>
+          <label className="block text-sm font-medium mb-1">{t('currentFinancing.financedAmount')}</label>
           <FormattedNumberInput
             value={financing.financedAmount || ''}
             onChange={(val) => handleChange('financedAmount', val)}
@@ -40,7 +45,7 @@ const CurrentFinancingSection = ({ financing = {}, onChange }) => {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Taux d'intérêt (%)</label>
+          <label className="block text-sm font-medium mb-1">{t('currentFinancing.interestRate')}</label>
           <FormattedNumberInput
             value={financing.interestRate || ''}
             onChange={(val) => handleChange('interestRate', val)}
@@ -50,7 +55,7 @@ const CurrentFinancingSection = ({ financing = {}, onChange }) => {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Date de début du prêt</label>
+          <label className="block text-sm font-medium mb-1">{t('currentFinancing.loanStartDate')}</label>
           <input
             type="date"
             value={financing.loanStartDate || ''}
@@ -59,7 +64,7 @@ const CurrentFinancingSection = ({ financing = {}, onChange }) => {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Durée d'amortissement (années)</label>
+          <label className="block text-sm font-medium mb-1">{t('currentFinancing.amortization')}</label>
           <FormattedNumberInput
             value={financing.amortization || ''}
             onChange={(val) => handleChange('amortization', val)}
@@ -68,7 +73,7 @@ const CurrentFinancingSection = ({ financing = {}, onChange }) => {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Fin du terme en cours</label>
+          <label className="block text-sm font-medium mb-1">{t('currentFinancing.termEndDate')}</label>
           <input
             type="date"
             value={financing.termEndDate || ''}

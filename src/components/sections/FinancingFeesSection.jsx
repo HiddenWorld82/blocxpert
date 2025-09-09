@@ -1,6 +1,7 @@
 import React from "react";
-import { Briefcase } from 'lucide-react';
+import { Briefcase } from "lucide-react";
 import FormattedNumberInput from "../FormattedNumberInput";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 export default function FinancingFeesSection({
   fees = {},
@@ -9,31 +10,32 @@ export default function FinancingFeesSection({
   isCMHC = false,
   includeWorkCost = false,
 }) {
+  const { t } = useLanguage();
   const handleChange = (field, value) => {
     onChange({ ...fees, [field]: value });
   };
 
   const fields = [
-    { field: "environmental1", label: "Env. Phase 1" },
-    { field: "appraiser", label: "Évaluateur agréé" },
+    { field: "environmental1", label: t("financingFees.environmental1") },
+    { field: "appraiser", label: t("financingFees.appraiser") },
     ...(isCMHC
       ? [
-          { field: "cmhcAnalysis", label: "Frais d'analyse SCHL", locked: true },
-          { field: "cmhcTax", label: "Taxe sur la prime SCHL", locked: true },
+          { field: "cmhcAnalysis", label: t("financingFees.cmhcAnalysis"), locked: true },
+          { field: "cmhcTax", label: t("financingFees.cmhcTax"), locked: true },
         ]
       : []),
-    { field: "otherFees", label: "Autres frais" },
-    { field: "notary", label: "Notaire" },
-    ...(includeWorkCost ? [{ field: "workCost", label: "Coût des travaux" }] : []),
+    { field: "otherFees", label: t("financingFees.otherFees") },
+    { field: "notary", label: t("financingFees.notary") },
+    ...(includeWorkCost ? [{ field: "workCost", label: t("financingFees.workCost") }] : []),
   ];
 
   const sectionTitle = includeWorkCost
-    ? "Frais de financement et travaux d'optimisation"
-    : "Frais de financement";
+    ? t("financingFees.sectionTitleWithWork")
+    : t("financingFees.sectionTitle");
 
   const totalLabel = includeWorkCost
-    ? "Total frais de financement et travaux"
-    : "Total frais de financement";
+    ? t("financingFees.totalWithWork")
+    : t("financingFees.total");
 
   return (
     <div className="border rounded-lg p-6">
