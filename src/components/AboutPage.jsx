@@ -22,7 +22,7 @@ const AboutPage = ({ onBack }) => {
               className="w-full h-full object-cover"
             />
           </div>
-          <h1 className="text-3xl font-bold mb-2">Votre Nom</h1>
+          <h1 className="text-3xl font-bold mb-2">Michael Marceau</h1>
           <h2 className="text-xl text-gray-600 mb-4">
             Actuaire de formation, entrepreneur et investisseur immobilier
           </h2>
