@@ -8,6 +8,7 @@ import FinancialSummary from "./sections/FinancialSummary";
 import FinancingSummary from "./sections/FinancingSummary";
 import calculateRentability from "../utils/calculateRentability";
 import { getScenarios, saveScenario, updateScenario } from "../services/dataService";
+import { useLanguage } from "../contexts/LanguageContext";
 
 export default function RenewScenarioForm({
   onBack,
@@ -28,6 +29,7 @@ export default function RenewScenarioForm({
   });
 
   const [parentScenario, setParentScenario] = useState(null);
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (!propertyId) return;
@@ -335,7 +337,7 @@ export default function RenewScenarioForm({
     }
   };
 
-  const titleText = "Scénario de renouvellement";
+  const titleText = t("scenarioForm.renewal.title");
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -345,7 +347,7 @@ export default function RenewScenarioForm({
             <h2 className="text-2xl font-semibold">{titleText}</h2>
             {onBack && (
               <button onClick={onBack} className="text-gray-600 hover:text-gray-800">
-                ← Retour
+                ← {t('back')}
               </button>
             )}
           </div>
@@ -353,11 +355,11 @@ export default function RenewScenarioForm({
           <div className="space-y-8">
             <div className="border rounded-lg p-6">
               <h2 className="text-lg font-semibold mb-4 text-gray-700">
-                Paramètres du scénario
+                {t('scenarioForm.parameters')}
               </h2>
               <div className="grid md:grid-cols-3 gap-4">
                 <div className="md:col-span-3">
-                  <label className="block text-sm font-medium mb-1">Titre</label>
+                  <label className="block text-sm font-medium mb-1">{t('scenarioForm.titleLabel')}</label>
                   <input
                     type="text"
                     value={scenario.title}
@@ -367,7 +369,7 @@ export default function RenewScenarioForm({
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">
-                    Croissance des revenus (%)
+                    {t('scenarioForm.revenueGrowthPct')}
                   </label>
                   <FormattedNumberInput
                     value={scenario.revenueGrowthPct || ""}
@@ -378,7 +380,7 @@ export default function RenewScenarioForm({
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">
-                    Croissance des dépenses (%)
+                    {t('scenarioForm.expenseGrowthPct')}
                   </label>
                   <FormattedNumberInput
                     value={scenario.expenseGrowthPct || ""}
@@ -389,7 +391,7 @@ export default function RenewScenarioForm({
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">
-                    Appréciation de la valeur (%)
+                    {t('scenarioForm.valueAppreciationPct')}
                   </label>
                   <FormattedNumberInput
                     value={scenario.valueAppreciationPct || ""}
@@ -403,12 +405,12 @@ export default function RenewScenarioForm({
 
             <div className="border rounded-lg p-6">
               <h2 className="text-lg font-semibold mb-4 text-purple-600">
-                Financement
+                {t('financing.title')}
               </h2>
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">
-                    Nouveau taux d'intérêt (%)
+                    {t('scenarioForm.newInterestRate')}
                   </label>
                   <FormattedNumberInput
                     value={scenario.financing.mortgageRate || ""}
@@ -420,7 +422,7 @@ export default function RenewScenarioForm({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Terme (années)</label>
+                  <label className="block text-sm font-medium mb-1">{t('financing.term')}</label>
                   <select
                     value={scenario.financing.term || ""}
                     onChange={(e) =>
@@ -459,7 +461,7 @@ export default function RenewScenarioForm({
                   onClick={handleSave}
                   className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                 >
-                  Sauvegarder
+                  {t('save')}
                 </button>
               )}
             </div>

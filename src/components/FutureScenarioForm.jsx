@@ -8,6 +8,7 @@ import FinancingSummary from "./sections/FinancingSummary";
 import calculateRentability from "../utils/calculateRentability";
 import { getAphMaxLtvRatio } from "../utils/cmhc";
 import { getScenarios, saveScenario, updateScenario } from "../services/dataService";
+import { useLanguage } from "../contexts/LanguageContext";
 
 export default function FutureScenarioForm({
   onBack,
@@ -37,6 +38,8 @@ export default function FutureScenarioForm({
 
   const [parentScenario, setParentScenario] = useState(null);
   const lastMarketValueEstimateRef = useRef("");
+
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (!propertyId) return;
@@ -406,8 +409,8 @@ export default function FutureScenarioForm({
   };
 
   const titleText = {
-    refinancing: "Scénario de refinancement",
-  }[type] || "Scénario";
+    refinancing: t("scenarioForm.refinancing.title"),
+  }[type] || t("scenarioForm.genericTitle");
 
   const renderScenarioSections = () => (
     <>
@@ -435,7 +438,7 @@ export default function FutureScenarioForm({
                 onClick={onBack}
                 className="text-gray-600 hover:text-gray-800"
               >
-                ← Retour
+                ← {t('back')}
               </button>
             )}
           </div>
@@ -443,21 +446,21 @@ export default function FutureScenarioForm({
           <div className="space-y-8">
             <div className="border rounded-lg p-6">
               <h2 className="text-lg font-semibold mb-4 text-gray-700">
-                Paramètres du scénario
+                {t('scenarioForm.parameters')}
               </h2>
               <div className="grid md:grid-cols-3 gap-4">
                 <div className="md:col-span-3">
-                  <label className="block text-sm font-medium mb-1">Titre</label>
+                  <label className="block text-sm font-medium mb-1">{t('scenarioForm.titleLabel')}</label>
                   <input
                     type="text"
                     value={scenario.title}
                     onChange={(e) => handleChange("title", e.target.value)}
                     className="w-full border rounded p-2"
-                    placeholder="Scénario"
+                    placeholder={t('scenarioForm.titlePlaceholder')}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Croissance des revenus (%)</label>
+                  <label className="block text-sm font-medium mb-1">{t('scenarioForm.revenueGrowthPct')}</label>
                   <FormattedNumberInput
                     value={scenario.revenueGrowthPct || ""}
                     onChange={(val) => handleChange("revenueGrowthPct", val)}
@@ -466,7 +469,7 @@ export default function FutureScenarioForm({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Croissance des dépenses (%)</label>
+                  <label className="block text-sm font-medium mb-1">{t('scenarioForm.expenseGrowthPct')}</label>
                   <FormattedNumberInput
                     value={scenario.expenseGrowthPct || ""}
                     onChange={(val) => handleChange("expenseGrowthPct", val)}
@@ -475,7 +478,7 @@ export default function FutureScenarioForm({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Appréciation de la valeur (%)</label>
+                  <label className="block text-sm font-medium mb-1">{t('scenarioForm.valueAppreciationPct')}</label>
                   <FormattedNumberInput
                     value={scenario.valueAppreciationPct || ""}
                     onChange={(val) => handleChange("valueAppreciationPct", val)}
@@ -486,7 +489,7 @@ export default function FutureScenarioForm({
               </div>
               <div className="grid md:grid-cols-2 gap-4 mt-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Refinancement dans (années)</label>
+                  <label className="block text-sm font-medium mb-1">{t('scenarioForm.refinanceYears')}</label>
                   <FormattedNumberInput
                     value={scenario.refinanceYears || ""}
                     onChange={(val) => handleChange("refinanceYears", val)}
@@ -494,7 +497,7 @@ export default function FutureScenarioForm({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Nouvelle valeur marchande</label>
+                  <label className="block text-sm font-medium mb-1">{t('scenarioForm.marketValue')}</label>
                   <FormattedNumberInput
                     value={scenario.marketValue || ""}
                     onChange={(val) => handleChange("marketValue", val)}
@@ -526,7 +529,7 @@ export default function FutureScenarioForm({
 
             {isEquityNegative && (
               <div className="text-red-600 text-sm text-right">
-                Ce scénario de refinancement n'est pas possible.
+                {t('scenarioForm.notPossible')}
               </div>
             )}
             <div className="flex justify-end">
@@ -540,7 +543,7 @@ export default function FutureScenarioForm({
                       : "bg-blue-600"
                   }`}
                 >
-                  Sauvegarder
+                  {t('save')}
                 </button>
               )}
             </div>
