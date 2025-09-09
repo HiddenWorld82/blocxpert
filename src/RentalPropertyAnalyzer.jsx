@@ -10,6 +10,7 @@ import AboutPage from './components/AboutPage';
 import useRentabilityCalculator from './hooks/useRentabilityCalculator';
 import defaultProperty from './defaults/defaultProperty';
 import { useAuth } from './contexts/AuthContext';
+import { useLanguage } from './contexts/LanguageContext';
 import {
   saveProperty,
   updateProperty,
@@ -21,6 +22,7 @@ import Header from './components/Header';
 
 const RentalPropertyAnalyzer = () => {
   const { currentUser, properties, propertiesLoading } = useAuth();
+  const { t } = useLanguage();
   const [currentStep, setCurrentStep] = useState('home');
   const [currentProperty, setCurrentProperty] = useState(defaultProperty);
   const [advancedExpenses, setAdvancedExpenses] = useState(false);
@@ -48,9 +50,9 @@ const RentalPropertyAnalyzer = () => {
         try {
           const data = JSON.parse(decodeURIComponent(atob(shared)));
           await importSharedProperty(data, currentUser.uid);
-          alert('Immeuble importé avec succès');
+          alert(t('property.import.success'));
         } catch (e) {
-          console.error("Erreur d'import", e);
+          console.error("Import error", e);
         } finally {
           params.delete('share');
           const newUrl = `${window.location.pathname}${
@@ -69,9 +71,9 @@ const RentalPropertyAnalyzer = () => {
       const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
       const link = `${window.location.origin}/?share=${encoded}`;
       await navigator.clipboard.writeText(link);
-      alert('Lien de partage copié dans le presse-papiers');
+      alert(t('share.link.copied'));
     } catch (e) {
-      console.error('Erreur lors du partage', e);
+      console.error(t('share.error'), e);
     }
   };
 
@@ -179,7 +181,7 @@ const RentalPropertyAnalyzer = () => {
       <Header />
       {propertiesLoading ? (
         <div className="flex items-center justify-center py-10">
-          <span className="text-gray-700">Chargement...</span>
+          <span className="text-gray-700">{t('loading')}</span>
         </div>
       ) : (
         <>

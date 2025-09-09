@@ -3,6 +3,7 @@ import React from 'react';
 import BasicInfo from './sections/BasicInfo';
 import RevenueSection from './sections/RevenueSection';
 import OperatingExpensesSection from './sections/OperatingExpensesSection';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const PropertyForm = ({
   currentProperty,
@@ -12,6 +13,7 @@ const PropertyForm = ({
   setAdvancedExpenses,
   onSave,
 }) => {
+  const { t } = useLanguage();
   const handleSaveClick = () => {
     if (
       !currentProperty.address ||
@@ -19,7 +21,7 @@ const PropertyForm = ({
       !currentProperty.province ||
       !currentProperty.postalCode
     ) {
-      alert("Veuillez remplir l'adresse complète (adresse, ville, province, code postal).");
+      alert(t('property.alert.fillAddress'));
       return;
     }
     onSave();
@@ -29,13 +31,13 @@ const PropertyForm = ({
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg shadow-lg p-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-semibold">Nouvelle Analyse d'Immeuble</h2>
+            <h2 className="text-2xl font-semibold">{t('property.form.title')}</h2>
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setAdvancedExpenses(!advancedExpenses)}
                 className="px-4 py-2 border rounded-lg hover:bg-gray-50"
               >
-                {advancedExpenses ? 'Mode simplifié' : 'Mode avancé'}
+                {advancedExpenses ? t('property.form.simpleMode') : t('property.form.advancedMode')}
               </button>
               <button
                 onClick={() =>
@@ -43,7 +45,7 @@ const PropertyForm = ({
                 }
                 className="text-gray-600 hover:text-gray-800"
               >
-                ← Retour
+                ← {t('back')}
               </button>
             </div>
           </div>
@@ -75,14 +77,14 @@ const PropertyForm = ({
                   onClick={() => setCurrentStep('home')}
                   className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
                 >
-                  Annuler
+                  {t('cancel')}
                 </button>
               )}
               <button
                 onClick={handleSaveClick}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
-                Sauvegarder
+                {t('save')}
               </button>
             </div>
           </div>
