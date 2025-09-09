@@ -17,14 +17,14 @@ const AboutPage = ({ onBack }) => {
           <div className="w-32 h-32 mx-auto rounded-full overflow-hidden bg-gray-200 mb-4">
             {/* La photo professionnelle sera ajoutée ultérieurement */}
             <img
-              src="/profile.jpg"
+              src="/src/profile.jpg"
               alt="Photo du développeur"
               className="w-full h-full object-cover"
             />
           </div>
           <h1 className="text-3xl font-bold mb-2">Votre Nom</h1>
           <h2 className="text-xl text-gray-600 mb-4">
-            Actuaire, entrepreneur et investisseur immobilier
+            Actuaire de formation, entrepreneur et investisseur immobilier
           </h2>
           <p className="text-gray-700">
             Passionné par l'analyse financière et l'immobilier, j'ai développé BlocXpert
