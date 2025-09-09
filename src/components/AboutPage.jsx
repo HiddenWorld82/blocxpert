@@ -27,7 +27,7 @@ const AboutPage = ({ onBack }) => {
             Actuaire de formation, entrepreneur et investisseur immobilier
           </h2>
           <p className="text-gray-700">
-            Passionné par l'analyse financière et l'immobilier, j'ai développé BlocXpert
+            Passionné par l'analyse financière et l'immobilier, j'ai développé Rentalyzer
             pour offrir aux investisseurs un outil simple et fiable afin de valider
             les rendements réels de leurs projets.
           </p>
@@ -39,7 +39,7 @@ const AboutPage = ({ onBack }) => {
               Mission, vision et valeurs de l'application
             </h3>
             <p className="mb-2">
-              BlocXpert est né du désir de démocratiser l'analyse de rentabilité
+              Rentalyzer est né du désir de démocratiser l'analyse de rentabilité
               immobilière et d'aider les investisseurs à prendre des décisions éclairées.
             </p>
             <p className="mb-2">

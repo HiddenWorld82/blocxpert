@@ -18,10 +18,10 @@ const HomeScreen = ({ properties, onNew, onSelect, onDelete, onShare, onAbout })
         <div className="text-center py-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-4">
             <Home className="inline-block mr-3 text-blue-600" />
-            Analyseur de Rentabilité Immobilière
+            Rentalyzer – Analyseur de Rentabilité Immobilière
           </h1>
           <p className="text-xl text-gray-600 mb-8">
-            Votre assistant intelligent pour réussir vos investissements immobiliers
+            Rentalyzer, votre assistant intelligent pour réussir vos investissements immobiliers
           </p>
         </div>
 
