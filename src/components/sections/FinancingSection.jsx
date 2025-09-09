@@ -1,45 +1,42 @@
 // src/components/sections/FinancingSection.jsx
 import React from "react";
-import {
-  Info,
-  Home,
-  DollarSign,
-  TrendingUp,
-  Briefcase,
-  Building,
-  Calculator,
-} from "lucide-react";
+import { Calculator } from "lucide-react";
 import FormattedNumberInput from "../FormattedNumberInput";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 export default function FinancingSection({
   financing = {},
   onChange,
   lockedFields = {},
 }) {
+  const { t } = useLanguage();
   const handleChange = (field, value) => {
     onChange({ ...financing, [field]: value }, field);
   };
 
   return (
     <div className="border rounded-lg p-6">
-      <h2 className="text-lg font-semibold mb-4 text-purple-600 flex items-center"><Calculator className="w-5 h-5 mr-2" />Financement</h2>
+      <h2 className="text-lg font-semibold mb-4 text-purple-600 flex items-center">
+        <Calculator className="w-5 h-5 mr-2" />
+        {t("financing.title")}
+      </h2>
       <div>
-        <label className="block text-sm font-medium mb-1">Type de financement</label>
+        <label className="block text-sm font-medium mb-1">{t("financing.type")}</label>
         <select
           value={financing.financingType || "conventional"}
           onChange={(e) => handleChange("financingType", e.target.value)}
           className="w-full border rounded p-2"
         >
-          <option value="conventional">Conventionnel</option>
-          <option value="cmhc">SCHL Standard</option>
-          <option value="cmhc_aph">SCHL APH Select</option>
-          <option value="private">Prêt privé</option>
+          <option value="conventional">{t("financing.type.conventional")}</option>
+          <option value="cmhc">{t("financing.type.cmhc")}</option>
+          <option value="cmhc_aph">{t("financing.type.cmhc_aph")}</option>
+          <option value="private">{t("financing.type.private")}</option>
         </select>
       </div>
       
       {financing.financingType === "cmhc_aph" && (
         <div className="mt-4">
-          <label className="block text-sm font-medium mb-1">Points APH</label>
+          <label className="block text-sm font-medium mb-1">{t("financing.aphPoints")}</label>
           <FormattedNumberInput
             value={financing.aphPoints || ""}
             onChange={(val) => handleChange("aphPoints", val)}
@@ -51,7 +48,7 @@ export default function FinancingSection({
 
       <div className="grid grid-cols-3 gap-4 mt-4">
         <div>
-          <label className="block text-sm font-medium mb-1">Taux d'intérêt (%)</label>
+          <label className="block text-sm font-medium mb-1">{t("financing.mortgageRate")}</label>
           <FormattedNumberInput
             value={financing.mortgageRate || ""}
             onChange={(val) => handleChange("mortgageRate", val)}
@@ -62,7 +59,7 @@ export default function FinancingSection({
         </div>
         {financing.financingType === "private" ? (
           <div>
-            <label className="block text-sm font-medium mb-1">Ratio Prêt Valeur (RPV)</label>
+            <label className="block text-sm font-medium mb-1">{t("financing.ltvRatio")}</label>
             <FormattedNumberInput
               value={financing.ltvRatio || ""}
               onChange={(val) => handleChange("ltvRatio", val)}
@@ -73,7 +70,7 @@ export default function FinancingSection({
           </div>
         ) : (
           <div>
-            <label className="block text-sm font-medium mb-1">Amortissement (années)</label>
+            <label className="block text-sm font-medium mb-1">{t("financing.amortization")}</label>
             <FormattedNumberInput
               value={financing.amortization || ""}
               onChange={(val) => handleChange("amortization", val)}
@@ -83,7 +80,7 @@ export default function FinancingSection({
           </div>
         )}
         <div>
-          <label className="block text-sm font-medium mb-1">Terme (années)</label>
+          <label className="block text-sm font-medium mb-1">{t("financing.term")}</label>
           <select
             value={financing.term || ""}
             onChange={(e) => handleChange("term", e.target.value)}
@@ -100,7 +97,7 @@ export default function FinancingSection({
 
       {financing.financingType === "private" && (
         <div className="mt-4">
-          <label className="block text-sm font-medium mb-1">Frais de dossier</label>
+          <label className="block text-sm font-medium mb-1">{t("financing.originationFee")}</label>
           <div className="flex">
             <FormattedNumberInput
               value={financing.originationFee || ""}
@@ -124,7 +121,7 @@ export default function FinancingSection({
       {financing.financingType !== "private" && (
         <div className="grid grid-cols-2 gap-4 mt-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Taux de qualification (%)</label>
+            <label className="block text-sm font-medium mb-1">{t("financing.qualificationRate")}</label>
             <FormattedNumberInput
               value={financing.qualificationRate || ""}
               onChange={(val) => handleChange("qualificationRate", val)}
@@ -134,7 +131,7 @@ export default function FinancingSection({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Ratio couverture dette</label>
+            <label className="block text-sm font-medium mb-1">{t("financing.debtCoverageRatio")}</label>
             <FormattedNumberInput
               value={financing.debtCoverageRatio || ""}
               onChange={(val) => handleChange("debtCoverageRatio", val)}

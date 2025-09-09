@@ -1,7 +1,8 @@
 // src/components/sections/RevenueSection.jsx
 import React from "react";
-import { Info, Home, DollarSign, TrendingUp, Briefcase, Building, Calculator } from 'lucide-react';
+import { DollarSign } from "lucide-react";
 import FormattedNumberInput from "../FormattedNumberInput";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 export default function RevenueSection({
   revenue = {},
@@ -9,6 +10,7 @@ export default function RevenueSection({
   advancedExpenses,
   readOnly = false,
 }) {
+  const { t } = useLanguage();
   const handleChange = (field, value) => {
     onChange({ ...revenue, [field]: value });
   };
@@ -16,9 +18,12 @@ export default function RevenueSection({
   if (!advancedExpenses) {
     return (
       <div className="border rounded-lg p-6">
-        <h2 className="text-lg font-semibold mb-4 text-green-600 flex items-center"> <DollarSign className="w-5 h-5 mr-2" />Revenus annuels</h2>
+        <h2 className="text-lg font-semibold mb-4 text-green-600 flex items-center">
+          <DollarSign className="w-5 h-5 mr-2" />
+          {t("revenue.title")}
+        </h2>
         <div>
-          <label className="block text-sm font-medium mb-1">Loyers annuels</label>
+          <label className="block text-sm font-medium mb-1">{t("revenue.annualRent")}</label>
           <FormattedNumberInput
             value={revenue.annualRent || ""}
             onChange={(val) => handleChange("annualRent", val)}
@@ -30,7 +35,7 @@ export default function RevenueSection({
           />
         </div>
         <div className="mt-4">
-          <label className="block text-sm font-medium mb-1">Autres revenus</label>
+          <label className="block text-sm font-medium mb-1">{t("revenue.otherRevenue")}</label>
           <FormattedNumberInput
             value={revenue.otherRevenue || ""}
             onChange={(val) => handleChange("otherRevenue", val)}
@@ -46,17 +51,20 @@ export default function RevenueSection({
   }
 
   const fields = [
-    { field: "parkingRevenue", label: "Revenus de stationnement" },
-    { field: "internetRevenue", label: "Revenus Internet" },
-    { field: "storageRevenue", label: "Revenus de rangement" },
-    { field: "otherRevenue", label: "Autres revenus" }
+    { field: "parkingRevenue", label: t("revenue.parkingRevenue") },
+    { field: "internetRevenue", label: t("revenue.internetRevenue") },
+    { field: "storageRevenue", label: t("revenue.storageRevenue") },
+    { field: "otherRevenue", label: t("revenue.otherRevenue") },
   ];
 
   return (
     <div className="border rounded-lg p-6">
-        <h2 className="text-lg font-semibold mb-4 text-green-600 flex items-center"> <DollarSign className="w-5 h-5 mr-2" />Revenus annuels</h2>
+        <h2 className="text-lg font-semibold mb-4 text-green-600 flex items-center">
+          <DollarSign className="w-5 h-5 mr-2" />
+          {t("revenue.title")}
+        </h2>
       <div>
-        <label className="block text-sm font-medium mb-1">Loyers annuels</label>
+        <label className="block text-sm font-medium mb-1">{t("revenue.annualRent")}</label>
         <FormattedNumberInput
           value={revenue.annualRent || ""}
           onChange={(val) => handleChange("annualRent", val)}

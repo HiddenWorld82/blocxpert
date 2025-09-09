@@ -1,7 +1,8 @@
 import React, { useMemo, useRef } from "react";
-import { Info, Home, DollarSign, TrendingUp, Briefcase, Building, Calculator } from 'lucide-react';
+import { Home } from "lucide-react";
 import FormattedNumberInput from "../FormattedNumberInput";
 import useGooglePlacesAutocomplete from "../../hooks/useGooglePlacesAutocomplete";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 export default function BasicInfo({
   property = {},
@@ -9,8 +10,10 @@ export default function BasicInfo({
   advancedExpenses,
   readOnly = false,
   disablePlaceAutocomplete = false,
-  purchasePriceLabel = "Prix d'achat",
+  purchasePriceLabel,
 }) {
+  const { t } = useLanguage();
+  const purchaseLabel = purchasePriceLabel || t("basicInfo.purchasePrice");
   const handleChange = (field, value) => {
     onChange({ ...property, [field]: value });
   };
@@ -54,16 +57,19 @@ export default function BasicInfo({
 
   return (
     <div className="border rounded-lg p-6">
-      <h2 className="text-lg font-semibold mb-4 text-blue-600 flex items-center"><Home className="w-5 h-5 mr-2" />Informations de base</h2>
+      <h2 className="text-lg font-semibold mb-4 text-blue-600 flex items-center">
+        <Home className="w-5 h-5 mr-2" />
+        {t("basicInfo.title")}
+      </h2>
       <div>
-        <label className="block text-sm font-medium mb-1">Adresse</label>
+        <label className="block text-sm font-medium mb-1">{t("basicInfo.address")}</label>
         <input
           ref={addressRef}
           type="text"
           value={property.address || ""}
           onChange={(e) => handleChange("address", e.target.value)}
           className={`w-full border rounded p-2 ${readOnly ? 'bg-gray-100' : ''}`}
-          placeholder="123 rue Example"
+          placeholder="123 Example St"
           disabled={readOnly}
           readOnly={readOnly}
           required
@@ -71,20 +77,20 @@ export default function BasicInfo({
       </div>
       <div className="grid grid-cols-3 gap-4 mt-4">
         <div>
-          <label className="block text-sm font-medium mb-1">Ville</label>
+          <label className="block text-sm font-medium mb-1">{t("basicInfo.city")}</label>
           <input
             type="text"
             value={property.city || ""}
             onChange={(e) => handleChange("city", e.target.value)}
             className={`w-full border rounded p-2 ${readOnly ? 'bg-gray-100' : ''}`}
-            placeholder="Montréal"
+            placeholder="Montreal"
             disabled={readOnly}
             readOnly={readOnly}
             required
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Province</label>
+          <label className="block text-sm font-medium mb-1">{t("basicInfo.province")}</label>
           <input
             type="text"
             value={property.province || ""}
@@ -97,7 +103,7 @@ export default function BasicInfo({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Code postal</label>
+          <label className="block text-sm font-medium mb-1">{t("basicInfo.postalCode")}</label>
           <input
             type="text"
             value={property.postalCode || ""}
@@ -113,7 +119,7 @@ export default function BasicInfo({
       <div className="grid grid-cols-2 gap-4 mt-4">
         {advancedExpenses && (
           <div>
-            <label className="block text-sm font-medium mb-1">Prix demandé</label>
+            <label className="block text-sm font-medium mb-1">{t("basicInfo.askingPrice")}</label>
             <FormattedNumberInput
               value={property.askingPrice || ""}
               onChange={(val) => handleChange("askingPrice", val)}
@@ -126,7 +132,7 @@ export default function BasicInfo({
           </div>
         )}
         <div>
-          <label className="block text-sm font-medium mb-1">{purchasePriceLabel}</label>
+          <label className="block text-sm font-medium mb-1">{purchaseLabel}</label>
           <FormattedNumberInput
             value={property.purchasePrice || ""}
             onChange={(val) => handleChange("purchasePrice", val)}
@@ -139,7 +145,7 @@ export default function BasicInfo({
         </div>
         {advancedExpenses && (
           <div>
-            <label className="block text-sm font-medium mb-1">Évaluation municipale</label>
+            <label className="block text-sm font-medium mb-1">{t("basicInfo.municipalEvaluation")}</label>
             <FormattedNumberInput
               value={property.municipalEvaluation || ""}
               onChange={(val) => handleChange("municipalEvaluation", val)}
@@ -152,7 +158,7 @@ export default function BasicInfo({
           </div>
         )}
         <div>
-          <label className="block text-sm font-medium mb-1">Nombre d'unités</label>
+          <label className="block text-sm font-medium mb-1">{t("basicInfo.numberOfUnits")}</label>
           <FormattedNumberInput
             value={property.numberOfUnits || ""}
             onChange={(val) => handleChange("numberOfUnits", val)}
@@ -163,15 +169,15 @@ export default function BasicInfo({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Type de structure</label>
+          <label className="block text-sm font-medium mb-1">{t("basicInfo.structureType")}</label>
           <select
             value={property.structureType || 'woodFrame'}
             onChange={(e) => handleChange('structureType', e.target.value)}
             className={`w-full border rounded p-2 ${readOnly ? 'bg-gray-100' : ''}`}
             disabled={readOnly}
           >
-            <option value="woodFrame">Bois</option>
-            <option value="concrete">Béton</option>
+            <option value="woodFrame">{t("basicInfo.structureType.woodFrame")}</option>
+            <option value="concrete">{t("basicInfo.structureType.concrete")}</option>
           </select>
         </div>
       </div>
