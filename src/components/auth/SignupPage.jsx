@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const SignupPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const { signup, loginWithGoogle } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -17,7 +19,7 @@ const SignupPage = () => {
       await signup(email, password);
       navigate(`/${location.search}`);
     } catch {
-      setError("Impossible de créer le compte");
+      setError(t('auth.signup.error'));
     }
   };
 
@@ -27,18 +29,18 @@ const SignupPage = () => {
       await loginWithGoogle();
       navigate(`/${location.search}`);
     } catch {
-      setError("Impossible de se connecter avec Google");
+      setError(t('auth.google.error'));
     }
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded shadow">
-        <h2 className="text-2xl font-bold text-center">Inscription</h2>
+        <h2 className="text-2xl font-bold text-center">{t('auth.signup.title')}</h2>
         {error && <div className="p-2 text-red-600 bg-red-100 rounded">{error}</div>}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium">Email</label>
+            <label className="block text-sm font-medium">{t('auth.email')}</label>
             <input
               type="email"
               value={email}
@@ -48,7 +50,7 @@ const SignupPage = () => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium">Mot de passe</label>
+            <label className="block text-sm font-medium">{t('auth.password')}</label>
             <input
               type="password"
               value={password}
@@ -61,7 +63,7 @@ const SignupPage = () => {
             type="submit"
             className="w-full py-2 text-white bg-blue-600 rounded hover:bg-blue-700"
           >
-            S'inscrire
+            {t('auth.signup.submit')}
           </button>
         </form>
         <button
@@ -69,12 +71,12 @@ const SignupPage = () => {
           onClick={handleGoogleLogin}
           className="w-full py-2 text-white bg-red-500 rounded hover:bg-red-600"
         >
-          Continuer avec Google
+          {t('auth.google')}
         </button>
         <div className="text-sm text-center">
-          Déjà un compte?{' '}
+          {t('auth.haveAccount')}{' '}
           <Link to={`/login${location.search}`} className="text-blue-600 hover:underline">
-            Se connecter
+            {t('auth.login.link')}
           </Link>
         </div>
       </div>
