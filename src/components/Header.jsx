@@ -13,7 +13,7 @@ const Header = () => {
       <img
         src="/rentalyzer-logo.png"
         alt="Rentalyzer logo"
-        className="h-8"
+        className="h-12"
       />
       <div className="flex items-center gap-2">
         {currentUser.photoURL && (
