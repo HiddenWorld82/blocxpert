@@ -1,7 +1,9 @@
 import React from 'react';
 import { ArrowLeft } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const AboutPage = ({ onBack }) => {
+  const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4">
       <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-lg p-8">
@@ -10,7 +12,7 @@ const AboutPage = ({ onBack }) => {
           className="flex items-center text-blue-600 mb-6 hover:text-blue-800"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Retour
+          {t('about.back')}
         </button>
 
         <div className="text-center mb-8">
@@ -18,49 +20,59 @@ const AboutPage = ({ onBack }) => {
             {/* La photo professionnelle sera ajoutée ultérieurement */}
             <img
               src="/src/profile.jpg"
-              alt="Photo du développeur"
+              alt={t('about.photoAlt')}
               className="w-full h-full object-cover"
             />
           </div>
           <h1 className="text-3xl font-bold mb-2">Michael Marceau</h1>
           <h2 className="text-xl text-gray-600 mb-4">
-            Actuaire de formation, entrepreneur et investisseur immobilier
+            {t('about.tagline')}
           </h2>
           <p className="text-gray-700">
-            Passionné par l'analyse financière et l'immobilier, j'ai développé Rentalyzer
-            pour offrir aux investisseurs un outil simple et fiable afin de valider
-            les rendements réels de leurs projets.
+            {t('about.intro')}
           </p>
         </div>
 
         <div className="space-y-8 text-gray-700">
           <section>
             <h3 className="text-2xl font-semibold mb-3">
-              Mission, vision et valeurs de l'application
+              {t('about.mvvTitle')}
             </h3>
             <p className="mb-2">
-              Rentalyzer est né du désir de démocratiser l'analyse de rentabilité
-              immobilière et d'aider les investisseurs à prendre des décisions éclairées.
+              {t('about.mvv1')}
             </p>
             <p className="mb-2">
-              À long terme, l'objectif est d'accompagner les investisseurs pour
-              comprendre leurs placements et valider les rendements réels qu'ils
-              génèrent.
+              {t('about.mvv2')}
             </p>
             <p>
-              <strong>Valeurs&nbsp;:</strong> Simplicité, Fiabilité, Éthique
+              <strong>{t('about.valuesLabel')}:&nbsp;</strong>
+              {t('about.valuesList')}
             </p>
           </section>
 
           <section>
-            <h3 className="text-2xl font-semibold mb-3">Parcours professionnel</h3>
+            <h3 className="text-2xl font-semibold mb-3">
+              {t('about.backgroundTitle')}
+            </h3>
             <ul className="list-disc pl-5 space-y-1">
-              <li>Détenteur d'un baccalauréat en actuariat</li>
-              <li>Entrepreneur depuis l'âge de 20 ans</li>
-              <li>Investisseur immobilier d'expérience</li>
+              <li>{t('about.education')}</li>
+              <li>{t('about.entrepreneur')}</li>
+              <li>{t('about.investor')}</li>
+              <li>{t('about.lender')}</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3 className="text-2xl font-semibold mb-3">{t('about.contactTitle')}</h3>
+            <ul className="space-y-2">
               <li>
-                Prêteur privé (via Omega Capital Privé et Société de Crédit Immo
-                Québec)
+                {t('about.email')}: <a href="mailto:mmarceau@dmii.ca" className="text-blue-600 hover:underline">mmarceau@dmii.ca</a>
+              </li>
+              <li>
+                {t('about.phone')}: <a href="tel:+15145001255" className="text-blue-600 hover:underline">514-500-1255</a>
+              </li>
+              <li>
+                {t('about.linkedin')}: <a href="https://www.linkedin.com/in/michael-marceau-23a6b570/" className="text-blue-600 hover:underline">linkedin.com/in/michael-marceau-23a6b570/</a>
               </li>
             </ul>
           </section>
