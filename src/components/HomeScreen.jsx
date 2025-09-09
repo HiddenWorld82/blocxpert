@@ -148,7 +148,7 @@ const HomeScreen = ({ properties, onNew, onSelect, onDelete, onShare, onAbout })
                       }`}
                     >
                       {property.effectiveNetIncome >= 0 ? '+' : ''}
-                      {Math.round(property.effectiveNetIncome).toLocaleString('fr-CA')}${t('home.perYear')}
+                      {Math.round(property.effectiveNetIncome).toLocaleString('fr-CA')}{t('home.perYear')}
                     </div>
                   </div>
                 );
