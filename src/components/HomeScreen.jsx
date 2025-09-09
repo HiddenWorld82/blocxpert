@@ -10,8 +10,10 @@ import {
   Share2,
   DollarSign,
 } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const HomeScreen = ({ properties, onNew, onSelect, onDelete, onShare, onAbout }) => {
+  const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4">
       <div className="max-w-6xl mx-auto">
@@ -23,42 +25,42 @@ const HomeScreen = ({ properties, onNew, onSelect, onDelete, onShare, onAbout })
               className="inline-block"
             />
           <h1 className="text-4xl font-bold text-gray-800 mb-4 flex items-center justify-center">
-            Outil d'Analyse de Rentabilité Immobilière
+            {t('home.title')}
           </h1>
           <p className="text-xl text-gray-600 mb-8">
-            Rentalyzer, votre assistant intelligent pour réussir vos investissements immobiliers
+            {t('home.subtitle')}
           </p>
         </div>
 
         {properties.length === 0 ? (
           <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
-            <h2 className="text-2xl font-semibold mb-6 text-center">🚀 Commencez votre première analyse</h2>
+            <h2 className="text-2xl font-semibold mb-6 text-center">{t('home.empty.title')}</h2>
             <div className="grid md:grid-cols-3 gap-6 mb-8">
               <div className="text-center">
                 <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Calculator className="w-8 h-8 text-blue-600" />
                 </div>
-                <h3 className="font-semibold mb-2">1. Saisissez vos données</h3>
+                <h3 className="font-semibold mb-2">{t('home.step1.title')}</h3>
                 <p className="text-gray-600 text-sm">
-                  Prix, revenus, dépenses - nous vous guidons à chaque étape
+                  {t('home.step1.text')}
                 </p>
               </div>
               <div className="text-center">
                 <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                   <TrendingUp className="w-8 h-8 text-green-600" />
                 </div>
-                <h3 className="font-semibold mb-2">2. Obtenez l'analyse</h3>
+                <h3 className="font-semibold mb-2">{t('home.step2.title')}</h3>
                 <p className="text-gray-600 text-sm">
-                  Rentabilité, cash flow, recommandations personnalisées
+                  {t('home.step2.text')}
                 </p>
               </div>
               <div className="text-center">
                 <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                   <FileText className="w-8 h-8 text-purple-600" />
                 </div>
-                <h3 className="font-semibold mb-2">3. Générez le rapport</h3>
+                <h3 className="font-semibold mb-2">{t('home.step3.title')}</h3>
                 <p className="text-gray-600 text-sm">
-                  Rapport professionnel prêt à présenter
+                  {t('home.step3.text')}
                 </p>
               </div>
             </div>
@@ -68,20 +70,20 @@ const HomeScreen = ({ properties, onNew, onSelect, onDelete, onShare, onAbout })
                 className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold text-lg hover:bg-blue-700 transition-colors"
               >
                 <Plus className="inline-block mr-2" />
-                Analyser mon premier immeuble
+                {t('home.new.button')}
               </button>
             </div>
           </div>
         ) : (
           <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
             <div className="flex flex-col items-center mb-6 md:flex-row md:justify-between md:items-center">
-              <h2 className="text-2xl font-semibold mb-4 md:mb-0">Mes Analyses</h2>
+              <h2 className="text-2xl font-semibold mb-4 md:mb-0">{t('home.existing.title')}</h2>
               <button
                 onClick={onNew}
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <Plus className="inline-block mr-1" />
-                Nouvelle analyse
+                {t('home.existing.new')}
               </button>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
@@ -106,7 +108,7 @@ const HomeScreen = ({ properties, onNew, onSelect, onDelete, onShare, onAbout })
                         onShare?.(property.id);
                       }}
                       className="absolute top-2 right-10 text-blue-600 hover:text-blue-800"
-                      aria-label="Partager"
+                      aria-label={t('home.share')}
                     >
                       <Share2 size={16} />
                     </button>
@@ -116,17 +118,17 @@ const HomeScreen = ({ properties, onNew, onSelect, onDelete, onShare, onAbout })
                         onDelete?.(property.id);
                       }}
                       className="absolute top-2 right-2 text-red-600 hover:text-red-800"
-                      aria-label="Supprimer"
+                      aria-label={t('home.delete')}
                     >
                       <Trash2 size={16} />
                     </button>
                     <h3 className="font-semibold text-lg mb-3">
-                      {fullAddress || 'Adresse non spécifiée'}
+                      {fullAddress || t('home.address.unset')}
                     </h3>
                     <div className="flex flex-wrap text-sm text-gray-600 gap-y-1 mb-2">
                       <div className="w-1/2 flex items-center">
                         <Home className="w-4 h-4 mr-1 text-blue-600" />
-                        {property.numberOfUnits} unités
+                        {property.numberOfUnits} {t('home.units')}
                       </div>
                       <div className="w-1/2 flex items-center">
                         <DollarSign className="w-4 h-4 mr-1 text-green-600" />
@@ -134,7 +136,7 @@ const HomeScreen = ({ properties, onNew, onSelect, onDelete, onShare, onAbout })
                       </div>
                       <div className="w-1/2 flex items-center">
                         <Calculator className="w-4 h-4 mr-1 text-purple-600" />
-                        {(property.purchasePrice / property.numberOfUnits).toLocaleString('fr-CA')}$/porte
+                        {(property.purchasePrice / property.numberOfUnits).toLocaleString('fr-CA')}{t('home.pricePerDoor')}
                       </div>
                     </div>
                     <div
@@ -145,7 +147,7 @@ const HomeScreen = ({ properties, onNew, onSelect, onDelete, onShare, onAbout })
                       }`}
                     >
                       {property.effectiveNetIncome >= 0 ? '+' : ''}
-                      {Math.round(property.effectiveNetIncome).toLocaleString('fr-CA')}$ /an
+                      {Math.round(property.effectiveNetIncome).toLocaleString('fr-CA')}${t('home.perYear')}
                     </div>
                   </div>
                 );
@@ -156,7 +158,7 @@ const HomeScreen = ({ properties, onNew, onSelect, onDelete, onShare, onAbout })
 
         <div className="text-center text-sm text-gray-500 mt-8">
           <button onClick={onAbout} className="hover:underline">
-            À propos
+            {t('home.about')}
           </button>
         </div>
 
