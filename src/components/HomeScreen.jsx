@@ -11,6 +11,7 @@ import {
   DollarSign,
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import CmbRates from './CmbRates';
 
 const HomeScreen = ({ properties, onNew, onSelect, onDelete, onShare, onAbout }) => {
   const { t } = useLanguage();
@@ -160,6 +161,7 @@ const HomeScreen = ({ properties, onNew, onSelect, onDelete, onShare, onAbout })
           <button onClick={onAbout} className="hover:underline">
             {t('home.about')}
           </button>
+          <CmbRates />
         </div>
 
       </div>
