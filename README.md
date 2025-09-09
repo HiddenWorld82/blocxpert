@@ -1,6 +1,6 @@
-# 🧠 Blocxpert – Analyseur de rentabilité immobilière
+# 🧠 Rentalyzer – Analyseur de rentabilité immobilière
 
-**Blocxpert** est une application web développée avec **React + Vite**, permettant aux investisseurs immobiliers d’évaluer rapidement la rentabilité de leurs immeubles multilogements.
+**Rentalyzer** est une application web développée avec **React + Vite**, permettant aux investisseurs immobiliers d’évaluer rapidement la rentabilité de leurs immeubles multilogements.
 
 ---
 
@@ -31,8 +31,8 @@
 ### 1. Cloner le projet
 
 ```bash
-git clone https://github.com/ton-utilisateur/blocxpert.git
-cd blocxpert
+git clone https://github.com/ton-utilisateur/rentalyzer.git
+cd rentalyzer
 npm install
 npm install @rollup/rollup-win32-x64-msvc
 ```
