@@ -1,8 +1,10 @@
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const Header = () => {
   const { currentUser, logout } = useAuth();
+  const { t } = useLanguage();
 
   if (!currentUser) return null;
 
@@ -22,7 +24,7 @@ const Header = () => {
         onClick={logout}
         className="text-sm text-blue-600 hover:underline"
       >
-        Déconnexion
+        {t('auth.logout')}
       </button>
     </header>
   );
