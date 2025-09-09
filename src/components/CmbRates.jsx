@@ -8,16 +8,26 @@ const CmbRates = () => {
 
   useEffect(() => {
     const fetchRates = async () => {
-      try {
-        const response = await fetch('https://www.bankofcanada.ca/valet/observations/group/cmb?recent=1');
+      const getRate = async (term) => {
+        const date = new Date();
+        date.setDate(date.getDate() - 1);
+        const formatted = date.toISOString().split('T')[0];
+        const url = `https://www.bankofcanada.ca/valet/observations/BD.CDN.${term}YR.DQ.YLD/json?start_date=${formatted}&end_date=${formatted}`;
+        const response = await fetch(url);
         if (!response.ok) throw new Error('Network response was not ok');
         const data = await response.json();
-        const obs = data?.observations?.[0] || {};
-        setRates({
-          one: obs.CMB1?.v,
-          five: obs.CMB5?.v,
-          ten: obs.CMB10?.v,
-        });
+        const obs = data?.observations?.[0];
+        const key = `BD.CDN.${term}YR.DQ.YLD`;
+        return obs ? obs[key] : undefined;
+      };
+
+      try {
+        const [one, five, ten] = await Promise.all([
+          getRate('1'),
+          getRate('5'),
+          getRate('10'),
+        ]);
+        setRates({ one, five, ten });
         setError(false);
       } catch (e) {
         console.error('Failed to fetch CMB rates', e);
