@@ -91,19 +91,19 @@ const BuildingDashboard = ({
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-5xl mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-semibold">Tableau de bord de l'immeuble</h2>
-            <div className="flex items-center gap-4">
+        <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
+            <h2 className="text-xl sm:text-2xl font-semibold">Tableau de bord de l'immeuble</h2>
+            <div className="flex items-center gap-2 sm:gap-4 self-end sm:self-auto">
               <button
                 onClick={onEditProperty}
-                className="px-4 py-2 border rounded-lg hover:bg-gray-5"
+                className="px-4 py-2 border rounded-lg hover:bg-gray-50 text-sm sm:text-base"
               >
                 Modifier
               </button>
               <button
                 onClick={onBack}
-                className="text-gray-600 hover:text-gray-800"
+                className="text-gray-600 hover:text-gray-800 text-sm sm:text-base"
               >
                 ← Retour
               </button>
@@ -133,7 +133,7 @@ const BuildingDashboard = ({
           <div className="flex justify-center mb-6">
             <button
               onClick={onCreateScenario}
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
+              className="w-full sm:w-auto bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
             >
               Créer Scénario de Financement
             </button>
@@ -143,6 +143,7 @@ const BuildingDashboard = ({
             propertyId={property.id}
             onEdit={onEditScenario}
             onView={onViewScenario}
+            excludeTypes={["refinancing", "renewal", "optimization", "other"]}
           />
         </div>
       </div>

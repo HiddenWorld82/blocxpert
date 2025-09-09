@@ -11,7 +11,7 @@ import {
   DollarSign,
 } from 'lucide-react';
 
-const HomeScreen = ({ properties, onNew, onSelect, onDelete, onShare }) => {
+const HomeScreen = ({ properties, onNew, onSelect, onDelete, onShare, onAbout }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4">
       <div className="max-w-6xl mx-auto">
@@ -149,7 +149,12 @@ const HomeScreen = ({ properties, onNew, onSelect, onDelete, onShare }) => {
           </div>
         )}
 
-        
+        <div className="text-center text-sm text-gray-500 mt-8">
+          <button onClick={onAbout} className="hover:underline">
+            À propos
+          </button>
+        </div>
+
       </div>
     </div>
   );

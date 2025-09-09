@@ -14,6 +14,13 @@ import calculateReturnAfterYears from '../utils/calculateReturnAfterYears';
 import { getScenarios } from '../services/dataService';
 import { getAphMaxLtvRatio } from '../utils/cmhc';
 
+const typeLabels = {
+  refinancing: 'Refinancement',
+  renewal: 'Renouvellement hypothécaire',
+  optimization: 'Optimisation',
+  other: 'Autres',
+};
+
 const PropertyReport = ({
   currentProperty,
   setCurrentStep,
@@ -273,15 +280,13 @@ const PropertyReport = ({
   const baseScenarioId = scenario ? scenario.parentScenarioId || scenario.id : null;
 
   useEffect(() => {
-    if (!currentProperty?.id || !baseScenarioId) return;
-    const unsub = getScenarios(
-      currentProperty.id,
-      (scs) =>
-        setSubScenarios(
-          scs.filter((s) => ['refinancing', 'optimization'].includes(s.type))
-        ),
-      baseScenarioId,
-    );
+    if (!currentProperty?.id) return;
+    const unsub = getScenarios(currentProperty.id, (scs) => {
+      const filtered = baseScenarioId
+        ? scs.filter((sc) => sc.parentScenarioId === baseScenarioId)
+        : scs;
+      setSubScenarios(filtered);
+    });
     return () => unsub && unsub();
   }, [currentProperty?.id, baseScenarioId]);
 
@@ -365,10 +370,13 @@ const PropertyReport = ({
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-6xl mx-auto">
-        <div ref={reportRef} className="bg-white rounded-lg shadow-lg p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-semibold">Rapport d'Analyse de Rentabilité</h2>
-            <div className="flex gap-2">
+        <div
+          ref={reportRef}
+          className="bg-white rounded-lg shadow-lg p-4 sm:p-6"
+        >
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
+            <h2 className="text-xl sm:text-2xl font-semibold">Rapport d'Analyse de Rentabilité</h2>
+            <div className="flex items-center gap-2 sm:gap-4 self-end sm:self-auto">
               <button
                 onClick={() => setCurrentStep('scenario')}
                 className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
@@ -393,14 +401,14 @@ const PropertyReport = ({
             </div>
           </div>
 
-          <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-6 mb-6">
+          <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-4 sm:p-6 mb-6">
             <h3 className="text-xl font-semibold mb-2">
               {fullAddress || 'Propriété à analyser'}
             </h3>
             {advancedExpenses ? (
               <div className="space-y-4 text-sm">
                 <div>
-                  <div className="grid md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
                       <span className="text-gray-600">Prix demandé:</span>
                       <div className="font-semibold">
@@ -426,7 +434,7 @@ const PropertyReport = ({
                   </div>
                 </div>
                 <div>
-                  <div className="grid md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     {reportProperty.financingType !== 'private' && (
                     <div>
                       <span className="text-gray-600">Revenus totaux:</span>
@@ -462,7 +470,7 @@ const PropertyReport = ({
                   </div>
                 </div>
                 <div>
-                  <div className="grid md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     {reportProperty.financingType !== 'private' && (
                     <div>
                       <span className="text-gray-600">Financement:</span>
@@ -505,7 +513,7 @@ const PropertyReport = ({
             ) : (
               <div className="space-y-4 text-sm">
                 <div>
-                  <div className="grid md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
                       <span className="text-gray-600">Prix d'achat:</span>
                       <div className="font-semibold">
@@ -529,7 +537,7 @@ const PropertyReport = ({
                   </div>
                 </div>
                 <div>
-                  <div className="grid md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     {reportProperty.financingType !== 'private' && (
                     <div>
                       <span className="text-gray-600">Financement:</span>
@@ -596,13 +604,12 @@ const PropertyReport = ({
                 <option value="">Aucun</option>
                 {subScenarios.map((s) => (
                   <option key={s.id} value={s.id}>
-                    {s.title || 'Sans titre'}{' '}
-                    {s.type === 'refinancing' ? '(Refinancement)' : '(Optimisation)'}
+                    {s.title || 'Sans titre'} ({typeLabels[s.type] || s.type})
                   </option>
                 ))}
               </select>
             </div>
-            <div className="grid md:grid-cols-4 gap-4 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Années</label>
                 <input
