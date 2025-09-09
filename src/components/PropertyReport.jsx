@@ -1,5 +1,6 @@
 // components/PropertyReport.jsx
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import KeyIndicators from './sections/KeyIndicators';
 import FinancialSummary from './sections/FinancialSummary';
 import FinancingSummary from './sections/FinancingSummary';
@@ -14,13 +15,6 @@ import calculateReturnAfterYears from '../utils/calculateReturnAfterYears';
 import { getScenarios } from '../services/dataService';
 import { getAphMaxLtvRatio } from '../utils/cmhc';
 
-const typeLabels = {
-  refinancing: 'Refinancement',
-  renewal: 'Renouvellement hypothécaire',
-  optimization: 'Optimisation',
-  other: 'Autres',
-};
-
 const PropertyReport = ({
   currentProperty,
   setCurrentStep,
@@ -30,6 +24,13 @@ const PropertyReport = ({
   scenario,
   onViewAmortization,
 }) => {
+  const { t } = useLanguage();
+  const typeLabels = {
+    refinancing: t('scenario.refinancing'),
+    renewal: t('scenario.renewal'),
+    optimization: t('scenario.optimization'),
+    other: t('scenario.other'),
+  };
   //const numberFormatter = new Intl.NumberFormat('fr-CA');
   const formatMoney = (value) =>
     new Intl.NumberFormat('fr-CA', {
@@ -327,26 +328,26 @@ const PropertyReport = ({
       return (
         <div className="mt-8">
           <h3 className="text-lg font-semibold mb-4">
-            Choisir le type de scénario
+            {t('propertyReport.chooseScenarioType')}
           </h3>
           <div className="flex gap-4">
             <button
               onClick={() => setEditingScenario({ ...editingScenario, type: 'refinancing' })}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
-              Refinancement
+              {t('scenario.refinancing')}
             </button>
             <button
               onClick={() => setEditingScenario({ ...editingScenario, type: 'renewal' })}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
-              Renouvellement hypothécaire
+              {t('scenario.renewal')}
             </button>
             <button
               onClick={() => setEditingScenario({ ...editingScenario, type: 'optimization' })}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
-              Optimisation
+              {t('scenario.optimization')}
             </button>
           </div>
         </div>
@@ -375,27 +376,27 @@ const PropertyReport = ({
           className="bg-white rounded-lg shadow-lg p-4 sm:p-6"
         >
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
-            <h2 className="text-xl sm:text-2xl font-semibold">Rapport d'Analyse de Rentabilité</h2>
+            <h2 className="text-xl sm:text-2xl font-semibold">{t('propertyReport.title')}</h2>
             <div className="flex items-center gap-2 sm:gap-4 self-end sm:self-auto">
               <button
                 onClick={() => setCurrentStep('scenario')}
                 className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
               >
-                Modifier
+                {t('edit')}
               </button>
               {scenario ? (
                 <button
                   onClick={() => setCurrentStep('dashboard')}
                   className="text-gray-600 hover:text-gray-800"
                 >
-                  ← Retour
+                  ← {t('back')}
                 </button>
               ) : (
                 <button
                   onClick={onSave}
                   className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
                 >
-                  Sauvegarder
+                  {t('save')}
                 </button>
               )}
             </div>
@@ -403,30 +404,30 @@ const PropertyReport = ({
 
           <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-4 sm:p-6 mb-6">
             <h3 className="text-xl font-semibold mb-2">
-              {fullAddress || 'Propriété à analyser'}
+              {fullAddress || t('propertyReport.analyzingProperty')}
             </h3>
             {advancedExpenses ? (
               <div className="space-y-4 text-sm">
                 <div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
-                      <span className="text-gray-600">Prix demandé:</span>
+                      <span className="text-gray-600">{t('propertyReport.askingPrice')}:</span>
                       <div className="font-semibold">
                         {formatMoney(parseFloat(reportProperty.askingPrice) || 0)}
                       </div>
                     </div>
                     <div>
-                      <span className="text-gray-600">Prix d'achat:</span>
+                      <span className="text-gray-600">{t('propertyReport.purchasePrice')}:</span>
                       <div className="font-semibold">
                         {formatMoney(parseFloat(reportProperty.purchasePrice) || 0)}
                       </div>
                     </div>
                     <div>
-                      <span className="text-gray-600">Nb d'unités:</span>
+                      <span className="text-gray-600">{t('propertyReport.numberOfUnits')}:</span>
                       <div className="font-semibold">{reportProperty.numberOfUnits || 'N/A'}</div>
                     </div>
                     <div>
-                      <span className="text-gray-600">Prix par porte:</span>
+                      <span className="text-gray-600">{t('propertyReport.pricePerDoor')}:</span>
                       <div className="font-semibold">
                         {formatMoney(Math.round(reportAnalysis.pricePerUnit || 0))}
                       </div>
@@ -437,7 +438,7 @@ const PropertyReport = ({
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     {reportProperty.financingType !== 'private' && (
                     <div>
-                      <span className="text-gray-600">Revenus totaux:</span>
+                      <span className="text-gray-600">{t('propertyReport.totalRevenue')}:</span>
                       <div className="font-semibold">
                         {formatMoney(reportAnalysis.totalGrossRevenue)}
                       </div>
@@ -445,7 +446,7 @@ const PropertyReport = ({
                     )}
                     {reportProperty.financingType !== 'private' && (
                     <div>
-                      <span className="text-gray-600">Dépenses totales:</span>
+                      <span className="text-gray-600">{t('propertyReport.totalExpenses')}:</span>
                       <div className="font-semibold text-red-600">
                         {formatMoney(reportAnalysis.totalExpenses)}
                       </div>
@@ -453,7 +454,7 @@ const PropertyReport = ({
                     )}
                     {reportProperty.financingType !== 'private' && (
                     <div>
-                      <span className="text-gray-600">Service de la dette an 1:</span>
+                      <span className="text-gray-600">{t('propertyReport.debtServiceYear1')}:</span>
                       <div className="font-semibold text-red-600">
                         {formatMoney(reportAnalysis.annualDebtService)}
                       </div>
@@ -461,7 +462,7 @@ const PropertyReport = ({
                     )}
                     {reportProperty.financingType !== 'private' && (
                     <div>
-                      <span className="text-gray-600">Cash Flow:</span>
+                      <span className="text-gray-600">{t('propertyReport.cashFlow')}:</span>
                       <div className={`font-semibold ${reportAnalysis.cashFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                         {formatMoney(reportAnalysis.cashFlow)}
                       </div>
@@ -473,38 +474,38 @@ const PropertyReport = ({
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     {reportProperty.financingType !== 'private' && (
                     <div>
-                      <span className="text-gray-600">Financement:</span>
+                      <span className="text-gray-600">{t('propertyReport.financing')}:</span>
                       <div className="font-semibold">
-                        {reportProperty.financingType === 'conventional' && 'Conventionnel'}
-                        {reportProperty.financingType === 'cmhc' && 'SCHL'}
-                        {reportProperty.financingType === 'cmhc_aph' && `SCHL APH (${reportProperty.aphPoints} pts)`}
+                        {reportProperty.financingType === 'conventional' && t('propertyReport.financingType.conventional')}
+                        {reportProperty.financingType === 'cmhc' && t('propertyReport.financingType.cmhc')}
+                        {reportProperty.financingType === 'cmhc_aph' && `${t('propertyReport.financingType.cmhc_aph')} (${reportProperty.aphPoints} pts)`}
                       </div>
                     </div>
                     )}
                     {reportProperty.financingType !== 'private' && (
                     <div>
-                      <span className="text-gray-600">Prêt maximal:</span>
+                      <span className="text-gray-600">{t('propertyReport.maxLoan')}:</span>
                       <div className="font-semibold">{formatMoney(reportAnalysis.maxLoanAmount)}</div>
                     </div>
                     )}
                     {reportProperty.financingType === 'private' && (
                       <div>
-                      <span className="text-gray-600">Prêt octroyé:</span>
+                      <span className="text-gray-600">{t('propertyReport.loanGranted')}:</span>
                       <div className="font-semibold">{formatMoney(reportAnalysis.maxLoanAmount)}</div>
                     </div>
                     )}
                     {reportProperty.financingType === 'private' && (
                       <div>
-                        <span className="text-gray-600">Ratio prêt-valeur:</span>
+                        <span className="text-gray-600">{t('propertyReport.ltv')}:</span>
                         <div className="font-semibold">{formatPercent(reportAnalysis.loanValueRatio)}</div>
                       </div>
                     )}
                     <div>
-                      <span className="text-gray-600">Mise de fonds:</span>
+                      <span className="text-gray-600">{t('propertyReport.downPayment')}:</span>
                       <div className="font-semibold">{formatMoney(reportAnalysis.downPayment)}</div>
                     </div>
                     <div>
-                      <span className="text-gray-600">Investissement total:</span>
+                      <span className="text-gray-600">{t('propertyReport.totalInvestment')}:</span>
                       <div className="font-semibold">{formatMoney(reportAnalysis.totalInvestment)}</div>
                     </div>
                   </div>
@@ -515,23 +516,23 @@ const PropertyReport = ({
                 <div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
-                      <span className="text-gray-600">Prix d'achat:</span>
+                      <span className="text-gray-600">{t('propertyReport.purchasePrice')}:</span>
                       <div className="font-semibold">
                         {formatMoney(parseFloat(reportProperty.purchasePrice) || 0)}
                       </div>
                     </div>
                     <div>
-                      <span className="text-gray-600">Nom d'unités:</span>
+                      <span className="text-gray-600">{t('propertyReport.numberOfUnits')}:</span>
                       <div className="font-semibold">{reportProperty.numberOfUnits || 'N/A'}</div>
                     </div>
                     <div>
-                      <span className="text-gray-600">Prix par porte:</span>
+                      <span className="text-gray-600">{t('propertyReport.pricePerDoor')}:</span>
                       <div className="font-semibold">
                         {formatMoney(Math.round(reportAnalysis.pricePerUnit || 0))}
                       </div>
                     </div>
                     <div>
-                      <span className="text-gray-600">Loyer moyen par porte:</span>
+                      <span className="text-gray-600">{t('propertyReport.averageRentPerDoor')}:</span>
                       <div className="font-semibold">{formatMoney(averageRentPerDoor)}</div>
                     </div>
                   </div>
@@ -540,30 +541,30 @@ const PropertyReport = ({
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     {reportProperty.financingType !== 'private' && (
                     <div>
-                      <span className="text-gray-600">Financement:</span>
+                      <span className="text-gray-600">{t('propertyReport.financing')}:</span>
                       <div className="font-semibold">
-                        {reportProperty.financingType === 'conventional' && 'Conventionnel'}
-                        {reportProperty.financingType === 'cmhc' && 'SCHL'}
-                        {reportProperty.financingType === 'cmhc_aph' && `SCHL APH (${reportProperty.aphPoints} pts)`}
+                        {reportProperty.financingType === 'conventional' && t('propertyReport.financingType.conventional')}
+                        {reportProperty.financingType === 'cmhc' && t('propertyReport.financingType.cmhc')}
+                        {reportProperty.financingType === 'cmhc_aph' && `${t('propertyReport.financingType.cmhc_aph')} (${reportProperty.aphPoints} pts)`}
                       </div>
                     </div>
                     )}
                     <div>
-                      <span className="text-gray-600">Prêt maximal:</span>
+                      <span className="text-gray-600">{t('propertyReport.maxLoan')}:</span>
                       <div className="font-semibold">{formatMoney(reportAnalysis.maxLoanAmount)}</div>
                     </div>
                     {reportProperty.financingType === 'private' && (
                       <div>
-                        <span className="text-gray-600">Ratio prêt-valeur:</span>
+                        <span className="text-gray-600">{t('propertyReport.ltv')}:</span>
                         <div className="font-semibold">{formatPercent(reportAnalysis.loanValueRatio)}</div>
                       </div>
                     )}
                     <div>
-                      <span className="text-gray-600">Mise de fonds:</span>
+                      <span className="text-gray-600">{t('propertyReport.downPayment')}:</span>
                       <div className="font-semibold">{formatMoney(reportAnalysis.downPayment)}</div>
                     </div>
                     <div>
-                      <span className="text-gray-600">Investissement total:</span>
+                      <span className="text-gray-600">{t('propertyReport.totalInvestment')}:</span>
                       <div className="font-semibold">{formatMoney(reportAnalysis.totalInvestment)}</div>
                     </div>
                   </div>
@@ -590,28 +591,28 @@ const PropertyReport = ({
           </div>
 
           <div className="mb-8">
-            <h3 className="text-lg font-medium text-gray-700 mb-1">Rendements futurs</h3>
+            <h3 className="text-lg font-medium text-gray-700 mb-1">{t('propertyReport.futureReturns.title')}</h3>
             <p className="text-sm text-gray-500 mb-4">
-              Ajustez les hypothèses pour estimer les rendements après {returnYears} ans.
+              {t('propertyReport.futureReturns.desc1')} {returnYears} {t('propertyReport.futureReturns.desc2')}
             </p>
             <div className="mb-4">
-              <label className="block text-xs text-gray-500 mb-1">Sous-scénario</label>
+              <label className="block text-xs text-gray-500 mb-1">{t('propertyReport.subScenario')}</label>
               <select
                 value={selectedSubScenarioId}
                 onChange={(e) => setSelectedSubScenarioId(e.target.value)}
                 className="w-full px-2 py-1 border rounded"
               >
-                <option value="">Aucun</option>
+                <option value="">{t('propertyReport.none')}</option>
                 {subScenarios.map((s) => (
                   <option key={s.id} value={s.id}>
-                    {s.title || 'Sans titre'} ({typeLabels[s.type] || s.type})
+                    {s.title || t('propertyReport.untitled')} ({typeLabels[s.type] || s.type})
                   </option>
                 ))}
               </select>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Années</label>
+                <label className="block text-xs text-gray-500 mb-1">{t('propertyReport.years')}</label>
                 <input
                   type="number"
                   min="1"
@@ -621,12 +622,12 @@ const PropertyReport = ({
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Croissance des revenus (%)</label>
+                <label className="block text-xs text-gray-500 mb-1">{t('propertyReport.incomeGrowth')}</label>
                 {isOptimization ? (
                   <input
                     type="text"
                     disabled
-                    value="S/O"
+                    value={t('notApplicable')}
                     className="w-full px-2 py-1 border rounded bg-gray-100 text-center"
                   />
                 ) : (
@@ -643,12 +644,12 @@ const PropertyReport = ({
                 )}
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Croissance des dépenses (%)</label>
+                <label className="block text-xs text-gray-500 mb-1">{t('propertyReport.expenseGrowth')}</label>
                 {isOptimization ? (
                   <input
                     type="text"
                     disabled
-                    value="S/O"
+                    value={t('notApplicable')}
                     className="w-full px-2 py-1 border rounded bg-gray-100 text-center"
                   />
                 ) : (
@@ -665,12 +666,12 @@ const PropertyReport = ({
                 )}
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Appréciation de la valeur (%)</label>
+                <label className="block text-xs text-gray-500 mb-1">{t('propertyReport.valueAppreciation')}</label>
                 {isOptimization ? (
                   <input
                     type="text"
                     disabled
-                    value="S/O"
+                    value={t('notApplicable')}
                     className="w-full px-2 py-1 border rounded bg-gray-100 text-center"
                   />
                 ) : (
@@ -689,11 +690,11 @@ const PropertyReport = ({
             </div>
             <div className="flex items-center justify-center gap-6">
               <div className="text-center">
-                <p className="text-sm text-gray-500">Rendement global sur {returnYears} an(s)</p>
+                <p className="text-sm text-gray-500">{t('propertyReport.globalReturn.prefix')} {returnYears} {t('propertyReport.globalReturn.suffix')}</p>
                 <p className="font-semibold">{formatPercent(multiYearReturn)}</p>
               </div>
               <div className="text-center">
-                <p className="text-sm text-gray-500">Rendement annualisé</p>
+                <p className="text-sm text-gray-500">{t('propertyReport.annualizedReturn')}</p>
                 <p className="font-semibold">{formatPercent(multiYearAnnualized)}</p>
               </div>
               <div className="text-center relative">
@@ -702,11 +703,11 @@ const PropertyReport = ({
                   onClick={() => setShowIRRInfo(!showIRRInfo)}
                   className="text-sm text-gray-500 underline cursor-pointer"
                 >
-                  TRI à la {returnYears}e année
+                  {t('propertyReport.irrAtYear.prefix')} {returnYears}{t('propertyReport.irrAtYear.suffix')}
                 </button>
                 {showIRRInfo && (
                   <div className="absolute z-10 left-1/2 -translate-x-1/2 mt-2 w-64 p-2 bg-white border rounded shadow-lg text-xs text-gray-700">
-                    Le taux de rendement interne (TRI) est le taux d'actualisation qui rend la valeur actuelle nette de l'investissement nulle.
+                    {t('propertyReport.irrInfo')}
                   </div>
                 )}
                 <p className="font-semibold">{formatPercent(multiYearIRR)}</p>
@@ -726,7 +727,7 @@ const PropertyReport = ({
               }
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
-              Amortissement
+              {t('propertyReport.amortization')}
             </button>
             <button
               onClick={() =>
@@ -734,13 +735,13 @@ const PropertyReport = ({
               }
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
-              Nouveau scénario
+              {t('propertyReport.newScenario')}
             </button>
             <button
               onClick={handleGeneratePDF}
               className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
             >
-              Générer PDF
+              {t('propertyReport.generatePdf')}
             </button>
           </div>
 

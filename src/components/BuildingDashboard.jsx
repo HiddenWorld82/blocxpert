@@ -2,6 +2,7 @@
 import React from 'react';
 import { DollarSign, TrendingUp, BarChart, Building } from 'lucide-react';
 import ScenarioList from './ScenarioList';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const BuildingDashboard = ({
   property,
@@ -11,6 +12,8 @@ const BuildingDashboard = ({
   onEditProperty,
   onBack,
 }) => {
+  const { t } = useLanguage();
+
   const formatMoney = (value) =>
     new Intl.NumberFormat('fr-CA', {
       style: 'currency',
@@ -29,51 +32,51 @@ const BuildingDashboard = ({
 
   const stats = [
     {
-      label: "Prix d'Achat",
+      label: t('building.purchasePrice'),
       value: formatMoney(Number(property.purchasePrice)),
       icon: <DollarSign className="w-6 h-6 text-emerald-600" />,
     },
     {
-      label: "Nombre d'unités",
+      label: t('building.numberOfUnits'),
       value: property.numberOfUnits || '—',
       icon: <Building className="w-6 h-6 text-gray-600" />,
     },
     {
-      label: 'Prix par porte',
+      label: t('building.pricePerDoor'),
       value: pricePerDoorValue ? formatMoney(pricePerDoorValue) : 'N/A',
       icon: <DollarSign className="w-6 h-6 text-indigo-600" />,
     },
     {
-      label: 'Revenu brut',
+      label: t('building.grossIncome'),
       value: formatMoney(property.totalGrossRevenue),
       icon: <DollarSign className="w-6 h-6 text-green-600" />,
     },
     {
-      label: "Dépenses totales",
+      label: t('building.totalExpenses'),
       value: formatMoney(property.totalExpenses),
       icon: <DollarSign className="w-6 h-6 text-red-600" />,
     },
     {
-      label: 'Revenu net (NOI)',
+      label: t('building.netIncome'),
       value: formatMoney(property.netOperatingIncome),
       icon: <DollarSign className="w-6 h-6 text-purple-600" />,
     },
     {
-      label: 'MRB',
+      label: t('building.grm'),
       value: property.grossRentMultiplier
         ? property.grossRentMultiplier.toFixed(1)
         : '—',
       icon: <BarChart className="w-6 h-6 text-blue-600" />,
     },
     {
-      label: 'MRN',
+      label: t('building.nim'),
       value: property.netIncomeMultiplier
         ? property.netIncomeMultiplier.toFixed(1)
         : '—',
       icon: <BarChart className="w-6 h-6 text-purple-600" />,
     },
     {
-      label: 'TGA',
+      label: t('building.capRate'),
       value: formatPercent(property.capRate),
       icon: <TrendingUp className="w-6 h-6 text-orange-600" />,
     },
@@ -93,25 +96,25 @@ const BuildingDashboard = ({
       <div className="max-w-5xl mx-auto">
         <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
-            <h2 className="text-xl sm:text-2xl font-semibold">Tableau de bord de l'immeuble</h2>
+            <h2 className="text-xl sm:text-2xl font-semibold">{t('building.dashboard.title')}</h2>
             <div className="flex items-center gap-2 sm:gap-4 self-end sm:self-auto">
               <button
                 onClick={onEditProperty}
                 className="px-4 py-2 border rounded-lg hover:bg-gray-50 text-sm sm:text-base"
               >
-                Modifier
+                {t('edit')}
               </button>
               <button
                 onClick={onBack}
                 className="text-gray-600 hover:text-gray-800 text-sm sm:text-base"
               >
-                ← Retour
+                ← {t('back')}
               </button>
             </div>
           </div>
           <div className="mb-6">
             <h3 className="text-xl font-semibold">
-              {fullAddress || 'Adresse non spécifiée'}
+              {fullAddress || t('home.address.unset')}
             </h3>
           </div>
 
@@ -135,7 +138,7 @@ const BuildingDashboard = ({
               onClick={onCreateScenario}
               className="w-full sm:w-auto bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
             >
-              Créer Scénario de Financement
+              {t('building.createScenario')}
             </button>
           </div>
 
