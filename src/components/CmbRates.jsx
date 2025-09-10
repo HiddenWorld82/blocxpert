@@ -9,17 +9,38 @@ const CmbRates = () => {
   useEffect(() => {
     const fetchRates = async () => {
       const getRate = async (term) => {
-        const date = new Date();
-        date.setDate(date.getDate() - 1);
-        const formatted = date.toISOString().split('T')[0];
-        const url = `https://www.bankofcanada.ca/valet/observations/BD.CDN.${term}YR.DQ.YLD/json?start_date=${formatted}&end_date=${formatted}`;
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Network response was not ok');
-        const data = await response.json();
-        const obs = data?.observations?.[0];
+  // Essayez les 7 derniers jours ouvrables
+  for (let daysBack = 1; daysBack <= 7; daysBack++) {
+    const date = new Date();
+    date.setDate(date.getDate() - daysBack);
+    const formatted = date.toISOString().split('T')[0];
+    
+    const url = `https://www.bankofcanada.ca/valet/observations/BD.CDN.${term}YR.DQ.YLD/json?start_date=${formatted}&end_date=${formatted}`;
+    
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.warn(`Series BD.CDN.${term}YR.DQ.YLD not found`);
+          return undefined; // Cette série n'existe pas
+        }
+        continue; // Essayez la date suivante
+      }
+      
+      const data = await response.json();
+      const obs = data?.observations?.[0];
+      
+      if (obs) {
         const key = `BD.CDN.${term}YR.DQ.YLD`;
-        return obs ? obs[key] : undefined;
-      };
+        return obs[key]?.v;
+      }
+    } catch (error) {
+      console.error(`Error fetching ${term}YR for date ${formatted}:`, error);
+    }
+  }
+  
+  return undefined; // Aucune donnée trouvée
+};
 
       try {
         const [one, five, ten] = await Promise.all([
@@ -27,6 +48,7 @@ const CmbRates = () => {
           getRate('5'),
           getRate('10'),
         ]);
+        console.log('Results from Promise.all:', { one, five, ten });
         setRates({ one, five, ten });
         setError(false);
       } catch (e) {
