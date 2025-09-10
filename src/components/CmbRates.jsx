@@ -43,13 +43,13 @@ const CmbRates = () => {
 };
 
       try {
-        const [one, five, ten] = await Promise.all([
-          getRate('1'),
+        const [two, five, ten] = await Promise.all([
+          getRate('2'),
           getRate('5'),
           getRate('10'),
         ]);
-        console.log('Results from Promise.all:', { one, five, ten });
-        setRates({ one, five, ten });
+        console.log('Results from Promise.all:', { two, five, ten });
+        setRates({ two, five, ten });
         setError(false);
       } catch (e) {
         console.error('Failed to fetch CMB rates', e);
@@ -85,7 +85,7 @@ const CmbRates = () => {
     <div className="text-center text-sm text-gray-500 mt-2">
       <h3 className="font-medium">{t('home.cmb.title')}</h3>
       <p>
-        {t('home.cmb.oneYear')}: {formatRate(rates.one)}% |{' '}
+        {t('home.cmb.twoYear')}: {formatRate(rates.two)}% |{' '}
         {t('home.cmb.fiveYear')}: {formatRate(rates.five)}% |{' '}
         {t('home.cmb.tenYear')}: {formatRate(rates.ten)}%
       </p>
