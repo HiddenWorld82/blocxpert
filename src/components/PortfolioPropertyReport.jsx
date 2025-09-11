@@ -125,29 +125,36 @@ const PortfolioPropertyReport = ({ property, onClose }) => {
     .filter(Boolean)
     .join(', ');
 
-  const handleGeneratePDF = () => {
+  const handleGeneratePDF = async () => {
     if (!reportRef.current) return;
-    const printWindow = window.open('', '', 'height=800,width=600');
-    if (!printWindow) return;
 
-    // Copy style and link tags so the PDF keeps the app styling
     const styles = Array.from(
       document.querySelectorAll('link[rel="stylesheet"], style'),
     )
       .map((el) => el.outerHTML)
       .join('');
 
-    printWindow.document.write('<html><head><title>Rapport</title>');
-    printWindow.document.write(styles);
-    printWindow.document.write('</head><body class="p-4">');
-    printWindow.document.write(reportRef.current.innerHTML);
-    printWindow.document.write('</body></html>');
-    printWindow.document.close();
-    printWindow.focus();
-    setTimeout(() => {
-      printWindow.print();
-      printWindow.close();
-    }, 500);
+    const html = `<!doctype html><html><head>${styles}</head><body class="p-4">${reportRef.current.innerHTML}</body></html>`;
+
+    try {
+      const response = await fetch('http://localhost:3001/api/generate-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ html }),
+      });
+
+      if (!response.ok) throw new Error('Request failed');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'rapport.pdf';
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('PDF generation failed', err);
+    }
   };
 
   return (
