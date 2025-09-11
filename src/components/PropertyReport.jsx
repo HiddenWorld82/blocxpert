@@ -284,9 +284,16 @@ const PropertyReport = ({
     if (!currentProperty?.id) return;
     const unsub = getScenarios(currentProperty.id, (scs) => {
       const filtered = baseScenarioId
-        ? scs.filter((sc) => sc.parentScenarioId === baseScenarioId)
-        : scs;
+        ? scs.filter(
+            (sc) => sc.parentScenarioId === baseScenarioId && sc.type !== 'renewal',
+          )
+        : scs.filter((sc) => sc.type !== 'renewal');
       setSubScenarios(filtered);
+      setSelectedSubScenarioId((currentSelectedId) =>
+        filtered.some((sc) => sc.id === currentSelectedId)
+          ? currentSelectedId
+          : '',
+      );
     });
     return () => unsub && unsub();
   }, [currentProperty?.id, baseScenarioId]);
