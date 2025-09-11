@@ -127,16 +127,27 @@ const PortfolioPropertyReport = ({ property, onClose }) => {
 
   const handleGeneratePDF = () => {
     if (!reportRef.current) return;
-    const printContents = reportRef.current.innerHTML;
     const printWindow = window.open('', '', 'height=800,width=600');
     if (!printWindow) return;
+
+    // Copy style and link tags so the PDF keeps the app styling
+    const styles = Array.from(
+      document.querySelectorAll('link[rel="stylesheet"], style'),
+    )
+      .map((el) => el.outerHTML)
+      .join('');
+
     printWindow.document.write('<html><head><title>Rapport</title>');
-    printWindow.document.write('</head><body>');
-    printWindow.document.write(printContents);
+    printWindow.document.write(styles);
+    printWindow.document.write('</head><body class="p-4">');
+    printWindow.document.write(reportRef.current.innerHTML);
     printWindow.document.write('</body></html>');
     printWindow.document.close();
     printWindow.focus();
-    printWindow.print();
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 500);
   };
 
   return (
