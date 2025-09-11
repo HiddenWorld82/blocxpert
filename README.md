@@ -43,6 +43,18 @@ npm install @rollup/rollup-win32-x64-msvc
 2. Ajouter une application web pour obtenir les clés de configuration.
 3. Copier `.env.example` vers `.env` et y renseigner les clés Firebase et Google Maps.
 
+### 3. Configurer le serveur PDF (optionnel)
+
+Pour générer des rapports PDF via un serveur externe ou un tunnel (ex.: ngrok), définissez `VITE_PDF_URL` dans votre fichier `.env` :
+
+```bash
+VITE_PDF_URL=http://localhost:3001
+```
+
+Si la variable n'est pas définie, l'application utilisera l'origine du navigateur (`window.location.origin`).
+
+### 4. Lancer l'application
+
 ### 3. Lancer l'application
 
 ```bash

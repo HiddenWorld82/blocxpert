@@ -320,7 +320,8 @@ const PropertyReport = ({
     const html = `<!doctype html><html><head>${styles}</head><body class="p-4">${reportRef.current.innerHTML}</body></html>`;
 
     try {
-      const response = await fetch('http://localhost:3001/api/generate-pdf', {
+      const pdfUrl = `${import.meta.env.VITE_PDF_URL || window.location.origin}/api/generate-pdf`;
+      const response = await fetch(pdfUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ html }),
