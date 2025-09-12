@@ -124,7 +124,7 @@ const translations = {
     'propertyReport.globalReturn.suffix': 'year(s)',
     'propertyReport.annualizedReturn': 'Annualized return',
     'propertyReport.irrAtYear.prefix': 'IRR at year',
-    'propertyReport.irrAtYear.suffix': '',
+    'propertyReport.irrAtYear.suffix': ' ',
     'propertyReport.irrInfo': 'The internal rate of return (IRR) is the discount rate that makes the net present value of the investment zero.',
     'propertyReport.amortization': 'Amortization',
     'propertyReport.newScenario': 'New scenario',
