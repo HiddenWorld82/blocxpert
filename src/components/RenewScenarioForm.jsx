@@ -1,12 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import FormattedNumberInput, {
-  parseLocaleNumber,
   formatPercentage,
 } from "./FormattedNumberInput";
 import KeyIndicators from "./sections/KeyIndicators";
 import FinancialSummary from "./sections/FinancialSummary";
 import FinancingSummary from "./sections/FinancingSummary";
-import calculateRentability from "../utils/calculateRentability";
+import calculateRenewScenario from "../utils/calculateRenewScenario";
 import { getScenarios, saveScenario, updateScenario } from "../services/dataService";
 import { useLanguage } from "../contexts/LanguageContext";
 
@@ -75,251 +74,16 @@ export default function RenewScenarioForm({
     }
   }, [scenario.financing.term, scenario.financing.mortgageRate]);
 
-  const parentProperty = useMemo(() => {
-    if (!property) return null;
-    if (!parentScenario) return property;
-    return {
-      ...property,
-      ...parentScenario.financing,
-      ...parentScenario.acquisitionCosts,
-    };
-  }, [property, parentScenario]);
-
-  const parentAnalysis = useMemo(() => {
-    if (!parentProperty) return null;
-    return calculateRentability(parentProperty, advancedExpenses);
-  }, [parentProperty, advancedExpenses]);
-
-  const { existingLoanBalance, existingLoanPrincipal } = useMemo(() => {
-    if (!parentAnalysis)
-      return { existingLoanBalance: 0, existingLoanPrincipal: 0 };
-    const principal = parentAnalysis.maxLoanAmount || 0;
-    const totalLoanAmount = parentAnalysis.totalLoanAmount || principal;
-    const mortgageRate = (parseFloat(parentProperty?.mortgageRate) || 0) / 100;
-    const monthlyRate = Math.pow(1 + mortgageRate / 2, 1 / 6) - 1;
-    const amortizationYears = parseInt(parentProperty?.amortization) || 25;
-    const totalPayments = amortizationYears * 12;
-    const paymentsMade = Math.min(
-      (parseInt(parentProperty?.term) || 0) * 12,
-      totalPayments,
-    );
-    if (monthlyRate <= 0)
-      return {
-        existingLoanBalance: totalLoanAmount,
-        existingLoanPrincipal: principal,
-      };
-    const balance =
-      totalLoanAmount *
-      (Math.pow(1 + monthlyRate, totalPayments) -
-        Math.pow(1 + monthlyRate, paymentsMade)) /
-      (Math.pow(1 + monthlyRate, totalPayments) - 1);
-    const factor = balance / totalLoanAmount;
-    return {
-      existingLoanBalance: balance,
-      existingLoanPrincipal: principal * factor,
-    };
-  }, [parentAnalysis, parentProperty]);
-
-  const remainingAmortization = useMemo(() => {
-    const amort = parseInt(parentProperty?.amortization) || 25;
-    const term = parseInt(parentProperty?.term) || 0;
-    return Math.max(amort - term, 0);
-  }, [parentProperty]);
-
-  const analysisProperty = useMemo(() => {
-    if (!property) return null;
-    const revenuePct =
-      (parseFloat(parseLocaleNumber(scenario.revenueGrowthPct)) || 0) / 100;
-    const expensePct =
-      (parseFloat(parseLocaleNumber(scenario.expenseGrowthPct)) || 0) / 100;
-    const appreciationPct =
-      (parseFloat(parseLocaleNumber(scenario.valueAppreciationPct)) || 0) / 100;
-    const termYears = parseInt(parentScenario?.financing?.term) || 0;
-    const revenueFactor = Math.pow(1 + revenuePct, Math.max(termYears, 0));
-    const expenseFactor = Math.pow(1 + expensePct, Math.max(termYears, 0));
-    const purchasePrice = parseFloat(property.purchasePrice) || 0;
-    const marketValue =
-      purchasePrice * Math.pow(1 + appreciationPct, Math.max(termYears, 0));
-    const revenueFields = [
-      "annualRent",
-      "parkingRevenue",
-      "internetRevenue",
-      "storageRevenue",
-      "otherRevenue",
-    ];
-    const expenseFields = [
-      "municipalTaxes",
-      "schoolTaxes",
-      "insurance",
-      "electricityHeating",
-      "maintenance",
-      "concierge",
-      "operatingExpenses",
-      "otherExpenses",
-      "heating",
-      "electricity",
-      "landscaping",
-      "snowRemoval",
-      "extermination",
-      "fireInspection",
-      "advertising",
-      "legal",
-      "accounting",
-      "elevator",
-      "cableInternet",
-      "appliances",
-      "garbage",
-      "washerDryer",
-      "hotWater",
-    ];
-    const scaled = {};
-    revenueFields.forEach((field) => {
-      const value = parseFloat(property[field]);
-      if (!isNaN(value)) {
-        scaled[field] = value * revenueFactor;
-      }
-    });
-    expenseFields.forEach((field) => {
-      const value = parseFloat(property[field]);
-      if (!isNaN(value)) {
-        scaled[field] = value * expenseFactor;
-      }
-    });
-    const acquisitionCostFields = [
-      "inspection",
-      "environmental1",
-      "environmental2",
-      "environmental3",
-      "otherFees",
-      "appraiser",
-      "notary",
-      "renovations",
-      "cmhcAnalysis",
-      "cmhcTax",
-      "welcomeTax",
-      "expertises",
-    ];
-    const propertyWithoutCosts = { ...property };
-    acquisitionCostFields.forEach((field) => {
-      delete propertyWithoutCosts[field];
-    });
-    return { ...propertyWithoutCosts, ...scaled, purchasePrice: marketValue };
-  }, [
-    property,
-    scenario.revenueGrowthPct,
-    scenario.expenseGrowthPct,
-    scenario.valueAppreciationPct,
-    parentScenario?.financing?.term,
-  ]);
-
-  const combinedFinancing = useMemo(() => {
-    const parentFin = parentScenario?.financing || {};
-    const mortgageRate =
-      scenario.financing.mortgageRate || parentFin.mortgageRate || "";
-    return {
-      ...parentFin,
-      ...scenario.financing,
-      mortgageRate,
-      qualificationRate: mortgageRate,
-      amortization: remainingAmortization.toString(),
-    };
-  }, [parentScenario?.financing, scenario.financing, remainingAmortization]);
-
-  const combinedProperty = useMemo(() => {
-    if (!analysisProperty) return null;
-    return {
-      ...analysisProperty,
-      ...combinedFinancing,
-    };
-  }, [analysisProperty, combinedFinancing]);
-
-  const baseAnalysis = useMemo(() => {
-    if (!combinedProperty) return null;
-    return calculateRentability(combinedProperty, advancedExpenses, {
-      initialLoanAmount: ["cmhc", "cmhc_aph"].includes(parentProperty?.financingType)
-        ? existingLoanBalance
-        : 0,
-    });
-  }, [
-    combinedProperty,
-    advancedExpenses,
-    existingLoanBalance,
-    parentProperty?.financingType,
-  ]);
-
-  const analysis = useMemo(() => {
-    if (!baseAnalysis) return null;
-    const mortgageRate =
-      (parseFloat(combinedFinancing.mortgageRate) || 0) / 100;
-    const monthlyRate = Math.pow(1 + mortgageRate / 2, 1 / 6) - 1;
-    const totalPayments =
-      (parseInt(combinedFinancing.amortization) || 0) * 12;
-    const totalLoanAmount = existingLoanBalance;
-    const monthlyPayment =
-      totalLoanAmount > 0 && monthlyRate > 0
-        ? (totalLoanAmount *
-            (monthlyRate * Math.pow(1 + monthlyRate, totalPayments))) /
-          (Math.pow(1 + monthlyRate, totalPayments) - 1)
-        : 0;
-    const annualDebtService = monthlyPayment * 12;
-    const cashFlow = baseAnalysis.effectiveNetIncome - annualDebtService;
-    const purchasePrice =
-      parseFloat(analysisProperty?.purchasePrice) || 0;
-    const downPayment = purchasePrice - existingLoanBalance;
-    const totalInvestment = downPayment + baseAnalysis.acquisitionCosts;
-    let principalPaidYear1 = 0;
-    if (monthlyPayment > 0) {
-      let balance = totalLoanAmount;
-      for (let i = 0; i < 12; i++) {
-        const interest = balance * monthlyRate;
-        const principal = monthlyPayment - interest;
-        principalPaidYear1 += principal;
-        balance -= principal;
-      }
-    }
-    const loanPaydownReturn =
-      totalInvestment > 0 ? (principalPaidYear1 / totalInvestment) * 100 : 0;
-    const appreciationRate =
-      (parseFloat(parseLocaleNumber(scenario.valueAppreciationPct)) || 0) /
-      100;
-    const appreciationReturn =
-      totalInvestment > 0
-        ? ((purchasePrice * appreciationRate) / totalInvestment) * 100
-        : 0;
-    const cashOnCashReturn =
-      totalInvestment > 0 ? (cashFlow / totalInvestment) * 100 : 0;
-    const totalReturn =
-      cashOnCashReturn + loanPaydownReturn + appreciationReturn;
-    const valueGeneratedYear1 =
-      cashFlow + principalPaidYear1 + purchasePrice * appreciationRate;
-    const loanValueRatio =
-      purchasePrice > 0 ? (totalLoanAmount / purchasePrice) * 100 : 0;
-    return {
-      ...baseAnalysis,
-      maxLoanAmount: existingLoanPrincipal,
-      totalLoanAmount,
-      cmhcPremium: 0,
-      monthlyPayment,
-      annualDebtService,
-      cashFlow,
-      downPayment,
-      totalInvestment,
-      loanValueRatio,
-      cashOnCashReturn,
-      loanPaydownReturn,
-      appreciationReturn,
-      totalReturn,
-      valueGeneratedYear1,
-    };
-  }, [
-    baseAnalysis,
-    combinedFinancing.mortgageRate,
-    combinedFinancing.amortization,
-    existingLoanBalance,
-    existingLoanPrincipal,
-    analysisProperty?.purchasePrice,
-    scenario.valueAppreciationPct,
-  ]);
+  const { analysisProperty, combinedFinancing, analysis } = useMemo(
+    () =>
+      calculateRenewScenario(
+        scenario,
+        property,
+        parentScenario,
+        advancedExpenses,
+      ),
+    [scenario, property, parentScenario, advancedExpenses],
+  );
 
   const handleSave = async () => {
     const { id, marketValue, netIncomeIncreasePct, ...dataWithoutId } = scenario;

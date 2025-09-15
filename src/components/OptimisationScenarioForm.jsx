@@ -7,8 +7,7 @@ import FormattedNumberInput, { parseLocaleNumber } from "./FormattedNumberInput"
 import KeyIndicators from "./sections/KeyIndicators";
 import FinancialSummary from "./sections/FinancialSummary";
 import FinancingSummary from "./sections/FinancingSummary";
-import calculateRentability from "../utils/calculateRentability";
-import { getAphMaxLtvRatio } from "../utils/cmhc";
+import calculateOptimisationScenario from "../utils/calculateOptimisationScenario";
 import { getScenarios, saveScenario, updateScenario } from "../services/dataService";
 import defaultProperty from "../defaults/defaultProperty";
 import { useLanguage } from "../contexts/LanguageContext";
@@ -158,132 +157,16 @@ export default function OptimisationScenarioForm({
     lastMarketValueEstimateRef.current = estimated;
   }, [scenario.refinanceYears, property?.purchasePrice]);
 
-  const analysisProperty = useMemo(() => {
-    if (!property) return null;
-    const overrides = { ...scenario.revenue, ...scenario.operatingExpenses };
-    const marketValue =
-      parseFloat(parseLocaleNumber(scenario.marketValue)) ||
-      0;
-
-      return {
-      ...defaultProperty,
-      numberOfUnits: property.numberOfUnits,
-      purchasePrice: marketValue,
-      ...overrides,
-    };
-  }, [
-    property,
-    scenario.revenue,
-    scenario.operatingExpenses,
-    scenario.marketValue,
-  ]);
-
-  const combinedProperty = useMemo(() => {
-    if (!analysisProperty) return null;
-    return {
-      ...analysisProperty,
-      ...scenario.financing,
-      ...scenario.financingFees,
-      ignoreLTV: true,
-    };
-  }, [analysisProperty, scenario.financing, scenario.financingFees]);
-
-
-  const parentProperty = useMemo(() => {
-    if (!property) return null;
-    if (!parentScenario) return property;
-    return {
-      ...property,
-      ...parentScenario.financing,
-      ...parentScenario.acquisitionCosts,
-    };
-  }, [property, parentScenario]);
-
-  const parentAnalysis = useMemo(() => {
-    if (!parentProperty) return null;
-    return calculateRentability(parentProperty, advancedExpenses);
-  }, [parentProperty, advancedExpenses]);
-
-  const existingLoanBalance = useMemo(() => {
-    if (!parentAnalysis) return 0;
-
-    const principal = parentAnalysis.maxLoanAmount || 0;
-    // Recalculate initial CMHC premium from scratch
-    let premium = 0;
-    if (["cmhc", "cmhc_aph"].includes(parentProperty?.financingType)) {
-      const purchasePrice = parseFloat(parentProperty?.purchasePrice) || 0;
-      const ltvRatio = purchasePrice > 0 ? (principal / purchasePrice) * 100 : 0;
-
-      const standardRates = [
-        { ltv: 65, rate: 0.026 },
-        { ltv: 70, rate: 0.0285 },
-        { ltv: 75, rate: 0.0335 },
-        { ltv: 80, rate: 0.0435 },
-        { ltv: 85, rate: 0.0535 },
-      ];
-
-      const points = parseInt(parentProperty?.aphPoints) || 0;
-      const effectiveLtv =
-        parentProperty.financingType === "cmhc_aph"
-          ? Math.min(ltvRatio, getAphMaxLtvRatio(points) * 100)
-          : ltvRatio;
-
-      let premiumRate = 0;
-      if (parentProperty.financingType === "cmhc_aph" && effectiveLtv > 85) {
-        premiumRate = effectiveLtv <= 90 ? 0.059 : 0.0615;
-      } else {
-        const bracket = standardRates.find((b) => effectiveLtv <= b.ltv);
-        premiumRate = bracket?.rate || standardRates.at(-1).rate;
-      }
-
-      const amortizationYears = parseInt(parentProperty?.amortization) || 25;
-      if (amortizationYears > 25) {
-        premiumRate += ((amortizationYears - 25) / 5) * 0.0025;
-      }
-
-      if (parentProperty.financingType === "cmhc_aph") {
-        const rebate =
-          points >= 100 ? 0.3 : points >= 70 ? 0.2 : points >= 50 ? 0.1 : 0;
-        premiumRate *= 1 - rebate;
-      }
-
-      premium = principal * premiumRate;
-    }
-
-    const totalLoanAmount = principal + premium;
-    const mortgageRate = (parseFloat(parentProperty?.mortgageRate) || 0) / 100;
-    const monthlyRate = Math.pow(1 + mortgageRate / 2, 1 / 6) - 1;
-    const amortizationYears = parseInt(parentProperty?.amortization) || 25;
-    const totalPayments = amortizationYears * 12;
-    const paymentsMade = Math.min(
-      (parseFloat(parseLocaleNumber(scenario.refinanceYears)) || 0) * 12,
-      totalPayments,
-    );
-    if (monthlyRate <= 0) return totalLoanAmount;
-    const balance =
-      totalLoanAmount *
-      (Math.pow(1 + monthlyRate, totalPayments) -
-        Math.pow(1 + monthlyRate, paymentsMade)) /
-      (Math.pow(1 + monthlyRate, totalPayments) - 1);
-    const factor = balance / totalLoanAmount;
-    return balance;
-  }, [parentAnalysis, parentProperty, scenario.refinanceYears]);
-
-  const analysis = useMemo(() => {
-    if (!combinedProperty) return null;
-    return calculateRentability(combinedProperty, advancedExpenses, {
-      initialLoanAmount: ["cmhc", "cmhc_aph"].includes(parentProperty?.financingType)
-        ? existingLoanBalance
-        : 0,
-    });
-  }, [
-    combinedProperty,
-    advancedExpenses,
-    existingLoanBalance,
-    parentProperty?.financingType,
-  ]);
-
-  const cmhcPremium = analysis?.cmhcPremium || 0;
+  const { analysisProperty, analysis, equityWithdrawal } = useMemo(
+    () =>
+      calculateOptimisationScenario(
+        scenario,
+        property,
+        parentScenario,
+        advancedExpenses,
+      ),
+    [scenario, property, parentScenario, advancedExpenses],
+  );
 
   useEffect(() => {
     const financingType = scenario.financing.financingType;
@@ -327,15 +210,6 @@ export default function OptimisationScenarioForm({
       }));
     }
   }, [analysis?.cmhcTax, scenario.financing.financingType, scenario.financingFees.cmhcTax]);
-
-  const equityWithdrawal = useMemo(() => {
-  if (!analysis) return 0;
-  return (
-    analysis.maxLoanAmount -
-    existingLoanBalance -
-    computeTotalFees()
-  );
-}, [analysis, existingLoanBalance, scenario.financingFees, cmhcPremium]);
 
   const isEquityNegative = equityWithdrawal < 0;
 
