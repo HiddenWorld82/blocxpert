@@ -1,0 +1,58 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import calculateOptimisationScenario from './calculateOptimisationScenario.js';
+
+const baseProperty = {
+  purchasePrice: 1_000_000,
+  annualRent: 200_000,
+  vacancyRate: 0,
+  municipalTaxes: 0,
+  schoolTaxes: 0,
+  insurance: 0,
+  maintenance: 0,
+  managementRate: 0,
+  concierge: 0,
+  electricityHeating: 0,
+  otherExpenses: 0,
+  financingType: 'conventional',
+  debtCoverageRatio: 1.1,
+  mortgageRate: 5,
+  qualificationRate: 5,
+  amortization: 25,
+  numberOfUnits: 1,
+};
+
+test('calculateOptimisationScenario adjusts equity with fees', () => {
+  const baseScenario = {
+    marketValue: '1200000',
+    revenue: {},
+    operatingExpenses: {},
+    financing: {
+      financingType: 'conventional',
+      mortgageRate: '5',
+      qualificationRate: '5',
+      amortization: '25',
+      debtCoverageRatio: '1.1',
+    },
+    refinanceYears: '0',
+  };
+
+  const noFees = calculateOptimisationScenario(
+    { ...baseScenario, financingFees: {} },
+    baseProperty,
+    null,
+    false,
+  );
+
+  const withFees = calculateOptimisationScenario(
+    { ...baseScenario, financingFees: { other: '1000' } },
+    baseProperty,
+    null,
+    false,
+  );
+
+  assert.equal(noFees.analysisProperty.purchasePrice, 1_200_000);
+  assert.ok(
+    Math.abs(noFees.equityWithdrawal - withFees.equityWithdrawal - 1000) < 1e-6,
+  );
+});
