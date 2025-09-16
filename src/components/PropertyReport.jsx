@@ -14,6 +14,7 @@ import calculateRentability from '../utils/calculateRentability';
 import calculateReturnAfterYears from '../utils/calculateReturnAfterYears';
 import { getScenarios } from '../services/dataService';
 import { getAphMaxLtvRatio } from '../utils/cmhc';
+import calculateOptimisationScenario from '../utils/calculateOptimisationScenario';
 
 const PropertyReport = ({
   currentProperty,
@@ -80,6 +81,7 @@ const PropertyReport = ({
   const [incomeGrowth, setIncomeGrowth] = useState(2);
   const [expenseGrowth, setExpenseGrowth] = useState(2.5);
   const [valueGrowth, setValueGrowth] = useState(3);
+  const [allScenarios, setAllScenarios] = useState([]);
   const [subScenarios, setSubScenarios] = useState([]);
   const [selectedSubScenarioId, setSelectedSubScenarioId] = useState('');
   const selectedSubScenario = useMemo(
@@ -231,12 +233,21 @@ const PropertyReport = ({
         initialLoanAmount,
       });
     } else if (selectedSubScenario.type === 'optimization') {
-      const scenarioProperty = {
-        ...currentProperty,
-        ...selectedSubScenario.revenue,
-        ...selectedSubScenario.operatingExpenses,
-      };
-      return calculateRentability(scenarioProperty, advancedExpenses);
+      const parentScenario = selectedSubScenario.parentScenarioId
+        ? allScenarios.find(
+            (sc) => sc.id === selectedSubScenario.parentScenarioId,
+          ) ||
+          (scenario?.id === selectedSubScenario.parentScenarioId ? scenario : null)
+        : scenario || null;
+
+      const { analysis } = calculateOptimisationScenario(
+        selectedSubScenario,
+        currentProperty,
+        parentScenario,
+        advancedExpenses,
+      );
+
+      return analysis;
     }
     return null;
   }, [
@@ -244,6 +255,8 @@ const PropertyReport = ({
     currentProperty,
     reportAnalysis,
     advancedExpenses,
+    allScenarios,
+    scenario,
   ]);
   const [showIRRInfo, setShowIRRInfo] = useState(false);
   const {
@@ -283,6 +296,7 @@ const PropertyReport = ({
   useEffect(() => {
     if (!currentProperty?.id) return;
     const unsub = getScenarios(currentProperty.id, (scs) => {
+      setAllScenarios(scs);
       const filtered = baseScenarioId
         ? scs.filter(
             (sc) => sc.parentScenarioId === baseScenarioId && sc.type !== 'renewal',
