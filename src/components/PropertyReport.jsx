@@ -12,6 +12,7 @@ import RenewScenarioForm from './RenewScenarioForm';
 import OptimisationScenarioForm from './OptimisationScenarioForm';
 import calculateRentability from '../utils/calculateRentability';
 import calculateReturnAfterYears from '../utils/calculateReturnAfterYears';
+import calculateOptimisationScenario from '../utils/calculateOptimisationScenario';
 import { getScenarios } from '../services/dataService';
 import { getAphMaxLtvRatio } from '../utils/cmhc';
 
@@ -231,12 +232,21 @@ const PropertyReport = ({
         initialLoanAmount,
       });
     } else if (selectedSubScenario.type === 'optimization') {
-      const scenarioProperty = {
-        ...currentProperty,
-        ...selectedSubScenario.revenue,
-        ...selectedSubScenario.operatingExpenses,
-      };
-      return calculateRentability(scenarioProperty, advancedExpenses);
+      const parentScenario =
+        (scenario &&
+          (scenario.id === selectedSubScenario.parentScenarioId ||
+            scenario.parentScenarioId === selectedSubScenario.parentScenarioId))
+          ? scenario
+          : subScenarios.find(
+              (sc) => sc.id === selectedSubScenario.parentScenarioId,
+            );
+      const { analysis } = calculateOptimisationScenario(
+        selectedSubScenario,
+        currentProperty,
+        parentScenario,
+        advancedExpenses,
+      );
+      return analysis;
     }
     return null;
   }, [
@@ -244,6 +254,8 @@ const PropertyReport = ({
     currentProperty,
     reportAnalysis,
     advancedExpenses,
+    scenario,
+    subScenarios,
   ]);
   const [showIRRInfo, setShowIRRInfo] = useState(false);
   const {
