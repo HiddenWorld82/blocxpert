@@ -17,8 +17,30 @@ export default function calculateOptimisationScenario(
   const marketValue =
     parseFloat(parseLocaleNumber(scenario.marketValue)) || 0;
 
+  const acquisitionCostFields = [
+    'inspection',
+    'environmental1',
+    'environmental2',
+    'environmental3',
+    'otherFees',
+    'appraiser',
+    'notary',
+    'renovations',
+    'cmhcAnalysis',
+    'cmhcTax',
+    'welcomeTax',
+    'expertises',
+    'workCost',
+  ];
+
+  const propertyWithoutCosts = { ...property };
+  acquisitionCostFields.forEach((field) => {
+    delete propertyWithoutCosts[field];
+  });
+
   const analysisProperty = {
     ...defaultProperty,
+    ...propertyWithoutCosts,
     numberOfUnits: property.numberOfUnits,
     purchasePrice: marketValue,
     ...overrides,

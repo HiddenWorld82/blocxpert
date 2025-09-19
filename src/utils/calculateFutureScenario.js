@@ -19,8 +19,9 @@ export default function calculateFutureScenario(
   const appreciationPct =
     (parseFloat(parseLocaleNumber(scenario.valueAppreciationPct)) || 0) / 100;
   const years = parseFloat(parseLocaleNumber(scenario.refinanceYears)) || 0;
-  const revenueFactor = Math.pow(1 + revenuePct, Math.max(years, 0));
-  const expenseFactor = Math.pow(1 + expensePct, Math.max(years, 0));
+  const projectionYears = Math.max(years, 0) + 1;
+  const revenueFactor = Math.pow(1 + revenuePct, projectionYears);
+  const expenseFactor = Math.pow(1 + expensePct, projectionYears);
   const purchasePrice = parseFloat(property.purchasePrice) || 0;
   const marketValue =
     parseFloat(parseLocaleNumber(scenario.marketValue)) ||

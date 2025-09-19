@@ -56,3 +56,30 @@ test('calculateOptimisationScenario adjusts equity with fees', () => {
     Math.abs(noFees.equityWithdrawal - withFees.equityWithdrawal - 1000) < 1e-6,
   );
 });
+
+test('calculateOptimisationScenario keeps existing property performance when not overridden', () => {
+  const scenario = {
+    marketValue: '1200000',
+    revenue: {},
+    operatingExpenses: {},
+    financing: {
+      financingType: 'conventional',
+      mortgageRate: '5',
+      qualificationRate: '5',
+      amortization: '25',
+      debtCoverageRatio: '1.1',
+    },
+    financingFees: {},
+    refinanceYears: '0',
+  };
+
+  const { analysisProperty, analysis } = calculateOptimisationScenario(
+    scenario,
+    baseProperty,
+    null,
+    false,
+  );
+
+  assert.equal(analysisProperty.annualRent, baseProperty.annualRent);
+  assert.ok(analysis.totalGrossRevenue > 0);
+});
