@@ -125,3 +125,4 @@ test('calculateFutureScenario retains revenues when property fields use locale f
   assert.ok(analysis.totalGrossRevenue > 0);
   assert.ok(analysis.netOperatingIncome > 0);
 });
+
