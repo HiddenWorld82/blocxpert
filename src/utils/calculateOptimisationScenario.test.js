@@ -56,3 +56,64 @@ test('calculateOptimisationScenario adjusts equity with fees', () => {
     Math.abs(noFees.equityWithdrawal - withFees.equityWithdrawal - 1000) < 1e-6,
   );
 });
+
+test('calculateOptimisationScenario keeps existing property performance when not overridden', () => {
+  const scenario = {
+    marketValue: '1200000',
+    revenue: {},
+    operatingExpenses: {},
+    financing: {
+      financingType: 'conventional',
+      mortgageRate: '5',
+      qualificationRate: '5',
+      amortization: '25',
+      debtCoverageRatio: '1.1',
+    },
+    financingFees: {},
+    refinanceYears: '0',
+  };
+
+  const { analysisProperty, analysis } = calculateOptimisationScenario(
+    scenario,
+    baseProperty,
+    null,
+    false,
+  );
+
+  assert.equal(analysisProperty.annualRent, baseProperty.annualRent);
+  assert.ok(analysis.totalGrossRevenue > 0);
+});
+
+test('calculateOptimisationScenario preserves numeric strings with locale formatting', () => {
+  const scenario = {
+    marketValue: '1 200 000',
+    revenue: {},
+    operatingExpenses: {},
+    financing: {
+      financingType: 'conventional',
+      mortgageRate: '5,25',
+      qualificationRate: '5,25',
+      amortization: '25',
+      debtCoverageRatio: '1,1',
+    },
+    financingFees: {},
+    refinanceYears: '0',
+  };
+
+  const property = {
+    ...baseProperty,
+    purchasePrice: '950 000',
+    annualRent: '200 000',
+    municipalTaxes: '5 000',
+  };
+
+  const { analysis } = calculateOptimisationScenario(
+    scenario,
+    property,
+    null,
+    false,
+  );
+
+  assert.ok(analysis.totalGrossRevenue > 0);
+  assert.ok(analysis.netOperatingIncome > 0);
+});

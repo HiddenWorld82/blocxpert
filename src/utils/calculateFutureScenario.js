@@ -1,6 +1,59 @@
 import calculateRentability from './calculateRentability.js';
 import parseLocaleNumber from './parseLocaleNumber.js';
+import defaultProperty from '../defaults/defaultProperty.js';
 import { getAphMaxLtvRatio } from './cmhc.js';
+
+const numericLikePattern = /^-?[\d\s.,$()%]+$/;
+
+function mergeNumericValues(target, source, { removeEmpty = false } = {}) {
+  Object.entries(source || {}).forEach(([key, value]) => {
+    if (value === undefined || value === null) {
+      if (!removeEmpty) {
+        target[key] = value;
+      }
+      return;
+    }
+
+    if (typeof value === 'number') {
+      target[key] = value;
+      return;
+    }
+
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (trimmed === '') {
+        if (!removeEmpty) {
+          target[key] = '';
+        }
+        return;
+      }
+
+      if (numericLikePattern.test(trimmed)) {
+        const normalized = parseLocaleNumber(value).replace(/[()]/g, '');
+        if (normalized === '') {
+          if (!removeEmpty) {
+            target[key] = '';
+          }
+          return;
+        }
+
+        const isNegative = trimmed.startsWith('(') && trimmed.endsWith(')');
+        const numeric = Number(normalized);
+        if (!Number.isNaN(numeric)) {
+          target[key] = isNegative ? -numeric : numeric;
+          return;
+        }
+      }
+
+      target[key] = value;
+      return;
+    }
+
+    target[key] = value;
+  });
+
+  return target;
+}
 
 export default function calculateFutureScenario(
   scenario,
@@ -19,9 +72,10 @@ export default function calculateFutureScenario(
   const appreciationPct =
     (parseFloat(parseLocaleNumber(scenario.valueAppreciationPct)) || 0) / 100;
   const years = parseFloat(parseLocaleNumber(scenario.refinanceYears)) || 0;
-  const revenueFactor = Math.pow(1 + revenuePct, Math.max(years, 0));
-  const expenseFactor = Math.pow(1 + expensePct, Math.max(years, 0));
-  const purchasePrice = parseFloat(property.purchasePrice) || 0;
+  const projectionYears = Math.max(years, 0) + 1;
+  const revenueFactor = Math.pow(1 + revenuePct, projectionYears);
+  const expenseFactor = Math.pow(1 + expensePct, projectionYears);
+  const purchasePrice = Number(parseLocaleNumber(property.purchasePrice)) || 0;
   const marketValue =
     parseFloat(parseLocaleNumber(scenario.marketValue)) ||
     purchasePrice * Math.pow(1 + appreciationPct, Math.max(years, 0));
@@ -61,14 +115,22 @@ export default function calculateFutureScenario(
 
   const scaled = {};
   revenueFields.forEach((field) => {
-    const value = parseFloat(property[field]);
-    if (!isNaN(value)) {
+    const normalized = parseLocaleNumber(property[field]);
+    if (normalized === '') {
+      return;
+    }
+    const value = Number(normalized);
+    if (!Number.isNaN(value)) {
       scaled[field] = value * revenueFactor;
     }
   });
   expenseFields.forEach((field) => {
-    const value = parseFloat(property[field]);
-    if (!isNaN(value)) {
+    const normalized = parseLocaleNumber(property[field]);
+    if (normalized === '') {
+      return;
+    }
+    const value = Number(normalized);
+    if (!Number.isNaN(value)) {
       scaled[field] = value * expenseFactor;
     }
   });
@@ -92,16 +154,29 @@ export default function calculateFutureScenario(
     delete propertyWithoutCosts[field];
   });
 
+  const basePropertyValues = mergeNumericValues({}, propertyWithoutCosts);
+  const parsedUnits = Number(parseLocaleNumber(property.numberOfUnits));
   const analysisProperty = {
-    ...propertyWithoutCosts,
+    ...defaultProperty,
+    ...basePropertyValues,
+    numberOfUnits:
+      basePropertyValues.numberOfUnits ??
+      (!Number.isNaN(parsedUnits) ? parsedUnits : property.numberOfUnits),
     ...scaled,
     purchasePrice: marketValue,
   };
 
+  const financing = mergeNumericValues({}, scenario.financing, {
+    removeEmpty: true,
+  });
+  const financingFees = mergeNumericValues({}, scenario.financingFees, {
+    removeEmpty: true,
+  });
+
   const combinedProperty = {
     ...analysisProperty,
-    ...scenario.financing,
-    ...scenario.financingFees,
+    ...financing,
+    ...financingFees,
     ignoreLTV: true,
   };
 

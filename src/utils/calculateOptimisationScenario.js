@@ -3,6 +3,58 @@ import parseLocaleNumber from './parseLocaleNumber.js';
 import defaultProperty from '../defaults/defaultProperty.js';
 import { getAphMaxLtvRatio } from './cmhc.js';
 
+const numericLikePattern = /^-?[\d\s.,$()%]+$/;
+
+function mergeNumericValues(target, source, { removeEmpty = false } = {}) {
+  Object.entries(source || {}).forEach(([key, value]) => {
+    if (value === undefined || value === null) {
+      if (!removeEmpty) {
+        target[key] = value;
+      }
+      return;
+    }
+
+    if (typeof value === 'number') {
+      target[key] = value;
+      return;
+    }
+
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (trimmed === '') {
+        if (!removeEmpty) {
+          target[key] = '';
+        }
+        return;
+      }
+
+      if (numericLikePattern.test(trimmed)) {
+        const normalized = parseLocaleNumber(value).replace(/[()]/g, '');
+        if (normalized === '') {
+          if (!removeEmpty) {
+            target[key] = '';
+          }
+          return;
+        }
+
+        const isNegative = trimmed.startsWith('(') && trimmed.endsWith(')');
+        const numeric = Number(normalized);
+        if (!Number.isNaN(numeric)) {
+          target[key] = isNegative ? -numeric : numeric;
+          return;
+        }
+      }
+
+      target[key] = value;
+      return;
+    }
+
+    target[key] = value;
+  });
+
+  return target;
+}
+
 export default function calculateOptimisationScenario(
   scenario,
   property,
@@ -13,21 +65,59 @@ export default function calculateOptimisationScenario(
     return { analysisProperty: null, analysis: null, equityWithdrawal: 0 };
   }
 
-  const overrides = { ...scenario.revenue, ...scenario.operatingExpenses };
+  const overrides = mergeNumericValues(
+    {},
+    { ...scenario.revenue, ...scenario.operatingExpenses },
+    { removeEmpty: true },
+  );
   const marketValue =
     parseFloat(parseLocaleNumber(scenario.marketValue)) || 0;
 
+  const acquisitionCostFields = [
+    'inspection',
+    'environmental1',
+    'environmental2',
+    'environmental3',
+    'otherFees',
+    'appraiser',
+    'notary',
+    'renovations',
+    'cmhcAnalysis',
+    'cmhcTax',
+    'welcomeTax',
+    'expertises',
+    'workCost',
+  ];
+
+  const propertyWithoutCosts = { ...property };
+  acquisitionCostFields.forEach((field) => {
+    delete propertyWithoutCosts[field];
+  });
+
+  const basePropertyValues = mergeNumericValues({}, propertyWithoutCosts);
+  const parsedUnits = Number(parseLocaleNumber(property.numberOfUnits));
   const analysisProperty = {
     ...defaultProperty,
-    numberOfUnits: property.numberOfUnits,
+    ...basePropertyValues,
+    numberOfUnits:
+      overrides.numberOfUnits ??
+      basePropertyValues.numberOfUnits ??
+      (!Number.isNaN(parsedUnits) ? parsedUnits : property.numberOfUnits),
     purchasePrice: marketValue,
     ...overrides,
   };
 
+  const financing = mergeNumericValues({}, scenario.financing, {
+    removeEmpty: true,
+  });
+  const financingFees = mergeNumericValues({}, scenario.financingFees, {
+    removeEmpty: true,
+  });
+
   const combinedProperty = {
     ...analysisProperty,
-    ...scenario.financing,
-    ...scenario.financingFees,
+    ...financing,
+    ...financingFees,
     ignoreLTV: true,
   };
 

@@ -58,3 +58,70 @@ test('calculateFutureScenario scales values and adjusts equity with fees', () =>
       1e-6,
   );
 });
+
+test('calculateFutureScenario uses first year after refinancing for rentability inputs', () => {
+  const scenario = {
+    revenueGrowthPct: '5',
+    expenseGrowthPct: '3',
+    valueAppreciationPct: '0',
+    refinanceYears: '2',
+    marketValue: '1100000',
+    financing: {
+      financingType: 'conventional',
+      mortgageRate: '5',
+      qualificationRate: '5',
+      amortization: '25',
+      debtCoverageRatio: '1.1',
+    },
+    financingFees: {},
+  };
+
+  const property = {
+    ...baseProperty,
+    municipalTaxes: 10_000,
+  };
+
+  const { analysisProperty } = calculateFutureScenario(
+    scenario,
+    property,
+    null,
+    false,
+  );
+
+  const expectedRevenue =
+    baseProperty.annualRent * Math.pow(1 + 0.05, 3); // years + 1
+  const expectedExpenses =
+    property.municipalTaxes * Math.pow(1 + 0.03, 3);
+
+  assert.ok(Math.abs(analysisProperty.annualRent - expectedRevenue) < 1e-6);
+  assert.ok(Math.abs(analysisProperty.municipalTaxes - expectedExpenses) < 1e-6);
+});
+
+test('calculateFutureScenario retains revenues when property fields use locale formatting', () => {
+  const scenario = {
+    revenueGrowthPct: '0',
+    expenseGrowthPct: '0',
+    valueAppreciationPct: '0',
+    refinanceYears: '1',
+    marketValue: '1 100 000',
+    financing: { financingType: 'conventional' },
+    financingFees: {},
+  };
+
+  const property = {
+    ...baseProperty,
+    purchasePrice: '1 000 000',
+    annualRent: '200 000',
+    municipalTaxes: '5 000',
+  };
+
+  const { analysis } = calculateFutureScenario(
+    scenario,
+    property,
+    null,
+    false,
+  );
+
+  assert.ok(analysis.totalGrossRevenue > 0);
+  assert.ok(analysis.netOperatingIncome > 0);
+});
