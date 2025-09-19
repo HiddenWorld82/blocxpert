@@ -96,3 +96,33 @@ test('calculateFutureScenario uses first year after refinancing for rentability 
   assert.ok(Math.abs(analysisProperty.annualRent - expectedRevenue) < 1e-6);
   assert.ok(Math.abs(analysisProperty.municipalTaxes - expectedExpenses) < 1e-6);
 });
+
+test('calculateFutureScenario retains revenues when property fields use locale formatting', () => {
+  const scenario = {
+    revenueGrowthPct: '0',
+    expenseGrowthPct: '0',
+    valueAppreciationPct: '0',
+    refinanceYears: '1',
+    marketValue: '1 100 000',
+    financing: { financingType: 'conventional' },
+    financingFees: {},
+  };
+
+  const property = {
+    ...baseProperty,
+    purchasePrice: '1 000 000',
+    annualRent: '200 000',
+    municipalTaxes: '5 000',
+  };
+
+  const { analysis } = calculateFutureScenario(
+    scenario,
+    property,
+    null,
+    false,
+  );
+
+  assert.ok(analysis.totalGrossRevenue > 0);
+  assert.ok(analysis.netOperatingIncome > 0);
+});
+
