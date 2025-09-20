@@ -10,6 +10,7 @@ import FinancingSummary from "./sections/FinancingSummary";
 import calculateOptimisationScenario from "../utils/calculateOptimisationScenario";
 import { getScenarios, saveScenario, updateScenario } from "../services/dataService";
 import defaultProperty from "../defaults/defaultProperty";
+import schlExpenses from "../defaults/schlExpenses";
 import { useLanguage } from "../contexts/LanguageContext";
 
 const baseScenario = {
@@ -21,9 +22,9 @@ const baseScenario = {
   revenue: {},
   operatingExpenses: {
     vacancyRate: defaultProperty.vacancyRate,
-    maintenance: defaultProperty.maintenance,
-    managementRate: defaultProperty.managementRate,
-    concierge: defaultProperty.concierge,
+    maintenance: "",
+    managementRate: "",
+    concierge: "",
   },
   parentScenarioId: "",
 };
@@ -37,15 +38,54 @@ export default function OptimisationScenarioForm({
   property,
   advancedExpenses,
 }) {
-  const buildScenarioState = (init = {}) => ({
-    ...baseScenario,
-    ...init,
-    operatingExpenses: {
-      ...baseScenario.operatingExpenses,
-      ...(init.operatingExpenses || {}),
-    },
+  const buildScenarioState = (init = {}) => {
+    const toStringOrEmpty = (value) => {
+      if (value === undefined || value === null || value === "") {
+        return "";
+      }
+      return typeof value === "number" ? value.toString() : value;
+    };
 
-  });
+    const units = parseInt(property?.numberOfUnits) || 0;
+    const province = property?.province;
+    const structureType = property?.structureType || "woodFrame";
+    const provinceConfig = province ? schlExpenses[province] : null;
+    let schlConfig;
+    if (provinceConfig) {
+      if (structureType === "woodFrame") {
+        schlConfig = provinceConfig.woodFrame[units <= 11 ? "small" : "large"];
+      } else {
+        schlConfig = provinceConfig.concrete.any;
+      }
+    }
+
+    const defaultOperatingExpenses = {
+      vacancyRate:
+        toStringOrEmpty(property?.vacancyRate) ||
+        baseScenario.operatingExpenses.vacancyRate,
+      maintenance: schlConfig
+        ? schlConfig.maintenance.toString()
+        : toStringOrEmpty(property?.maintenance),
+      managementRate: schlConfig
+        ? schlConfig.managementRate.toString()
+        : toStringOrEmpty(property?.managementRate),
+      concierge: schlConfig
+        ? schlConfig.salaries.toString()
+        : toStringOrEmpty(property?.concierge),
+      province: province || "",
+      structureType,
+    };
+
+    return {
+      ...baseScenario,
+      ...init,
+      operatingExpenses: {
+        ...baseScenario.operatingExpenses,
+        ...defaultOperatingExpenses,
+        ...(init.operatingExpenses || {}),
+      },
+    };
+  };
 
   const [scenario, setScenario] = useState(buildScenarioState(initialScenario));
 
@@ -261,6 +301,8 @@ export default function OptimisationScenarioForm({
       <OperatingExpensesSection
         expenses={{
           numberOfUnits: property?.numberOfUnits,
+          province: property?.province,
+          structureType: property?.structureType,
           ...scenario.revenue,
           ...scenario.operatingExpenses,
         }}
