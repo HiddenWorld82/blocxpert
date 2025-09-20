@@ -186,8 +186,9 @@ export default function calculateOptimisationScenario(
     }
   }
 
+  const scenarioFinancingType = combinedProperty?.financingType;
   const analysis = calculateRentability(combinedProperty, advancedExpenses, {
-    initialLoanAmount: ['cmhc', 'cmhc_aph'].includes(parentProperty?.financingType)
+    initialLoanAmount: ['cmhc', 'cmhc_aph'].includes(scenarioFinancingType)
       ? existingLoanBalance
       : 0,
   });

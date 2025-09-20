@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import calculateOptimisationScenario from './calculateOptimisationScenario.js';
+import calculateRentability from './calculateRentability.js';
 
 const baseProperty = {
   purchasePrice: 1_000_000,
@@ -116,4 +117,60 @@ test('calculateOptimisationScenario preserves numeric strings with locale format
 
   assert.ok(analysis.totalGrossRevenue > 0);
   assert.ok(analysis.netOperatingIncome > 0);
+});
+
+test('calculateOptimisationScenario uses scenario CMHC financing data for premiums', () => {
+  const parentScenario = {
+    financing: {
+      financingType: 'conventional',
+      mortgageRate: 5,
+      qualificationRate: 5,
+      amortization: 25,
+      debtCoverageRatio: 1.1,
+    },
+    acquisitionCosts: {},
+  };
+
+  const scenario = {
+    marketValue: '1200000',
+    revenue: {},
+    operatingExpenses: {},
+    financing: {
+      financingType: 'cmhc',
+      mortgageRate: 4,
+      qualificationRate: 4,
+      amortization: 25,
+      debtCoverageRatio: 1.1,
+    },
+    financingFees: {},
+    refinanceYears: '0',
+  };
+
+  const { analysis, analysisProperty } = calculateOptimisationScenario(
+    scenario,
+    baseProperty,
+    parentScenario,
+    false,
+  );
+
+  const parentProperty = { ...baseProperty, ...parentScenario.financing };
+  const parentAnalysis = calculateRentability(parentProperty, false);
+
+  const combinedProperty = {
+    ...analysisProperty,
+    ...scenario.financing,
+    ...scenario.financingFees,
+    ignoreLTV: true,
+  };
+
+  const expectedWithExisting = calculateRentability(combinedProperty, false, {
+    initialLoanAmount: parentAnalysis.maxLoanAmount,
+  });
+
+  const expectedWithoutExisting = calculateRentability(combinedProperty, false, {
+    initialLoanAmount: 0,
+  });
+
+  assert.ok(Math.abs(analysis.cmhcPremium - expectedWithExisting.cmhcPremium) < 1e-6);
+  assert.ok(Math.abs(expectedWithExisting.cmhcPremium - expectedWithoutExisting.cmhcPremium) > 1e-3);
 });
