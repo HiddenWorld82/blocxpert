@@ -130,8 +130,10 @@ export default function calculateOptimisationScenario(
     : null;
 
   let existingLoanBalance = 0;
+  let initialLoanAmount = 0;
   if (parentAnalysis) {
     const principal = parentAnalysis.maxLoanAmount || 0;
+    initialLoanAmount = principal;
     let premium = 0;
     if (['cmhc', 'cmhc_aph'].includes(parentProperty?.financingType)) {
       const purchasePrice = parseFloat(parentProperty?.purchasePrice) || 0;
@@ -189,7 +191,7 @@ export default function calculateOptimisationScenario(
   const scenarioFinancingType = combinedProperty?.financingType;
   const analysis = calculateRentability(combinedProperty, advancedExpenses, {
     initialLoanAmount: ['cmhc', 'cmhc_aph'].includes(scenarioFinancingType)
-      ? existingLoanBalance
+      ? initialLoanAmount
       : 0,
   });
 
