@@ -3,9 +3,11 @@ import React from "react";
 import {
   DollarSign,
   TrendingUp,
+  TrendingDown,
   BarChart,
   PiggyBank,
   Percent,
+  Clock,
 } from "lucide-react";
 import { useLanguage } from "../../contexts/LanguageContext";
 
@@ -25,6 +27,56 @@ export default function KeyIndicators({ analysis, variant = "acquisition", exclu
           maximumFractionDigits: 0,
         }).format(value)
       : "—";
+
+  const formatPercentDifference = (value, decimals = 1) =>
+    value !== null && value !== undefined
+      ? `${value >= 0 ? "+" : ""}${value.toFixed(decimals)}%`
+      : "—";
+
+  const getColorForChange = (value) => {
+    if (value === null || value === undefined) {
+      return "text-gray-700";
+    }
+    return value >= 0 ? "text-green-600" : "text-red-600";
+  };
+
+  const comparison = analysis?.optimizationComparison;
+  const baseRevenue = comparison?.base?.totalGrossRevenue ?? null;
+  const optimizedRevenue = comparison?.optimized?.totalGrossRevenue ?? null;
+  const baseExpenses = comparison?.base?.totalExpenses ?? null;
+  const optimizedExpenses = comparison?.optimized?.totalExpenses ?? null;
+  const baseNOI = comparison?.base?.netOperatingIncome ?? null;
+  const optimizedNOI = comparison?.optimized?.netOperatingIncome ?? null;
+  const baseCapRate = comparison?.base?.capRate ?? null;
+  const optimizedCapRate = comparison?.optimized?.capRate ?? null;
+  const baseCoC = comparison?.base?.cashOnCashReturn ?? null;
+  const optimizedCoC = comparison?.optimized?.cashOnCashReturn ?? null;
+  const workCost = comparison?.workCost ?? 0;
+
+  const revenueIncrease =
+    baseRevenue !== null && optimizedRevenue !== null
+      ? optimizedRevenue - baseRevenue
+      : null;
+  const expenseReduction =
+    baseExpenses !== null && optimizedExpenses !== null
+      ? baseExpenses - optimizedExpenses
+      : null;
+  const noiImprovement =
+    baseNOI !== null && optimizedNOI !== null ? optimizedNOI - baseNOI : null;
+  const capRateImprovement =
+    baseCapRate !== null && optimizedCapRate !== null
+      ? optimizedCapRate - baseCapRate
+      : null;
+  const cocImprovement =
+    baseCoC !== null && optimizedCoC !== null ? optimizedCoC - baseCoC : null;
+
+  const noiIncrease = noiImprovement ?? comparison?.noiIncrease ?? null;
+  const investmentEfficiency =
+    workCost > 0 && noiIncrease !== null
+      ? (noiIncrease / workCost) * 100
+      : null;
+  const paybackPeriodYears =
+    workCost > 0 && noiIncrease > 0 ? workCost / noiIncrease : null;
 
   let cards = [
     {
@@ -92,6 +144,69 @@ export default function KeyIndicators({ analysis, variant = "acquisition", exclu
     },
   ];
 
+  if (variant === "optimization" && comparison) {
+    cards = cards.concat([
+      {
+        key: "revenueIncrease",
+        label: t("keyIndicators.revenueIncrease"),
+        value: formatMoney(revenueIncrease),
+        icon: <TrendingUp className="w-6 h-6 text-green-600" />,
+        color: getColorForChange(revenueIncrease),
+      },
+      {
+        key: "expenseReduction",
+        label: t("keyIndicators.expenseReduction"),
+        value: formatMoney(expenseReduction),
+        icon: <TrendingDown className="w-6 h-6 text-green-600" />,
+        color: getColorForChange(expenseReduction),
+      },
+      {
+        key: "noiImprovement",
+        label: t("keyIndicators.noiImprovement"),
+        value: formatMoney(noiImprovement),
+        icon: <DollarSign className="w-6 h-6 text-emerald-600" />,
+        color: getColorForChange(noiImprovement),
+      },
+      {
+        key: "capRateImprovement",
+        label: t("keyIndicators.capRateImprovement"),
+        value: formatPercentDifference(capRateImprovement, 2),
+        icon: <TrendingUp className="w-6 h-6 text-green-600" />,
+        color: getColorForChange(capRateImprovement),
+      },
+      {
+        key: "cocImprovement",
+        label: t("keyIndicators.cocImprovement"),
+        value: formatPercentDifference(cocImprovement, 1),
+        icon: <Percent className="w-6 h-6 text-emerald-600" />,
+        color: getColorForChange(cocImprovement),
+      },
+      {
+        key: "investmentEfficiency",
+        label: t("keyIndicators.investmentEfficiency"),
+        value:
+          investmentEfficiency !== null
+            ? formatPercent(investmentEfficiency)
+            : "—",
+        icon: <BarChart className="w-6 h-6 text-purple-600" />,
+        color: "text-gray-700",
+      },
+      {
+        key: "paybackPeriod",
+        label: t("keyIndicators.paybackPeriod"),
+        value:
+          paybackPeriodYears !== null
+            ? `${paybackPeriodYears.toFixed(1)} ${t("keyIndicators.years")}`
+            : "—",
+        icon: <Clock className="w-6 h-6 text-blue-600" />,
+        color:
+          paybackPeriodYears !== null && paybackPeriodYears > 10
+            ? "text-orange-500"
+            : "text-gray-700",
+      },
+    ]);
+  }
+
   if (variant === "private") {
     cards = cards.concat([
       {
@@ -133,6 +248,19 @@ export default function KeyIndicators({ analysis, variant = "acquisition", exclu
       !["coc", "loanPaydownReturn", "appreciationReturn", "totalReturn"].includes(
         card.key,
       ),
+    optimization: (card) =>
+      [
+        "revenueIncrease",
+        "expenseReduction",
+        "noiImprovement",
+        "coc",
+        "loanPaydownReturn",
+        "totalReturn",
+        "investmentEfficiency",
+        "paybackPeriod",
+        "valueGeneratedYear1",
+        "capRateImprovement",
+      ].includes(card.key),
   };
 
   const visibleCards = cards.filter((card) => {

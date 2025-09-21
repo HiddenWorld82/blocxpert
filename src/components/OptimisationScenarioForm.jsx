@@ -370,7 +370,7 @@ return (
 
           {analysis && (
             <>
-              <KeyIndicators analysis={analysis} variant="future" />
+              <KeyIndicators analysis={analysis} variant="optimization" />
               <div className="grid md:grid-cols-2 gap-4">
                 <FinancialSummary
                   analysis={analysis}

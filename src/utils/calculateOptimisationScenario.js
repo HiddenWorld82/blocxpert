@@ -213,5 +213,38 @@ export default function calculateOptimisationScenario(
     adjustedAnalysis = { ...analysis, downPayment: trappedEquity };
   }
 
-  return { analysisProperty, analysis: adjustedAnalysis, equityWithdrawal };
+  const workCost =
+    Number(parseLocaleNumber(scenario.financingFees?.workCost || 0)) || 0;
+
+  const optimizationComparison =
+    parentAnalysis && adjustedAnalysis
+      ? {
+          base: {
+            totalGrossRevenue: parentAnalysis.totalGrossRevenue ?? null,
+            totalExpenses: parentAnalysis.totalExpenses ?? null,
+            netOperatingIncome: parentAnalysis.netOperatingIncome ?? null,
+            capRate: parentAnalysis.capRate ?? null,
+            cashOnCashReturn: parentAnalysis.cashOnCashReturn ?? null,
+          },
+          optimized: {
+            totalGrossRevenue: adjustedAnalysis.totalGrossRevenue ?? null,
+            totalExpenses: adjustedAnalysis.totalExpenses ?? null,
+            netOperatingIncome: adjustedAnalysis.netOperatingIncome ?? null,
+            capRate: adjustedAnalysis.capRate ?? null,
+            cashOnCashReturn: adjustedAnalysis.cashOnCashReturn ?? null,
+          },
+          workCost,
+          noiIncrease:
+            (adjustedAnalysis.netOperatingIncome ?? 0) -
+            (parentAnalysis.netOperatingIncome ?? 0),
+        }
+      : null;
+
+  return {
+    analysisProperty,
+    analysis: adjustedAnalysis
+      ? { ...adjustedAnalysis, optimizationComparison }
+      : adjustedAnalysis,
+    equityWithdrawal,
+  };
 }
