@@ -203,5 +203,15 @@ export default function calculateOptimisationScenario(
   const equityWithdrawal =
     analysis.maxLoanAmount - existingLoanBalance - totalFees;
 
-  return { analysisProperty, analysis, equityWithdrawal };
+  let adjustedAnalysis = analysis;
+  if (
+    analysis &&
+    typeof analysis.economicValue === 'number' &&
+    typeof analysis.totalLoanAmount === 'number'
+  ) {
+    const trappedEquity = analysis.economicValue - analysis.totalLoanAmount;
+    adjustedAnalysis = { ...analysis, downPayment: trappedEquity };
+  }
+
+  return { analysisProperty, analysis: adjustedAnalysis, equityWithdrawal };
 }

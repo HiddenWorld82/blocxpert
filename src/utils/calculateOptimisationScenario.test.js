@@ -174,3 +174,41 @@ test('calculateOptimisationScenario uses scenario CMHC financing data for premiu
   assert.ok(Math.abs(analysis.cmhcPremium - expectedWithExisting.cmhcPremium) < 1e-6);
   assert.ok(Math.abs(expectedWithExisting.cmhcPremium - expectedWithoutExisting.cmhcPremium) > 1e-3);
 });
+
+test('calculateOptimisationScenario computes trapped equity from borrowing value', () => {
+  const parentScenario = {
+    financing: {
+      financingType: 'cmhc',
+      mortgageRate: 5,
+      qualificationRate: 5,
+      amortization: 25,
+      debtCoverageRatio: 1.1,
+    },
+    acquisitionCosts: {},
+  };
+
+  const scenario = {
+    marketValue: '1200000',
+    revenue: {},
+    operatingExpenses: {},
+    financing: {
+      financingType: 'cmhc',
+      mortgageRate: '4.5',
+      qualificationRate: '4.5',
+      amortization: '25',
+      debtCoverageRatio: '1.1',
+    },
+    financingFees: {},
+    refinanceYears: '0',
+  };
+
+  const { analysis } = calculateOptimisationScenario(
+    scenario,
+    baseProperty,
+    parentScenario,
+    false,
+  );
+
+  const expectedTrappedEquity = analysis.economicValue - analysis.totalLoanAmount;
+  assert.ok(Math.abs(analysis.downPayment - expectedTrappedEquity) < 1e-6);
+});
