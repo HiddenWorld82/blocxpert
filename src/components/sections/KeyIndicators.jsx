@@ -28,11 +28,6 @@ export default function KeyIndicators({ analysis, variant = "acquisition", exclu
         }).format(value)
       : "—";
 
-  const formatPercentDifference = (value, decimals = 1) =>
-    value !== null && value !== undefined
-      ? `${value >= 0 ? "+" : ""}${value.toFixed(decimals)}%`
-      : "—";
-
   const getColorForChange = (value) => {
     if (value === null || value === undefined) {
       return "text-gray-700";
@@ -47,10 +42,6 @@ export default function KeyIndicators({ analysis, variant = "acquisition", exclu
   const optimizedExpenses = comparison?.optimized?.totalExpenses ?? null;
   const baseNOI = comparison?.base?.netOperatingIncome ?? null;
   const optimizedNOI = comparison?.optimized?.netOperatingIncome ?? null;
-  const baseCapRate = comparison?.base?.capRate ?? null;
-  const optimizedCapRate = comparison?.optimized?.capRate ?? null;
-  const baseCoC = comparison?.base?.cashOnCashReturn ?? null;
-  const optimizedCoC = comparison?.optimized?.cashOnCashReturn ?? null;
   const workCost = comparison?.workCost ?? 0;
 
   const revenueIncrease =
@@ -63,13 +54,6 @@ export default function KeyIndicators({ analysis, variant = "acquisition", exclu
       : null;
   const noiImprovement =
     baseNOI !== null && optimizedNOI !== null ? optimizedNOI - baseNOI : null;
-  const capRateImprovement =
-    baseCapRate !== null && optimizedCapRate !== null
-      ? optimizedCapRate - baseCapRate
-      : null;
-  const cocImprovement =
-    baseCoC !== null && optimizedCoC !== null ? optimizedCoC - baseCoC : null;
-
   const noiIncrease = noiImprovement ?? comparison?.noiIncrease ?? null;
   const investmentEfficiency =
     workCost > 0 && noiIncrease !== null
@@ -168,20 +152,6 @@ export default function KeyIndicators({ analysis, variant = "acquisition", exclu
         color: getColorForChange(noiImprovement),
       },
       {
-        key: "capRateImprovement",
-        label: t("keyIndicators.capRateImprovement"),
-        value: formatPercentDifference(capRateImprovement, 2),
-        icon: <TrendingUp className="w-6 h-6 text-green-600" />,
-        color: getColorForChange(capRateImprovement),
-      },
-      {
-        key: "cocImprovement",
-        label: t("keyIndicators.cocImprovement"),
-        value: formatPercentDifference(cocImprovement, 1),
-        icon: <Percent className="w-6 h-6 text-emerald-600" />,
-        color: getColorForChange(cocImprovement),
-      },
-      {
         key: "investmentEfficiency",
         label: t("keyIndicators.investmentEfficiency"),
         value:
@@ -242,32 +212,38 @@ export default function KeyIndicators({ analysis, variant = "acquisition", exclu
     ]);
   }
 
+  const optimizationKeys = [
+    "coc",
+    "loanPaydownReturn",
+    "appreciationReturn",
+    "totalReturn",
+    "investmentEfficiency",
+    "paybackPeriod",
+    "revenueIncrease",
+    "expenseReduction",
+    "noiImprovement",
+  ];
+
   const filterConfig = {
     future: (card) => !["mrb", "mrn", "tga"].includes(card.key),
     private: (card) =>
       !["coc", "loanPaydownReturn", "appreciationReturn", "totalReturn"].includes(
         card.key,
       ),
-    optimization: (card) =>
-      [
-        "revenueIncrease",
-        "expenseReduction",
-        "noiImprovement",
-        "coc",
-        "loanPaydownReturn",
-        "totalReturn",
-        "investmentEfficiency",
-        "paybackPeriod",
-        "valueGeneratedYear1",
-        "capRateImprovement",
-      ].includes(card.key),
+    optimization: (card) => optimizationKeys.includes(card.key),
   };
 
-  const visibleCards = cards.filter((card) => {
+  let visibleCards = cards.filter((card) => {
     if (exclude.includes(card.key)) return false;
     const variantFilter = filterConfig[variant];
     return variantFilter ? variantFilter(card) : true;
   });
+
+  if (variant === "optimization") {
+    visibleCards = optimizationKeys
+      .map((key) => visibleCards.find((card) => card.key === key))
+      .filter(Boolean);
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
