@@ -501,7 +501,7 @@ const translations = {
     'keyIndicators.coc': 'Rendement Cash on Cash (CoC)',
     'keyIndicators.loanPaydownReturn': 'Rendement capitalisation du prêt (1an)',
     'keyIndicators.appreciationReturn':
-      "Rendement sur la plus value (calculée par défaut à 3% de la valeur d'emprunt)",
+      "Rendement sur la plus value",
     'keyIndicators.valueGeneratedYear1': "Valeur générée après l'an 1",
     'keyIndicators.totalReturn': 'Rendement global (1 an)',
     'keyIndicators.loanValueRatio': 'Ratio Prêt Valeur (RPV)',
