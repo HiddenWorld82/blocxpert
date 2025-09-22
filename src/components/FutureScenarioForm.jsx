@@ -176,6 +176,14 @@ export default function FutureScenarioForm({
 
   const isEquityNegative = equityWithdrawal < 0;
 
+  const keyIndicatorExclusions = useMemo(
+    () =>
+      type === "refinancing"
+        ? ["coc", "loanPaydownReturn", "appreciationReturn", "totalReturn"]
+        : [],
+    [type],
+  );
+
 
   useEffect(() => {
     if (!lockedFields.debtCoverage) return;
@@ -315,7 +323,11 @@ export default function FutureScenarioForm({
 
             {analysis && (
               <>
-                <KeyIndicators analysis={analysis} variant="future" />
+                <KeyIndicators
+                  analysis={analysis}
+                  variant="future"
+                  exclude={keyIndicatorExclusions}
+                />
                 <div className="grid md:grid-cols-2 gap-4">
                   <FinancialSummary
                     analysis={analysis}

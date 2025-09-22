@@ -253,6 +253,18 @@ export default function OptimisationScenarioForm({
 
   const isEquityNegative = equityWithdrawal < 0;
 
+  const keyIndicatorExclusions = useMemo(
+    () => [
+      "coc",
+      "loanPaydownReturn",
+      "appreciationReturn",
+      "totalReturn",
+      "investmentEfficiency",
+      "paybackPeriod",
+    ],
+    [],
+  );
+
 
   useEffect(() => {
     if (!lockedFields.debtCoverage) return;
@@ -370,7 +382,11 @@ return (
 
           {analysis && (
             <>
-              <KeyIndicators analysis={analysis} variant="optimization" />
+              <KeyIndicators
+                analysis={analysis}
+                variant="optimization"
+                exclude={keyIndicatorExclusions}
+              />
               <div className="grid md:grid-cols-2 gap-4">
                 <FinancialSummary
                   analysis={analysis}
