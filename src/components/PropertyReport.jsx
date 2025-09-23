@@ -16,6 +16,10 @@ import calculateOptimisationScenario from '../utils/calculateOptimisationScenari
 import { getScenarios } from '../services/dataService';
 import { getAphMaxLtvRatio } from '../utils/cmhc';
 
+const DEFAULT_INCOME_GROWTH = 2;
+const DEFAULT_EXPENSE_GROWTH = 2.5;
+const DEFAULT_VALUE_GROWTH = 3;
+
 const PropertyReport = ({
   currentProperty,
   setCurrentStep,
@@ -78,15 +82,21 @@ const PropertyReport = ({
     12;
 
   const [returnYears, setReturnYears] = useState(5);
-  const [incomeGrowth, setIncomeGrowth] = useState(2);
-  const [expenseGrowth, setExpenseGrowth] = useState(2.5);
-  const [valueGrowth, setValueGrowth] = useState(3);
+  const [incomeGrowth, setIncomeGrowth] = useState(DEFAULT_INCOME_GROWTH);
+  const [expenseGrowth, setExpenseGrowth] = useState(DEFAULT_EXPENSE_GROWTH);
+  const [valueGrowth, setValueGrowth] = useState(DEFAULT_VALUE_GROWTH);
   const [subScenarios, setSubScenarios] = useState([]);
   const [selectedSubScenarioId, setSelectedSubScenarioId] = useState('');
   const selectedSubScenario = useMemo(
     () => subScenarios.find((s) => s.id === selectedSubScenarioId),
     [subScenarios, selectedSubScenarioId]
   );
+  const manualGrowthRef = useRef({
+    income: DEFAULT_INCOME_GROWTH,
+    expense: DEFAULT_EXPENSE_GROWTH,
+    value: DEFAULT_VALUE_GROWTH,
+  });
+  const previousSubScenarioRef = useRef(null);
   const subScenarioAnalysis = useMemo(() => {
     if (!selectedSubScenario) return null;
     if (selectedSubScenario.type === 'refinancing') {
@@ -311,16 +321,45 @@ const PropertyReport = ({
   }, [currentProperty?.id, baseScenarioId]);
 
   useEffect(() => {
-    if (!selectedSubScenario) return;
-    if (selectedSubScenario.type === 'refinancing') {
-      setIncomeGrowth(parseFloat(selectedSubScenario.revenueGrowthPct) || 0);
-      setExpenseGrowth(parseFloat(selectedSubScenario.expenseGrowthPct) || 0);
-      setValueGrowth(parseFloat(selectedSubScenario.valueAppreciationPct) || 0);
-    } else if (selectedSubScenario.type === 'optimization') {
-      setIncomeGrowth(null);
-      setExpenseGrowth(null);
-      setValueGrowth(null);
+    const previousSubScenario = previousSubScenarioRef.current;
+    const baselineIncome = Number.isFinite(manualGrowthRef.current.income)
+      ? manualGrowthRef.current.income
+      : DEFAULT_INCOME_GROWTH;
+    const baselineExpense = Number.isFinite(manualGrowthRef.current.expense)
+      ? manualGrowthRef.current.expense
+      : DEFAULT_EXPENSE_GROWTH;
+    const baselineValue = Number.isFinite(manualGrowthRef.current.value)
+      ? manualGrowthRef.current.value
+      : DEFAULT_VALUE_GROWTH;
+
+    if (selectedSubScenario?.type === 'refinancing') {
+      const revenueGrowth = parseFloat(selectedSubScenario.revenueGrowthPct);
+      const expenseGrowthPct = parseFloat(selectedSubScenario.expenseGrowthPct);
+      const valueGrowthPct = parseFloat(
+        selectedSubScenario.valueAppreciationPct,
+      );
+      setIncomeGrowth(Number.isFinite(revenueGrowth) ? revenueGrowth : 0);
+      setExpenseGrowth(Number.isFinite(expenseGrowthPct) ? expenseGrowthPct : 0);
+      setValueGrowth(Number.isFinite(valueGrowthPct) ? valueGrowthPct : 0);
+    } else if (selectedSubScenario?.type === 'optimization') {
+      setIncomeGrowth(baselineIncome);
+      setExpenseGrowth(baselineExpense);
+      setValueGrowth(baselineValue);
+    } else if (!selectedSubScenario && previousSubScenario) {
+      setIncomeGrowth(baselineIncome);
+      setExpenseGrowth(baselineExpense);
+      setValueGrowth(baselineValue);
     }
+
+    if (!selectedSubScenario && previousSubScenario) {
+      manualGrowthRef.current = {
+        income: baselineIncome,
+        expense: baselineExpense,
+        value: baselineValue,
+      };
+    }
+
+    previousSubScenarioRef.current = selectedSubScenario;
   }, [selectedSubScenario]);
 
   const isRefinancing = selectedSubScenario?.type === 'refinancing';
@@ -662,69 +701,66 @@ const PropertyReport = ({
               </div>
               <div>
                 <label className="block text-xs text-gray-500 mb-1">{t('propertyReport.incomeGrowth')}</label>
-                {isOptimization ? (
-                  <input
-                    type="text"
-                    disabled
-                    value={t('notApplicable')}
-                    className="w-full px-2 py-1 border rounded bg-gray-100 text-center"
-                  />
-                ) : (
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={incomeGrowth ?? ''}
-                    onChange={(e) =>
-                      setIncomeGrowth(parseFloat(e.target.value) || 0)
+                <input
+                  type="number"
+                  step="0.1"
+                  value={incomeGrowth ?? ''}
+                  onChange={(e) => {
+                    const parsed = parseFloat(e.target.value);
+                    const nextValue = Number.isFinite(parsed) ? parsed : 0;
+                    setIncomeGrowth(nextValue);
+                    if (!selectedSubScenario) {
+                      manualGrowthRef.current = {
+                        ...manualGrowthRef.current,
+                        income: nextValue,
+                      };
                     }
-                    disabled={isRefinancing}
-                    className="w-full px-2 py-1 border rounded"
-                  />
-                )}
+                  }}
+                  disabled={isRefinancing || isOptimization}
+                  className="w-full px-2 py-1 border rounded"
+                />
               </div>
               <div>
                 <label className="block text-xs text-gray-500 mb-1">{t('propertyReport.expenseGrowth')}</label>
-                {isOptimization ? (
-                  <input
-                    type="text"
-                    disabled
-                    value={t('notApplicable')}
-                    className="w-full px-2 py-1 border rounded bg-gray-100 text-center"
-                  />
-                ) : (
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={expenseGrowth ?? ''}
-                    onChange={(e) =>
-                      setExpenseGrowth(parseFloat(e.target.value) || 0)
+                <input
+                  type="number"
+                  step="0.1"
+                  value={expenseGrowth ?? ''}
+                  onChange={(e) => {
+                    const parsed = parseFloat(e.target.value);
+                    const nextValue = Number.isFinite(parsed) ? parsed : 0;
+                    setExpenseGrowth(nextValue);
+                    if (!selectedSubScenario) {
+                      manualGrowthRef.current = {
+                        ...manualGrowthRef.current,
+                        expense: nextValue,
+                      };
                     }
-                    disabled={isRefinancing}
-                    className="w-full px-2 py-1 border rounded"
-                  />
-                )}
+                  }}
+                  disabled={isRefinancing || isOptimization}
+                  className="w-full px-2 py-1 border rounded"
+                />
               </div>
               <div>
                 <label className="block text-xs text-gray-500 mb-1">{t('propertyReport.valueAppreciation')}</label>
-                {isOptimization ? (
-                  <input
-                    type="text"
-                    disabled
-                    value={t('notApplicable')}
-                    className="w-full px-2 py-1 border rounded bg-gray-100 text-center"
-                  />
-                ) : (
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={valueGrowth ?? ''}
-                    onChange={(e) =>
-                      setValueGrowth(parseFloat(e.target.value) || 0)
+                <input
+                  type="number"
+                  step="0.1"
+                  value={valueGrowth ?? ''}
+                  onChange={(e) => {
+                    const parsed = parseFloat(e.target.value);
+                    const nextValue = Number.isFinite(parsed) ? parsed : 0;
+                    setValueGrowth(nextValue);
+                    if (!selectedSubScenario) {
+                      manualGrowthRef.current = {
+                        ...manualGrowthRef.current,
+                        value: nextValue,
+                      };
                     }
-                    disabled={isRefinancing}
-                    className="w-full px-2 py-1 border rounded"
-                  />
-                )}
+                  }}
+                  disabled={isRefinancing || isOptimization}
+                  className="w-full px-2 py-1 border rounded"
+                />
               </div>
             </div>
             <div className="flex items-center justify-center gap-6">
