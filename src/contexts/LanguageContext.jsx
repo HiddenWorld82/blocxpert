@@ -326,6 +326,8 @@ const translations = {
     'scenarioForm.marketValue': 'New Market Value',
     'scenarioForm.notPossible': 'This refinancing scenario is not possible.',
     'scenarioForm.newInterestRate': 'New interest rate (%)',
+    'scenarioForm.viewSummary': 'View results',
+    'scenarioForm.editScenario': 'Edit scenario',
     'recommendations.title': 'Recommendations',
     'recommendations.capRate.veryLow':
       'Cap rate is very low. Consider negotiating the price or increasing revenues. If the building is very recent or strong optimization is possible, the cap rate may be acceptable.',
@@ -677,6 +679,8 @@ const translations = {
     'scenarioForm.marketValue': 'Nouvelle valeur marchande',
     'scenarioForm.notPossible': "Ce scénario de refinancement n'est pas possible.",
     'scenarioForm.newInterestRate': "Nouveau taux d'intérêt (%)",
+    'scenarioForm.viewSummary': 'Voir les résultats',
+    'scenarioForm.editScenario': 'Modifier le scénario',
     'recommendations.title': 'Recommandations',
     'recommendations.capRate.veryLow':
       "Le taux de capitalisation est très faible. Considérez négocier le prix ou augmenter les revenus. Si l'immeuble est très récent ou qu'une forte optimisation est possible, le taux de capitalisation peut être acceptable.",

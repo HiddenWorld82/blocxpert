@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
+import { Eye, Pencil } from "lucide-react";
 import FinancingSection from "./sections/FinancingSection";
 import FinancingFeesSection from "./sections/FinancingFeesSection";
 import FormattedNumberInput, { parseLocaleNumber } from "./FormattedNumberInput";
@@ -37,6 +38,7 @@ export default function FutureScenarioForm({
 
   const [parentScenario, setParentScenario] = useState(null);
   const lastMarketValueEstimateRef = useRef("");
+  const [isViewingOnly, setIsViewingOnly] = useState(Boolean(initialScenario.id));
 
   const { t } = useLanguage();
 
@@ -67,6 +69,7 @@ export default function FutureScenarioForm({
     });
     lastMarketValueEstimateRef.current =
       parseLocaleNumber(initialScenario.marketValue) || "";
+    setIsViewingOnly(Boolean(initialScenario.id));
   }, [initialScenario.id]);
 
   const handleFinancingChange = (financing, field) => {
@@ -223,6 +226,8 @@ export default function FutureScenarioForm({
     refinancing: t("scenarioForm.refinancing.title"),
   }[type] || t("scenarioForm.genericTitle");
 
+  const canToggleView = Boolean(initialScenario.id || scenario.id);
+
   const renderScenarioSections = () => (
     <>
       <FinancingSection
@@ -244,82 +249,111 @@ export default function FutureScenarioForm({
         <div className="bg-white rounded-lg shadow-lg p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-semibold">{titleText}</h2>
-            {onBack && (
-              <button
-                onClick={onBack}
-                className="text-gray-600 hover:text-gray-800"
-              >
-                ← {t('back')}
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              {canToggleView && (
+                <button
+                  onClick={() => setIsViewingOnly((prev) => !prev)}
+                  className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-200 rounded text-gray-600 hover:text-gray-800 hover:border-gray-300"
+                >
+                  {isViewingOnly ? (
+                    <>
+                      <Pencil className="w-4 h-4" />
+                      {t('scenarioForm.editScenario')}
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="w-4 h-4" />
+                      {t('scenarioForm.viewSummary')}
+                    </>
+                  )}
+                </button>
+              )}
+              {onBack && (
+                <button
+                  onClick={onBack}
+                  className="text-gray-600 hover:text-gray-800"
+                >
+                  ← {t('back')}
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="space-y-8">
-            <div className="border rounded-lg p-6">
-              <h2 className="text-lg font-semibold mb-4 text-gray-700">
-                {t('scenarioForm.parameters')}
-              </h2>
-              <div className="grid md:grid-cols-3 gap-4">
-                <div className="md:col-span-3">
-                  <label className="block text-sm font-medium mb-1">{t('scenarioForm.titleLabel')}</label>
-                  <input
-                    type="text"
-                    value={scenario.title}
-                    onChange={(e) => handleChange("title", e.target.value)}
-                    className="w-full border rounded p-2"
-                    placeholder={t('scenarioForm.titlePlaceholder')}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">{t('scenarioForm.revenueGrowthPct')}</label>
-                  <FormattedNumberInput
-                    value={scenario.revenueGrowthPct || ""}
-                    onChange={(val) => handleChange("revenueGrowthPct", val)}
-                    className="w-full border rounded p-2"
-                    type="percentage"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">{t('scenarioForm.expenseGrowthPct')}</label>
-                  <FormattedNumberInput
-                    value={scenario.expenseGrowthPct || ""}
-                    onChange={(val) => handleChange("expenseGrowthPct", val)}
-                    className="w-full border rounded p-2"
-                    type="percentage"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">{t('scenarioForm.valueAppreciationPct')}</label>
-                  <FormattedNumberInput
-                    value={scenario.valueAppreciationPct || ""}
-                    onChange={(val) => handleChange("valueAppreciationPct", val)}
-                    className="w-full border rounded p-2"
-                    type="percentage"
-                  />
-                </div>
+            {isViewingOnly && scenario.title && (
+              <div className="border rounded-lg p-4 bg-gray-50">
+                <div className="text-sm text-gray-500">{t('scenarioForm.titleLabel')}</div>
+                <div className="text-lg font-semibold text-gray-900">{scenario.title}</div>
               </div>
-              <div className="grid md:grid-cols-2 gap-4 mt-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">{t('scenarioForm.refinanceYears')}</label>
-                  <FormattedNumberInput
-                    value={scenario.refinanceYears || ""}
-                    onChange={(val) => handleChange("refinanceYears", val)}
-                    className="w-full border rounded p-2"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">{t('scenarioForm.marketValue')}</label>
-                  <FormattedNumberInput
-                    value={scenario.marketValue || ""}
-                    onChange={(val) => handleChange("marketValue", val)}
-                    className="w-full border rounded p-2"
-                    type="currency"
-                  />
-                </div>
-              </div>
-            </div>
+            )}
 
-            {renderScenarioSections()}
+            {!isViewingOnly && (
+              <div className="border rounded-lg p-6">
+                <h2 className="text-lg font-semibold mb-4 text-gray-700">
+                  {t('scenarioForm.parameters')}
+                </h2>
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div className="md:col-span-3">
+                    <label className="block text-sm font-medium mb-1">{t('scenarioForm.titleLabel')}</label>
+                    <input
+                      type="text"
+                      value={scenario.title}
+                      onChange={(e) => handleChange("title", e.target.value)}
+                      className="w-full border rounded p-2"
+                      placeholder={t('scenarioForm.titlePlaceholder')}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">{t('scenarioForm.revenueGrowthPct')}</label>
+                    <FormattedNumberInput
+                      value={scenario.revenueGrowthPct || ""}
+                      onChange={(val) => handleChange("revenueGrowthPct", val)}
+                      className="w-full border rounded p-2"
+                      type="percentage"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">{t('scenarioForm.expenseGrowthPct')}</label>
+                    <FormattedNumberInput
+                      value={scenario.expenseGrowthPct || ""}
+                      onChange={(val) => handleChange("expenseGrowthPct", val)}
+                      className="w-full border rounded p-2"
+                      type="percentage"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">{t('scenarioForm.valueAppreciationPct')}</label>
+                    <FormattedNumberInput
+                      value={scenario.valueAppreciationPct || ""}
+                      onChange={(val) => handleChange("valueAppreciationPct", val)}
+                      className="w-full border rounded p-2"
+                      type="percentage"
+                    />
+                  </div>
+                </div>
+                <div className="grid md:grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">{t('scenarioForm.refinanceYears')}</label>
+                    <FormattedNumberInput
+                      value={scenario.refinanceYears || ""}
+                      onChange={(val) => handleChange("refinanceYears", val)}
+                      className="w-full border rounded p-2"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">{t('scenarioForm.marketValue')}</label>
+                    <FormattedNumberInput
+                      value={scenario.marketValue || ""}
+                      onChange={(val) => handleChange("marketValue", val)}
+                      className="w-full border rounded p-2"
+                      type="currency"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {!isViewingOnly && renderScenarioSections()}
 
             {analysis && (
               <>
@@ -347,21 +381,23 @@ export default function FutureScenarioForm({
                 {t('scenarioForm.notPossible')}
               </div>
             )}
-            <div className="flex justify-end">
-              {onSaved && (
-                <button
-                  onClick={handleSave}
-                  disabled={isEquityNegative}
-                  className={`px-6 py-2 text-white rounded-lg hover:bg-blue-700 ${
-                    isEquityNegative
-                      ? "bg-blue-300 cursor-not-allowed"
-                      : "bg-blue-600"
-                  }`}
-                >
-                  {t('save')}
-                </button>
-              )}
-            </div>
+            {!isViewingOnly && (
+              <div className="flex justify-end">
+                {onSaved && (
+                  <button
+                    onClick={handleSave}
+                    disabled={isEquityNegative}
+                    className={`px-6 py-2 text-white rounded-lg hover:bg-blue-700 ${
+                      isEquityNegative
+                        ? "bg-blue-300 cursor-not-allowed"
+                        : "bg-blue-600"
+                    }`}
+                  >
+                    {t('save')}
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
