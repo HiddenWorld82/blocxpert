@@ -167,3 +167,45 @@ test('uses scenario debt values when provided, even if zero', () => {
   );
   assert.ok(scenarioRes.totalReturn > baseRes.totalReturn);
 });
+
+test('handles IRR above 100 percent from large equity withdrawal', () => {
+  const property = {
+    purchasePrice: 100000,
+    mortgageRate: 5,
+    amortization: 25,
+    financingType: 'conventional',
+  };
+  const analysis = {
+    cashFlow: 0,
+    effectiveGrossRevenue: 0,
+    operatingExpensesTotal: 0,
+    annualDebtService: 0,
+    totalInvestment: 20000,
+    monthlyPayment: 0,
+    totalLoanAmount: 80000,
+  };
+
+  const scenario = {
+    refinanceYears: 1,
+    financing: { financingType: 'conventional', mortgageRate: 5 },
+    type: 'refinancing',
+  };
+  const scenarioAnalysis = {
+    annualDebtService: 0,
+    totalLoanAmount: 200000,
+    monthlyPayment: 0,
+  };
+
+  const { internalRateOfReturn } = calculateReturnAfterYears(
+    property,
+    analysis,
+    5,
+    0,
+    0,
+    0.5,
+    scenario,
+    scenarioAnalysis,
+  );
+
+  assert.ok(internalRateOfReturn > 100);
+});
