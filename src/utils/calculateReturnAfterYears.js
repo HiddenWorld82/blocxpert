@@ -87,6 +87,13 @@ export default function calculateReturnAfterYears(
     ? scenarioAnalysis?.annualDebtService ?? scenarioMonthlyPayment * 12
     : annualDebtService;
 
+  const scenarioRevenueBase =
+    scenarioAnalysis?.effectiveGrossRevenue ?? null;
+  const scenarioExpensesBase =
+    scenarioAnalysis?.operatingExpensesTotal ?? null;
+  const hasScenarioCashflowOverrides =
+    scenarioRevenueBase != null || scenarioExpensesBase != null;
+
   // Calculate cash flows with annual increases
   let revenue = baseRevenue;
   let expenses = baseExpenses;
@@ -94,12 +101,30 @@ export default function calculateReturnAfterYears(
   const cashFlows = [-totalInvestment];
   let balance = totalLoanAmount;
   let principalPaid = 0;
+  let usingScenarioValues = false;
   for (let year = 1; year <= nYears; year++) {
-    if (year > 1) {
-      revenue *= 1 + incomeIncreaseRate;
-      expenses *= 1 + expenseIncreaseRate;
-    }
     const useScenario = scenario && year > refYears;
+    let revenueSwitched = false;
+    let expensesSwitched = false;
+    if (useScenario && !usingScenarioValues && hasScenarioCashflowOverrides) {
+      if (scenarioRevenueBase != null) {
+        revenue = scenarioRevenueBase;
+        revenueSwitched = true;
+      }
+      if (scenarioExpensesBase != null) {
+        expenses = scenarioExpensesBase;
+        expensesSwitched = true;
+      }
+      usingScenarioValues = true;
+    }
+    if (year > 1) {
+      if (!revenueSwitched) {
+        revenue *= 1 + incomeIncreaseRate;
+      }
+      if (!expensesSwitched) {
+        expenses *= 1 + expenseIncreaseRate;
+      }
+    }
     const annualCF =
       revenue - expenses - (useScenario ? scenarioAnnualDebtService : annualDebtService);
     cashFlowTotal += annualCF;
@@ -137,7 +162,14 @@ export default function calculateReturnAfterYears(
       ? (Math.pow(1 + totalReturn / 100, 1 / nYears) - 1) * 100
       : 0;
 
-  const saleNet = propertyValue - balance;
+  const scenarioOccursWithinHorizon =
+    scenario &&
+    scenarioAnalysis?.economicValue != null &&
+    nYears > refYears;
+  const exitValue = scenarioOccursWithinHorizon
+    ? scenarioAnalysis.economicValue
+    : propertyValue;
+  const saleNet = exitValue - balance;
   if (cashFlows.length > 1) {
     cashFlows[nYears] += saleNet;
   }
