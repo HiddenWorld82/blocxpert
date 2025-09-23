@@ -10,7 +10,15 @@ function computeIRR(cashFlows) {
   let high = 1;
   let npvLow = npv(low);
   let npvHigh = npv(high);
-  if (npvLow * npvHigh > 0) return 0; // Cannot find a valid IRR
+
+  // Expand the search interval if the IRR is greater than 100%
+  const maxHigh = 1024; // Allow IRR up to 102400%
+  while (npvLow * npvHigh > 0 && high < maxHigh) {
+    high *= 2;
+    npvHigh = npv(high);
+  }
+
+  if (npvLow * npvHigh > 0) return 0; // Cannot find a valid IRR within range
 
   let mid = 0;
   for (let i = 0; i < 1000; i++) {
