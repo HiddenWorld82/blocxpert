@@ -65,16 +65,20 @@ app.get('/api/health', (req, res) => {
 // Test rapide de fonctionnement
 app.get('/api/test', async (req, res) => {
   let browser;
+  let page;
   
   try {
     console.log('🧪 Test PDF rapide...');
     
     browser = await puppeteer.launch({
       headless: 'new',
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+      timeout: 60000
     });
 
-    const page = await browser.newPage();
+    page = await browser.newPage();
+    await page.setDefaultTimeout(30000);
+    
     await page.setContent(`
       <!DOCTYPE html>
       <html>
@@ -85,14 +89,24 @@ app.get('/api/test', async (req, res) => {
         <p>Généré le ${new Date().toLocaleString('fr-FR')}</p>
       </body>
       </html>
-    `);
+    `, { 
+      waitUntil: ['load', 'domcontentloaded'],
+      timeout: 20000
+    });
 
     const pdfResult = await page.pdf({
       format: 'A4',
-      printBackground: true
+      printBackground: true,
+      timeout: 30000
     });
 
-    await browser.close();
+    // Fermeture propre
+    if (page && !page.isClosed()) {
+      await page.close();
+    }
+    if (browser) {
+      await browser.close();
+    }
     
     const pdfBuffer = ensureBuffer(pdfResult);
     
@@ -104,7 +118,14 @@ app.get('/api/test', async (req, res) => {
 
   } catch (error) {
     console.error('❌ Erreur test:', error);
-    if (browser) await browser.close();
+    
+    // Nettoyage
+    if (page && !page.isClosed()) {
+      try { await page.close(); } catch {}
+    }
+    if (browser) {
+      try { await browser.close(); } catch {}
+    }
     
     if (!res.headersSent) {
       res.status(500).json({ error: error.message });
@@ -115,6 +136,7 @@ app.get('/api/test', async (req, res) => {
 // Génération PDF principale pour vos rapports Rentalyzer
 app.post('/api/generate-pdf', async (req, res) => {
   let browser;
+  let page;
   const startTime = Date.now();
   
   try {
@@ -133,7 +155,7 @@ app.post('/api/generate-pdf', async (req, res) => {
 
     console.log(`📄 HTML reçu: ${html.length} caractères`);
 
-    // Configuration Puppeteer optimisée pour vos rapports
+    // Configuration Puppeteer robuste avec timeouts plus longs
     console.log('🌐 Lancement navigateur...');
     browser = await puppeteer.launch({
       headless: 'new',
@@ -144,14 +166,20 @@ app.post('/api/generate-pdf', async (req, res) => {
         '--disable-accelerated-2d-canvas',
         '--disable-gpu',
         '--no-first-run',
-        '--single-process'
+        '--disable-background-timer-throttling',
+        '--disable-backgrounding-occluded-windows',
+        '--disable-renderer-backgrounding',
+        '--disable-features=TranslateUI',
+        '--disable-ipc-flooding-protection'
       ],
-      timeout: 60000
+      timeout: 120000 // 2 minutes
     });
 
-    const page = await browser.newPage();
+    page = await browser.newPage();
     
-    // Configuration optimale pour vos rapports
+    // Configuration robuste pour éviter les timeouts
+    await page.setDefaultTimeout(120000);
+    await page.setDefaultNavigationTimeout(120000);
     await page.setViewport({ width: 1200, height: 800 });
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
     
@@ -417,24 +445,44 @@ app.post('/api/generate-pdf', async (req, res) => {
     `;
 
     console.log('📄 Chargement contenu...');
-    await page.setContent(cleanHtml, { 
-      waitUntil: ['networkidle0', 'domcontentloaded'],
-      timeout: 30000 
-    });
+    
+    // Chargement du contenu avec gestion d'erreurs robuste
+    try {
+      await page.setContent(cleanHtml, { 
+        waitUntil: ['load', 'domcontentloaded'],
+        timeout: 90000 
+      });
+    } catch (contentError) {
+      console.warn('⚠️ Timeout setContent, tentative alternative...');
+      await page.goto(`data:text/html,${encodeURIComponent(cleanHtml)}`, {
+        waitUntil: ['load', 'domcontentloaded'],
+        timeout: 90000
+      });
+    }
 
     console.log('🖨️ Configuration impression...');
     await page.emulateMediaType('print');
     
-    // Attendre que tout soit rendu
+    // Attendre que tout soit rendu avec une vérification active
+    console.log('⏳ Attente du rendu complet...');
     await page.evaluate(() => {
       return new Promise((resolve) => {
-        if (document.readyState === 'complete') {
-          resolve();
-        } else {
-          window.addEventListener('load', resolve);
-        }
+        const checkReady = () => {
+          if (document.readyState === 'complete') {
+            // Attendre encore un peu pour s'assurer que tout est stable
+            setTimeout(resolve, 1000);
+          } else {
+            setTimeout(checkReady, 100);
+          }
+        };
+        checkReady();
       });
     });
+
+    // Vérifier que la page est encore active avant la génération PDF
+    if (page.isClosed()) {
+      throw new Error('La page s\'est fermée de manière inattendue');
+    }
 
     console.log('📝 Génération PDF...');
     const pdfResult = await page.pdf({
@@ -448,11 +496,22 @@ app.post('/api/generate-pdf', async (req, res) => {
         left: '10mm'
       },
       displayHeaderFooter: false,
-      timeout: 60000
+      timeout: 90000 // Timeout spécifique pour le PDF
     });
 
-    await browser.close();
+    // Fermeture propre et séquentielle
+    if (page && !page.isClosed()) {
+      await page.close();
+      console.log('📄 Page fermée proprement');
+    }
+    
+    if (browser) {
+      await browser.close();
+      console.log('🌐 Navigateur fermé proprement');
+    }
+    
     browser = null;
+    page = null;
 
     console.log(`✅ PDF brut généré: ${pdfResult?.length || pdfResult?.byteLength || 'taille inconnue'} bytes`);
 
@@ -487,12 +546,22 @@ app.post('/api/generate-pdf', async (req, res) => {
       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
     
+    // Nettoyage d'urgence en cas d'erreur
+    if (page && !page.isClosed()) {
+      try {
+        await page.close();
+        console.log('🔒 Page fermée après erreur');
+      } catch (closeError) {
+        console.error('Erreur fermeture page:', closeError.message);
+      }
+    }
+    
     if (browser) {
       try {
         await browser.close();
         console.log('🔒 Navigateur fermé après erreur');
       } catch (closeError) {
-        console.error('Erreur fermeture navigateur:', closeError);
+        console.error('Erreur fermeture navigateur:', closeError.message);
       }
     }
     
