@@ -365,39 +365,153 @@ const PropertyReport = ({
   const isRefinancing = selectedSubScenario?.type === 'refinancing';
   const isOptimization = selectedSubScenario?.type === 'optimization';
 
-  const handleGeneratePDF = async () => {
-    if (!reportRef.current) return;
+// Fonction corrigée pour gérer les réponses JSON d'erreur
+const handleGeneratePDF = async () => {
+  if (!reportRef.current) {
+    console.error('Référence du rapport introuvable');
+    return;
+  }
 
-    // Gather existing styles so Puppeteer applies the same styling
-    const styles = Array.from(
-      document.querySelectorAll('link[rel="stylesheet"], style'),
-    )
-      .map((el) => el.outerHTML)
-      .join('');
+  try {
+    console.log('Début de la génération PDF...');
+    
+    // Préparation du HTML (même logique qu'avant)
+    const reportElement = reportRef.current;
+    const clonedElement = reportElement.cloneNode(true);
+    
+    // Nettoyer le contenu
+    const buttonsToRemove = clonedElement.querySelectorAll('button, .no-print');
+    buttonsToRemove.forEach(btn => btn.remove());
+    
+    // Styles essentiels uniquement
+    const htmlContent = `
+      <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+          font-family: Arial, sans-serif; 
+          line-height: 1.4; 
+          color: #333; 
+          padding: 20px;
+        }
+        .text-gray-600 { color: #4b5563; }
+        .text-green-600 { color: #16a34a; }
+        .text-red-600 { color: #dc2626; }
+        .font-semibold { font-weight: 600; }
+        .text-xl { font-size: 1.25rem; }
+        .p-4 { padding: 1rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .border { border: 1px solid #e5e7eb; }
+        .rounded-lg { border-radius: 0.5rem; }
+        .grid { display: grid; gap: 1rem; }
+        .grid-cols-2 { grid-template-columns: 1fr 1fr; }
+      </style>
+      <div>${clonedElement.innerHTML}</div>
+    `;
+    
+    console.log('HTML préparé, taille:', htmlContent.length);
+    
+    const pdfUrl = `${import.meta.env.VITE_PDF_URL || window.location.origin}/api/generate-pdf`;
+    console.log('URL du serveur PDF:', pdfUrl);
+    
+    const response = await fetch(pdfUrl, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/pdf',
+      },
+      body: JSON.stringify({ html: htmlContent }),
+    });
 
-    const html = `<!doctype html><html><head>${styles}</head><body class="p-4">${reportRef.current.innerHTML}</body></html>`;
-
-    try {
-      const pdfUrl = `${import.meta.env.VITE_PDF_URL || window.location.origin}/api/generate-pdf`;
-      const response = await fetch(pdfUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ html }),
-      });
-
-      if (!response.ok) throw new Error('Request failed');
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'rapport.pdf';
-      a.click();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('PDF generation failed', err);
+    console.log('Réponse reçue, status:', response.status);
+    console.log('Content-Type:', response.headers.get('Content-Type'));
+    
+    // ⚠️ POINT CRITIQUE: Vérifier le Content-Type AVANT de traiter
+    const contentType = response.headers.get('Content-Type') || '';
+    
+    if (contentType.includes('application/json')) {
+      // Le serveur a renvoyé une erreur JSON
+      const errorData = await response.json();
+      console.error('Erreur serveur (JSON):', errorData);
+      
+      const errorMessage = errorData.error || errorData.message || 'Erreur serveur inconnue';
+      throw new Error(`Erreur serveur: ${errorMessage}`);
     }
-  };
+    
+    if (!response.ok) {
+      // Erreur HTTP mais pas JSON
+      const errorText = await response.text();
+      console.error('Erreur HTTP:', response.status, errorText);
+      throw new Error(`Erreur HTTP ${response.status}: ${errorText.substring(0, 100)}`);
+    }
+    
+    if (!contentType.includes('application/pdf')) {
+      console.warn(`Type de contenu inattendu: ${contentType}`);
+      // On continue quand même, peut-être que c'est un PDF sans le bon header
+    }
+
+    // Récupérer le contenu
+    console.log('Récupération du PDF...');
+    const arrayBuffer = await response.arrayBuffer();
+    console.log('ArrayBuffer reçu, taille:', arrayBuffer.byteLength);
+    
+    if (arrayBuffer.byteLength === 0) {
+      throw new Error('Le fichier PDF reçu est vide');
+    }
+    
+    // Vérification de l'en-tête PDF
+    const uint8Array = new Uint8Array(arrayBuffer);
+    const header = String.fromCharCode(...uint8Array.slice(0, 4));
+    console.log('En-tête PDF:', JSON.stringify(header));
+    
+    if (header !== '%PDF') {
+      // Afficher plus de debug
+      const first20Chars = String.fromCharCode(...uint8Array.slice(0, 20));
+      console.error('Premiers 20 caractères:', JSON.stringify(first20Chars));
+      
+      // Si ça ressemble à du JSON, essayer de le parser
+      if (first20Chars.startsWith('{')) {
+        try {
+          const fullText = new TextDecoder().decode(uint8Array);
+          const jsonError = JSON.parse(fullText);
+          throw new Error(`Le serveur a renvoyé une erreur: ${jsonError.error || jsonError.message || 'Erreur inconnue'}`);
+        } catch (parseError) {
+          throw new Error(`Réponse invalide du serveur (pas un PDF): ${first20Chars}`);
+        }
+      }
+      
+      throw new Error(`En-tête PDF invalide: "${header}" (reçu: ${JSON.stringify(first20Chars)})`);
+    }
+    
+    // Créer et télécharger le PDF
+    const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    
+    const downloadLink = document.createElement('a');
+    downloadLink.href = url;
+    downloadLink.download = `rapport-${new Date().toISOString().split('T')[0]}.pdf`;
+    downloadLink.style.display = 'none';
+    
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+    
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    
+    console.log('PDF téléchargé avec succès');
+    alert('PDF généré avec succès !');
+    
+  } catch (error) {
+    console.error('Erreur complète:', error);
+    
+    // Message d'erreur plus informatif
+    let userMessage = error.message;
+    if (userMessage.includes('En-tête PDF invalide')) {
+      userMessage += '\n\nCela indique que le serveur PDF a rencontré une erreur. Vérifiez les logs du serveur.';
+    }
+    
+    alert(`Erreur lors de la génération du PDF:\n${userMessage}`);
+  }
+};
 
 
   const renderScenarioForm = () => {
