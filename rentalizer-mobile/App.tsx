@@ -1,4 +1,5 @@
 import React from 'react';
+import { AppRegistry } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
@@ -8,7 +9,7 @@ import { AuthProvider } from './src/contexts/AuthContext';
 import { LanguageProvider } from './src/contexts/LanguageContext';
 import { NetworkProvider } from './src/contexts/NetworkContext';
 
-export default function App(): JSX.Element {
+function App(): JSX.Element {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <LanguageProvider>
@@ -24,3 +25,7 @@ export default function App(): JSX.Element {
     </GestureHandlerRootView>
   );
 }
+
+AppRegistry.registerComponent('auth', () => App);
+
+export default App;
