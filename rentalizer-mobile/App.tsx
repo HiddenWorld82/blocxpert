@@ -1,31 +1,26 @@
-import { StatusBar } from 'expo-status-bar';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { StatusBar } from 'expo-status-bar';
 
-export default function App() {
+import AppNavigator from './src/navigation/AppNavigator';
+import { AuthProvider } from './src/contexts/AuthContext';
+import { LanguageProvider } from './src/contexts/LanguageContext';
+import { NetworkProvider } from './src/contexts/NetworkContext';
+
+export default function App(): JSX.Element {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>🚀 Rentalyzer Mobile</Text>
-      <Text style={styles.subtitle}>Test de base</Text>
-      <StatusBar style="auto" />
-    </View>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <LanguageProvider>
+        <NetworkProvider>
+          <AuthProvider>
+            <NavigationContainer>
+              <StatusBar style="dark" />
+              <AppNavigator />
+            </NavigationContainer>
+          </AuthProvider>
+        </NetworkProvider>
+      </LanguageProvider>
+    </GestureHandlerRootView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-  },
-});
