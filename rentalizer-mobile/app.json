@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "Rentalyzer Mobile",
+    "slug": "rentalizer-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "rentalyzer",
+    "icon": "../rentalyzer-logo.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "../rentalyzer-logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "../rentalyzer-logo.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "web": {
+      "favicon": "../rentalyzer-logo.png"
+    },
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
+    ]
+  }
+}
