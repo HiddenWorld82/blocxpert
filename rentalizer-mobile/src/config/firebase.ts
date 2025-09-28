@@ -83,7 +83,8 @@ try {
       persistence: getReactNativePersistenceFn(AsyncStorage),
     });
   } else {
-    auth = getAuth(app);
+    console.warn('Falling back to default React Native auth initialization without persistence.');
+    auth = initializeAuth(app);
   }
   
   // Initialiser Firestore
