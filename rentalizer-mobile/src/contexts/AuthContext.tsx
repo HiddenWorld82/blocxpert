@@ -42,12 +42,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [propertiesLoading, setPropertiesLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
-      setLoading(false);
-    });
+    let unsubscribe: (() => void) | undefined;
+    
+    // Délai pour s'assurer que Firebase est complètement initialisé
+    const initAuth = async () => {
+      try {
+        // Attendre un moment pour que Firebase soit prêt
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        unsubscribe = onAuthStateChanged(auth, (user) => {
+          console.log('Auth state changed:', user ? 'User logged in' : 'User logged out');
+          setCurrentUser(user);
+          setLoading(false);
+        }, (error) => {
+          console.error('Auth state change error:', error);
+          setLoading(false);
+        });
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        setLoading(false);
+      }
+    };
 
-    return unsubscribe;
+    initAuth();
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, []);
 
   // Simulation de données pour les tests
@@ -57,6 +80,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const mockProperties: Property[] = [
         {
           id: '1',
+          uid: currentUser.uid,
           address: '123 Rue Example',
           city: 'Montréal',
           province: 'QC',
@@ -66,7 +90,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
           annualRent: 36000,
         },
         {
-          id: '2', 
+          id: '2',
+          uid: currentUser.uid,
           address: '456 Avenue Test',
           city: 'Québec',
           province: 'QC',
@@ -85,15 +110,41 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [currentUser]);
 
-  const signup = (email: string, password: string) =>
-    createUserWithEmailAndPassword(auth, email, password);
+  const signup = async (email: string, password: string) => {
+    try {
+      return await createUserWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      console.error('Signup error:', error);
+      throw error;
+    }
+  };
 
-  const login = (email: string, password: string) =>
-    signInWithEmailAndPassword(auth, email, password);
+  const login = async (email: string, password: string) => {
+    try {
+      return await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
+  };
 
-  const logout = () => signOut(auth);
+  const logout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error('Logout error:', error);
+      throw error;
+    }
+  };
 
-  const resetPassword = (email: string) => sendPasswordResetEmail(auth, email);
+  const resetPassword = async (email: string) => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+    } catch (error) {
+      console.error('Reset password error:', error);
+      throw error;
+    }
+  };
 
   const value: AuthContextType = {
     currentUser,

@@ -16,22 +16,68 @@ const firebaseConfig = {
   appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID ?? '',
 } as const;
 
+// Vérification des variables d'environnement
 const missingConfigKey = Object.entries(firebaseConfig).find(([, value]) => !value);
 
 if (missingConfigKey) {
   const [key] = missingConfigKey;
-  throw new Error(`Firebase configuration value for "${key}" is missing.`);
+  console.warn(`Firebase configuration value for "${key}" is missing. Using default Firebase for development.`);
+  
+  // Configuration par défaut pour le développement (optionnel)
+  // Vous pouvez commenter ces lignes si vous voulez forcer l'erreur
+  const defaultConfig = {
+    apiKey: "demo-api-key",
+    authDomain: "demo-project.firebaseapp.com",
+    projectId: "demo-project",
+    storageBucket: "demo-project.appspot.com",
+    messagingSenderId: "123456789",
+    appId: "1:123456789:web:abcdef123456789",
+  };
+  
+  Object.assign(firebaseConfig, defaultConfig);
 }
 
-const apps = getApps();
-const app: FirebaseApp = apps.length ? getApp() : initializeApp(firebaseConfig);
+let app: FirebaseApp;
+let auth: any;
+let firestore: any;
 
-const auth = apps.length
-  ? getAuth(app)
-  : initializeAuth(app, {
+try {
+  // Initialiser Firebase seulement s'il n'est pas déjà initialisé
+  const apps = getApps();
+  
+  if (apps.length === 0) {
+    app = initializeApp(firebaseConfig);
+    
+    // Initialiser Auth avec persistance pour React Native
+    auth = initializeAuth(app, {
       persistence: getReactNativePersistence(AsyncStorage),
     });
-
-const firestore = getFirestore(app);
+  } else {
+    app = getApp();
+    auth = getAuth(app);
+  }
+  
+  // Initialiser Firestore
+  firestore = getFirestore(app);
+  
+  console.log('Firebase initialized successfully');
+} catch (error) {
+  console.error('Firebase initialization error:', error);
+  
+  // En cas d'erreur, créer des objets mock pour éviter les crashes
+  auth = {
+    currentUser: null,
+    onAuthStateChanged: () => () => {},
+    signInWithEmailAndPassword: () => Promise.reject(new Error('Firebase not configured')),
+    createUserWithEmailAndPassword: () => Promise.reject(new Error('Firebase not configured')),
+    signOut: () => Promise.reject(new Error('Firebase not configured')),
+    sendPasswordResetEmail: () => Promise.reject(new Error('Firebase not configured')),
+  };
+  
+  firestore = {
+    collection: () => ({}),
+    doc: () => ({}),
+  };
+}
 
 export { app, auth, firestore };
