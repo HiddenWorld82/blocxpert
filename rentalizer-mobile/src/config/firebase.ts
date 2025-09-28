@@ -1,17 +1,37 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { initializeApp, getApp, getApps, FirebaseApp } from 'firebase/app';
+import {
+  getAuth,
+  initializeAuth,
+  getReactNativePersistence,
+} from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const firebaseConfig = {
-  // ⚠️ Utilisez exactement la même configuration que votre projet web
-  apiKey: "AIzaSyAF1wo4_rCRgtFUJatYiGJ3tU8GGsjtQuI",
-  authDomain: "blocxpert-a4f09.firebaseapp.com",
-  projectId: "blocxpert-a4f09",
-  storageBucket: "blocxpert-a4f09.firebasestorage.app", 
-  messagingSenderId: "943428807330",
-  appId: "1:943428807330:web:f92383f550620a091e85fb"
-};
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY ?? '',
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN ?? '',
+  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID ?? '',
+  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET ?? '',
+  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? '',
+  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID ?? '',
+} as const;
 
-export const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const firestore = getFirestore(app);
+const missingConfigKey = Object.entries(firebaseConfig).find(([, value]) => !value);
+
+if (missingConfigKey) {
+  const [key] = missingConfigKey;
+  throw new Error(`Firebase configuration value for "${key}" is missing.`);
+}
+
+const apps = getApps();
+const app: FirebaseApp = apps.length ? getApp() : initializeApp(firebaseConfig);
+
+const auth = apps.length
+  ? getAuth(app)
+  : initializeAuth(app, {
+      persistence: getReactNativePersistence(AsyncStorage),
+    });
+
+const firestore = getFirestore(app);
+
+export { app, auth, firestore };
