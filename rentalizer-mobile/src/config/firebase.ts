@@ -1,11 +1,14 @@
 import { initializeApp, getApp, getApps, FirebaseApp } from 'firebase/app';
 import {
+  browserLocalPersistence,
   getAuth,
   initializeAuth,
-  getReactNativePersistence,
+  setPersistence,
+  type Persistence,
 } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY ?? '',
@@ -41,19 +44,45 @@ let app: FirebaseApp;
 let auth: any;
 let firestore: any;
 
+type ReactNativePersistenceFn = (storage: typeof AsyncStorage) => Persistence;
+let getReactNativePersistenceFn: ReactNativePersistenceFn | undefined;
+
+if (Platform.OS !== 'web') {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires, global-require
+    const rnAuthModule = require('firebase/node_modules/@firebase/auth/dist/rn');
+
+    if (typeof rnAuthModule?.getReactNativePersistence === 'function') {
+      getReactNativePersistenceFn = rnAuthModule.getReactNativePersistence as ReactNativePersistenceFn;
+    }
+  } catch (nativePersistenceError) {
+    console.warn(
+      'React Native persistence helper unavailable, falling back to default persistence.',
+      nativePersistenceError,
+    );
+  }
+}
+
 try {
   // Initialiser Firebase seulement s'il n'est pas déjà initialisé
   const apps = getApps();
   
   if (apps.length === 0) {
     app = initializeApp(firebaseConfig);
-    
-    // Initialiser Auth avec persistance pour React Native
-    auth = initializeAuth(app, {
-      persistence: getReactNativePersistence(AsyncStorage),
-    });
   } else {
     app = getApp();
+  }
+
+  if (Platform.OS === 'web') {
+    auth = getAuth(app);
+    setPersistence(auth, browserLocalPersistence).catch((persistenceError) => {
+      console.warn('Failed to set web auth persistence:', persistenceError);
+    });
+  } else if (getReactNativePersistenceFn) {
+    auth = initializeAuth(app, {
+      persistence: getReactNativePersistenceFn(AsyncStorage),
+    });
+  } else {
     auth = getAuth(app);
   }
   
