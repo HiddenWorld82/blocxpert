@@ -1,5 +1,4 @@
 import React from 'react';
-import { AppRegistry } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
@@ -25,7 +24,5 @@ function App(): JSX.Element {
     </GestureHandlerRootView>
   );
 }
-
-AppRegistry.registerComponent('auth', () => App);
 
 export default App;
