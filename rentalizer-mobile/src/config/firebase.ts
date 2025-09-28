@@ -48,10 +48,19 @@ type ReactNativePersistenceFn = (storage: typeof AsyncStorage) => Persistence;
 let getReactNativePersistenceFn: ReactNativePersistenceFn | undefined;
 
 if (Platform.OS !== 'web') {
-  // Lazy-load the React Native specific persistence only on native platforms
-  getReactNativePersistenceFn =
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    require('firebase/auth/react-native').getReactNativePersistence as ReactNativePersistenceFn;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires, global-require
+    const rnAuthModule = require('firebase/node_modules/@firebase/auth/dist/rn');
+
+    if (typeof rnAuthModule?.getReactNativePersistence === 'function') {
+      getReactNativePersistenceFn = rnAuthModule.getReactNativePersistence as ReactNativePersistenceFn;
+    }
+  } catch (nativePersistenceError) {
+    console.warn(
+      'React Native persistence helper unavailable, falling back to default persistence.',
+      nativePersistenceError,
+    );
+  }
 }
 
 try {
