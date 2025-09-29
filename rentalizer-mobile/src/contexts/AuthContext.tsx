@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -11,8 +11,11 @@ import {
 } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { Property } from '../types';
+import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
 import * as AuthSession from 'expo-auth-session';
-import { Platform } from 'react-native';
+
+WebBrowser.maybeCompleteAuthSession();
 
 interface AuthContextType {
   currentUser: User | null;
@@ -115,6 +118,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [currentUser]);
 
+  const googleLoginPromiseRef = useRef<{
+    resolve: () => void;
+    reject: (error: Error) => void;
+  } | null>(null);
+
+  const [googleRequest, googleResponse, promptAsync] = Google.useIdTokenAuthRequest({
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+  });
+
   const signup = async (email: string, password: string) => {
     try {
       return await createUserWithEmailAndPassword(auth, email, password);
@@ -133,66 +147,65 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-   const getGoogleClientId = () => {
-    if (Platform.OS === 'android') {
-      return process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID;
+  useEffect(() => {
+    if (!googleResponse || !googleLoginPromiseRef.current) {
+      return;
     }
 
-    if (Platform.OS === 'ios') {
-      return process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID;
-    }
+    (async () => {
+      const pendingPromise = googleLoginPromiseRef.current;
 
-    return process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID;
-  };
+      try {
+        if (googleResponse.type === 'success') {
+          const params = googleResponse.params as Record<string, string> | undefined;
+          const idToken = googleResponse.authentication?.idToken || params?.id_token;
+          const accessToken = googleResponse.authentication?.accessToken || params?.access_token;
+
+          if (!idToken) {
+            throw new Error('Google authentication did not return an ID token.');
+          }
+
+          const credential = GoogleAuthProvider.credential(idToken, accessToken);
+          await signInWithCredential(auth, credential);
+          pendingPromise?.resolve();
+          return;
+        }
+
+        if (googleResponse.type === 'error') {
+          const errorResult = googleResponse as AuthSession.ErrorResult;
+          throw new Error(errorResult.errorCode || errorResult.error || 'Google authentication failed');
+        }
+
+        if (googleResponse.type === 'dismiss' || googleResponse.type === 'cancel') {
+          throw new Error('Google authentication was cancelled.');
+        }
+
+        if (googleResponse.type === 'locked') {
+          throw new Error('Authentication is already in progress.');
+        }
+      } catch (error) {
+        const authError = error instanceof Error ? error : new Error(String(error));
+        pendingPromise?.reject(authError);
+      } finally {
+        googleLoginPromiseRef.current = null;
+      }
+    })();
+  }, [googleResponse]);
 
   const loginWithGoogle = async () => {
     try {
-      const clientId = getGoogleClientId();
-
-      if (!clientId) {
-        throw new Error('Google client ID is not configured.');
+      if (!googleRequest) {
+        throw new Error('Google authentication is not ready.');
       }
 
-      const useProxy = Platform.OS !== 'web';
-      const redirectUri = AuthSession.makeRedirectUri({ useProxy });
-       const discovery = await AuthSession.fetchDiscoveryAsync('https://accounts.google.com');
+      await new Promise<void>((resolve, reject) => {
+        googleLoginPromiseRef.current = { resolve, reject };
 
-      const request = new AuthSession.AuthRequest({
-        clientId,
-        redirectUri,
-        responseType: AuthSession.ResponseType.IdToken,
-        scopes: ['openid', 'email', 'profile'],
-        extraParams: { prompt: 'select_account' },
+        promptAsync().catch((error) => {
+          googleLoginPromiseRef.current = null;
+          reject(error instanceof Error ? error : new Error(String(error)));
+        });
       });
-
-      const result = await request.promptAsync(discovery, { useProxy });
-
-      if (result.type === 'success') {
-        const params = result.params as Record<string, string> | undefined;
-        const idToken = result.authentication?.idToken || params?.id_token;
-        const accessToken = result.authentication?.accessToken || params?.access_token;
-
-        if (!idToken) {
-          throw new Error('Google authentication did not return an ID token.');
-        }
-
-        const credential = GoogleAuthProvider.credential(idToken, accessToken);
-        await signInWithCredential(auth, credential);
-        return;
-      }
-
-      if (result.type === 'error') {
-        const errorResult = result as AuthSession.ErrorResult;
-        throw new Error(errorResult.errorCode || 'Google authentication failed');
-      }
-
-      if (result.type === 'dismiss') {
-        throw new Error('Google authentication was cancelled.');
-      }
-      
-      if (result.type === 'locked') {
-        throw new Error('Authentication is already in progress.');
-      }
     } catch (error) {
       console.error('Google login error:', error);
       throw error;
