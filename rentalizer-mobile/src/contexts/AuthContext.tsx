@@ -155,17 +155,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       const useProxy = Platform.OS !== 'web';
       const redirectUri = AuthSession.makeRedirectUri({ useProxy });
-      const authUrl =
-        'https://accounts.google.com/o/oauth2/v2/auth' +
-        `?client_id=${encodeURIComponent(clientId)}` +
-        `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-        '&response_type=id_token%20token' +
-        `&scope=${encodeURIComponent('openid email profile')}`;
+       const discovery = await AuthSession.fetchDiscoveryAsync('https://accounts.google.com');
 
-      const result = await AuthSession.startAsync({ authUrl });
+      const request = new AuthSession.AuthRequest({
+        clientId,
+        redirectUri,
+        responseType: AuthSession.ResponseType.IdToken,
+        scopes: ['openid', 'email', 'profile'],
+        extraParams: { prompt: 'select_account' },
+      });
+
+      const result = await request.promptAsync(discovery, { useProxy });
 
       if (result.type === 'success') {
-        const { id_token: idToken, access_token: accessToken } = result.params as Record<string, string>;
+        const params = result.params as Record<string, string> | undefined;
+        const idToken = result.authentication?.idToken || params?.id_token;
+        const accessToken = result.authentication?.accessToken || params?.access_token;
 
         if (!idToken) {
           throw new Error('Google authentication did not return an ID token.');
@@ -181,6 +186,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw new Error(errorResult.errorCode || 'Google authentication failed');
       }
 
+      if (result.type === 'dismiss') {
+        throw new Error('Google authentication was cancelled.');
+      }
+      
       if (result.type === 'locked') {
         throw new Error('Authentication is already in progress.');
       }
