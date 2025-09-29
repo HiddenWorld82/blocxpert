@@ -3,11 +3,14 @@ import { NavigationContainer } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import { View, Text } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
 
 import AppNavigator from './src/navigation/AppNavigator';
 import { AuthProvider } from './src/contexts/AuthContext';
 import { LanguageProvider } from './src/contexts/LanguageContext';
 import { NetworkProvider } from './src/contexts/NetworkContext';
+
+WebBrowser.maybeCompleteAuthSession();
 
 // Composant de fallback en cas d'erreur
 class ErrorBoundary extends React.Component {
