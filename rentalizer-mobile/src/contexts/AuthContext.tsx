@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -12,8 +12,8 @@ import {
 import { auth } from '../config/firebase';
 import { Property } from '../types';
 import * as WebBrowser from 'expo-web-browser';
-import * as Google from 'expo-auth-session/providers/google';
 import * as AuthSession from 'expo-auth-session';
+import { Platform } from 'react-native';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -118,17 +118,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [currentUser]);
 
-  const googleLoginPromiseRef = useRef<{
-    resolve: () => void;
-    reject: (error: Error) => void;
-  } | null>(null);
-
-  const [googleRequest, googleResponse, promptAsync] = Google.useIdTokenAuthRequest({
-    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
-    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-  });
-
   const signup = async (email: string, password: string) => {
     try {
       return await createUserWithEmailAndPassword(auth, email, password);
@@ -147,65 +136,48 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  useEffect(() => {
-    if (!googleResponse || !googleLoginPromiseRef.current) {
-      return;
-    }
-
-    (async () => {
-      const pendingPromise = googleLoginPromiseRef.current;
-
-      try {
-        if (googleResponse.type === 'success') {
-          const params = googleResponse.params as Record<string, string> | undefined;
-          const idToken = googleResponse.authentication?.idToken || params?.id_token;
-          const accessToken = googleResponse.authentication?.accessToken || params?.access_token;
-
-          if (!idToken) {
-            throw new Error('Google authentication did not return an ID token.');
-          }
-
-          const credential = GoogleAuthProvider.credential(idToken, accessToken);
-          await signInWithCredential(auth, credential);
-          pendingPromise?.resolve();
-          return;
-        }
-
-        if (googleResponse.type === 'error') {
-          const errorResult = googleResponse as AuthSession.ErrorResult;
-          throw new Error(errorResult.errorCode || errorResult.error || 'Google authentication failed');
-        }
-
-        if (googleResponse.type === 'dismiss' || googleResponse.type === 'cancel') {
-          throw new Error('Google authentication was cancelled.');
-        }
-
-        if (googleResponse.type === 'locked') {
-          throw new Error('Authentication is already in progress.');
-        }
-      } catch (error) {
-        const authError = error instanceof Error ? error : new Error(String(error));
-        pendingPromise?.reject(authError);
-      } finally {
-        googleLoginPromiseRef.current = null;
-      }
-    })();
-  }, [googleResponse]);
-
   const loginWithGoogle = async () => {
     try {
-      if (!googleRequest) {
-        throw new Error('Google authentication is not ready.');
+      const useProxy = Platform.select({ web: false, default: true });
+      const redirectUri = AuthSession.makeRedirectUri({ useProxy });
+
+      const clientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+      if (!clientId) {
+        throw new Error('Missing EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID');
       }
 
-      await new Promise<void>((resolve, reject) => {
-        googleLoginPromiseRef.current = { resolve, reject };
+      const discovery = await AuthSession.fetchDiscoveryAsync('https://accounts.google.com');
 
-        promptAsync().catch((error) => {
-          googleLoginPromiseRef.current = null;
-          reject(error instanceof Error ? error : new Error(String(error)));
-        });
+      const request = new AuthSession.AuthRequest({
+        clientId,
+        redirectUri,
+        responseType: AuthSession.ResponseType.IdToken,
+        scopes: ['openid', 'email', 'profile'],
+        extraParams: { prompt: 'select_account' },
       });
+
+      const result = await request.promptAsync(discovery, { useProxy });
+
+      if (result.type === 'success') {
+        const idToken =
+          result.authentication?.idToken ||
+          (result.params as Record<string, string> | undefined)?.id_token;
+
+        if (!idToken) {
+          throw new Error('Google did not return id_token');
+        }
+
+        const credential = GoogleAuthProvider.credential(idToken);
+        await signInWithCredential(auth, credential);
+        return;
+      }
+
+      if (result.type === 'error') {
+        const errorResult = result as AuthSession.ErrorResult;
+        throw new Error(`Google error: ${errorResult.errorCode ?? 'unknown'}`);
+      }
+
+      throw new Error('Authentication cancelled or interrupted.');
     } catch (error) {
       console.error('Google login error:', error);
       throw error;
