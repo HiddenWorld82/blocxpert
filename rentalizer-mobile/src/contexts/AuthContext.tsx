@@ -5,10 +5,14 @@ import {
   signOut,
   sendPasswordResetEmail,
   onAuthStateChanged,
-  User
+  User,
+  GoogleAuthProvider,
+  signInWithCredential,
 } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { Property } from '../types';
+import * as AuthSession from 'expo-auth-session';
+import { Platform } from 'react-native';
 
 interface AuthContextType {
   currentUser: User | null;
@@ -18,6 +22,7 @@ interface AuthContextType {
   signup: (email: string, password: string) => Promise<any>;
   login: (email: string, password: string) => Promise<any>;
   logout: () => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
 }
 
@@ -128,6 +133,63 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+   const getGoogleClientId = () => {
+    if (Platform.OS === 'android') {
+      return process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID;
+    }
+
+    if (Platform.OS === 'ios') {
+      return process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID;
+    }
+
+    return process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID;
+  };
+
+  const loginWithGoogle = async () => {
+    try {
+      const clientId = getGoogleClientId();
+
+      if (!clientId) {
+        throw new Error('Google client ID is not configured.');
+      }
+
+      const useProxy = Platform.OS !== 'web';
+      const redirectUri = AuthSession.makeRedirectUri({ useProxy });
+      const authUrl =
+        'https://accounts.google.com/o/oauth2/v2/auth' +
+        `?client_id=${encodeURIComponent(clientId)}` +
+        `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+        '&response_type=id_token%20token' +
+        `&scope=${encodeURIComponent('openid email profile')}`;
+
+      const result = await AuthSession.startAsync({ authUrl });
+
+      if (result.type === 'success') {
+        const { id_token: idToken, access_token: accessToken } = result.params as Record<string, string>;
+
+        if (!idToken) {
+          throw new Error('Google authentication did not return an ID token.');
+        }
+
+        const credential = GoogleAuthProvider.credential(idToken, accessToken);
+        await signInWithCredential(auth, credential);
+        return;
+      }
+
+      if (result.type === 'error') {
+        const errorResult = result as AuthSession.ErrorResult;
+        throw new Error(errorResult.errorCode || 'Google authentication failed');
+      }
+
+      if (result.type === 'locked') {
+        throw new Error('Authentication is already in progress.');
+      }
+    } catch (error) {
+      console.error('Google login error:', error);
+      throw error;
+    }
+  };
+
   const logout = async () => {
     try {
       await signOut(auth);
@@ -153,6 +215,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     propertiesLoading,
     signup,
     login,
+    loginWithGoogle,
     logout,
     resetPassword,
   };

@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
@@ -18,7 +19,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { login, signup, resetPassword } = useAuth();
+  const { login, signup, resetPassword, loginWithGoogle } = useAuth();
 
   const handleSubmit = async () => {
     if (!email || !password) {
@@ -57,6 +58,17 @@ export default function LoginScreen() {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    try {
+      await loginWithGoogle();
+    } catch (error) {
+      Alert.alert('Erreur', 'Impossible de se connecter avec Google');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <KeyboardAvoidingView 
       style={styles.container} 
@@ -65,7 +77,11 @@ export default function LoginScreen() {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {/* Logo/Header */}
         <View style={styles.header}>
-          <Ionicons name="business" size={60} color="#2563eb" />
+          <Image
+            source={require('../../../rentalyzer-logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
           <Text style={styles.title}>Rentalyzer</Text>
           <Text style={styles.subtitle}>
             {isSignUp ? 'Créer un compte' : 'Connexion'}
@@ -120,10 +136,25 @@ export default function LoginScreen() {
             style={styles.linkButton}
           >
             <Text style={styles.linkText}>
-              {isSignUp 
+              {isSignUp
                 ? 'Déjà un compte ? Se connecter' 
                 : 'Pas de compte ? S\'inscrire'}
             </Text>
+          </TouchableOpacity>
+
+          <View style={styles.dividerContainer}>
+            <View style={styles.divider} />
+            <Text style={styles.dividerText}>ou</Text>
+            <View style={styles.divider} />
+          </View>
+
+          <TouchableOpacity
+            style={[styles.googleButton, loading && styles.googleButtonDisabled]}
+            onPress={handleGoogleLogin}
+            disabled={loading}
+          >
+            <Ionicons name="logo-google" size={20} color="#1f2937" style={styles.googleIcon} />
+            <Text style={styles.googleButtonText}>Continuer avec Google</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -144,6 +175,10 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     marginBottom: 40,
+  },
+  logo: {
+    width: 120,
+    height: 120,
   },
   title: {
     fontSize: 32,
@@ -210,5 +245,45 @@ const styles = StyleSheet.create({
     color: '#2563eb',
     fontSize: 14,
     fontWeight: '500',
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 24,
+    marginBottom: 16,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#e5e7eb',
+  },
+  dividerText: {
+    marginHorizontal: 12,
+    color: '#6b7280',
+    fontSize: 14,
+  },
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    height: 50,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  googleButtonDisabled: {
+    opacity: 0.6,
+  },
+  googleIcon: {
+    marginRight: 12,
+  },
+  googleButtonText: {
+    color: '#1f2937',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
