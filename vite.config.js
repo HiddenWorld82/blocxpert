@@ -3,11 +3,14 @@ import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  /**plugins: [react()],
   server: {
     host: '0.0.0.0',
     allowedHosts: [
       'bluebird-emerging-incredibly.ngrok.app'
     ]
-  }
+  }**/
+  base: '/',   // <-- CHEMIN DU REPO, important !
+  plugins: [react()],
+  build: { sourcemap: true }
 })
