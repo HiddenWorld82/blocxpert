@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import RentalPropertyAnalyzer from './RentalPropertyAnalyzer';
 import LoginPage from './components/auth/LoginPage';
 import SignupPage from './components/auth/SignupPage';
@@ -9,7 +9,7 @@ import NetworkStatusBadge from './components/NetworkStatusBadge';
 
 function App() {
   return (
-    <Router>
+    <>
       <NetworkStatusBadge />
       <Routes>
         <Route
@@ -24,7 +24,7 @@ function App() {
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/reset-password" element={<ResetPassword />} />
       </Routes>
-    </Router>
+    </>
   );
 }
 
