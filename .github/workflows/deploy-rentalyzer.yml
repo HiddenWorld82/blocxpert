@@ -54,7 +54,9 @@ jobs:
 
       - name: sanity check (no secret printed)
         shell: bash
-        run: echo "env file created: $(wc -l < .env.production) lines"
+        run: |
+          lines=$(wc -l < .env.production)
+          echo "env file created: $lines lines"
 
       - name: build
         run: pnpm run build
