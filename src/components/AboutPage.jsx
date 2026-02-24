@@ -19,7 +19,7 @@ const AboutPage = ({ onBack }) => {
           <div className="w-32 h-32 mx-auto rounded-full overflow-hidden bg-gray-200 mb-4">
             {/* La photo professionnelle sera ajoutée ultérieurement */}
             <img
-              src="/src/profile.jpg"
+              src="/profile.jpg"
               alt={t('about.photoAlt')}
               className="w-full h-full object-cover"
             />
