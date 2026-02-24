@@ -15,15 +15,33 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
+
+      - name: setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+          run_install: false
+
+      - name: get pnpm store path
+        shell: bash
+        run: echo "PNPM_STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.PNPM_STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: install
-        run: npm ci --include=optional
+        run: pnpm install --frozen-lockfile
 
       - name: build
-        run: npm run build
+        run: pnpm run build
 
       - name: pick build folder
+        shell: bash
         run: |
           if [ -d "build" ]; then
             echo "BUILD_DIR=build" >> $GITHUB_ENV
@@ -41,11 +59,13 @@ jobs:
           ssh-passphrase: ${{ secrets.SSH_PASSPHRASE }}
 
       - name: trust host key
+        shell: bash
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
 
       - name: deploy via rsync
+        shell: bash
         run: |
           rsync -az --delete \
             -e "ssh -p ${{ secrets.SSH_PORT }}" \
