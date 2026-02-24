@@ -13,7 +13,6 @@
     "deploy": "gh-pages -d dist --cname rentalyzer.dmii.ca"
   },
   "dependencies": {
-    "@rollup/rollup-win32-x64-msvc": "^4.49.0",
     "@tailwindcss/postcss": "^4.1.11",
     "express": "^4.21.2",
     "firebase": "^12.1.0",
@@ -52,5 +51,6 @@
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/HiddenWorld82/blocxpert/issues"
-  }
+  },
+  "packageManager": "pnpm@10.30.2+sha512.36cdc707e7b7940a988c9c1ecf88d084f8514b5c3f085f53a2e244c2921d3b2545bc20dd4ebe1fc245feec463bb298aecea7a63ed1f7680b877dc6379d8d0cb4"
 }
