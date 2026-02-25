@@ -15,7 +15,7 @@ import calculateReturnAfterYears from '../utils/calculateReturnAfterYears';
 import calculateOptimisationScenario from '../utils/calculateOptimisationScenario';
 import { getScenarios } from '../services/dataService';
 import { getAphMaxLtvRatio } from '../utils/cmhc';
-import { getPdfEndpointCandidates } from '../utils/pdfEndpoint';
+import { getPdfEndpointCandidates, requestPdfWithFallback } from '../utils/pdfEndpoint';
 
 const DEFAULT_INCOME_GROWTH = 2;
 const DEFAULT_EXPENSE_GROWTH = 2.5;
@@ -414,66 +414,18 @@ const handleGeneratePDF = async () => {
     const endpointCandidates = getPdfEndpointCandidates();
     console.log('URL du serveur PDF (candidates):', endpointCandidates);
 
-    let response;
-
-    for (let index = 0; index < endpointCandidates.length; index += 1) {
-      const endpoint = endpointCandidates[index];
-
+    endpointCandidates.forEach((endpoint, index) => {
       console.log(`Tentative PDF ${index + 1}/${endpointCandidates.length}:`, endpoint);
+    });
 
-      response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/pdf',
-        },
-        body: JSON.stringify({ html: htmlContent }),
-      });
+    const { endpoint, contentType, arrayBuffer } = await requestPdfWithFallback({
+      html: htmlContent,
+      endpointCandidates,
+    });
 
-      const contentType = response.headers.get('Content-Type') || '';
-      const canRetry =
-        index < endpointCandidates.length - 1
-        && response.status === 404
-        && contentType.includes('text/html');
-
-      if (canRetry) {
-        console.warn('Endpoint PDF introuvable, tentative du prochain endpoint...');
-        continue;
-      }
-
-      break;
-    }
-
-    console.log('Réponse reçue, status:', response.status);
-    console.log('Content-Type:', response.headers.get('Content-Type'));
-    
-    // ⚠️ POINT CRITIQUE: Vérifier le Content-Type AVANT de traiter
-    const contentType = response.headers.get('Content-Type') || '';
-    
-    if (contentType.includes('application/json')) {
-      // Le serveur a renvoyé une erreur JSON
-      const errorData = await response.json();
-      console.error('Erreur serveur (JSON):', errorData);
-      
-      const errorMessage = errorData.error || errorData.message || 'Erreur serveur inconnue';
-      throw new Error(`Erreur serveur: ${errorMessage}`);
-    }
-    
-    if (!response.ok) {
-      // Erreur HTTP mais pas JSON
-      const errorText = await response.text();
-      console.error('Erreur HTTP:', response.status, errorText);
-      throw new Error(`Erreur HTTP ${response.status}: ${errorText.substring(0, 100)}`);
-    }
-    
-    if (!contentType.includes('application/pdf')) {
-      console.warn(`Type de contenu inattendu: ${contentType}`);
-      // On continue quand même, peut-être que c'est un PDF sans le bon header
-    }
-
-    // Récupérer le contenu
+    console.log('Réponse reçue depuis:', endpoint);
+    console.log('Content-Type:', contentType);
     console.log('Récupération du PDF...');
-    const arrayBuffer = await response.arrayBuffer();
     console.log('ArrayBuffer reçu, taille:', arrayBuffer.byteLength);
     
     if (arrayBuffer.byteLength === 0) {

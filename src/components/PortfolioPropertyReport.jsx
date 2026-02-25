@@ -4,7 +4,7 @@ import FinancialSummary from './sections/FinancialSummary';
 import FinancingSummary from './sections/FinancingSummary';
 import calculateRentability from '../utils/calculateRentability';
 import calculateReturnAfterYears from '../utils/calculateReturnAfterYears';
-import { getPdfEndpointCandidates } from '../utils/pdfEndpoint';
+import { getPdfEndpointCandidates, requestPdfWithFallback } from '../utils/pdfEndpoint';
 
 function formatCurrency(val) {
   return new Intl.NumberFormat('fr-CA', {
@@ -139,32 +139,12 @@ const PortfolioPropertyReport = ({ property, onClose }) => {
 
     try {
       const endpointCandidates = getPdfEndpointCandidates();
-      let response;
+      const { arrayBuffer } = await requestPdfWithFallback({
+        html,
+        endpointCandidates,
+      });
 
-      for (let index = 0; index < endpointCandidates.length; index += 1) {
-        const endpoint = endpointCandidates[index];
-        response = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ html }),
-        });
-
-        const contentType = response.headers.get('Content-Type') || '';
-        const canRetry =
-          index < endpointCandidates.length - 1
-          && response.status === 404
-          && contentType.includes('text/html');
-
-        if (canRetry) {
-          continue;
-        }
-
-        break;
-      }
-
-      if (!response.ok) throw new Error(`Request failed (${response.status})`);
-
-      const blob = await response.blob();
+      const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
