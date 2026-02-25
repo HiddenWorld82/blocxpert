@@ -432,31 +432,8 @@ const handleGeneratePDF = async () => {
       throw new Error('Le fichier PDF reçu est vide');
     }
     
-    // Vérification de l'en-tête PDF
-    const uint8Array = new Uint8Array(arrayBuffer);
-    const header = String.fromCharCode(...uint8Array.slice(0, 4));
-    console.log('En-tête PDF:', JSON.stringify(header));
-    
-    if (header !== '%PDF') {
-      // Afficher plus de debug
-      const first20Chars = String.fromCharCode(...uint8Array.slice(0, 20));
-      console.error('Premiers 20 caractères:', JSON.stringify(first20Chars));
-      
-      // Si ça ressemble à du JSON, essayer de le parser
-      if (first20Chars.startsWith('{')) {
-        try {
-          const fullText = new TextDecoder().decode(uint8Array);
-          const jsonError = JSON.parse(fullText);
-          throw new Error(`Le serveur a renvoyé une erreur: ${jsonError.error || jsonError.message || 'Erreur inconnue'}`);
-        } catch (_parseError) {
-          throw new Error(`Réponse invalide du serveur (pas un PDF): ${first20Chars}`);
-        }
-      }
-      
-      throw new Error(`En-tête PDF invalide: "${header}" (reçu: ${JSON.stringify(first20Chars)})`);
-    }
-    
-    // Créer et télécharger le PDF
+    // La validation du payload PDF est déjà effectuée dans requestPdfWithFallback.
+    // Ici, on ne télécharge que si la réponse est confirmée valide.
     const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);
     
@@ -479,8 +456,8 @@ const handleGeneratePDF = async () => {
     
     // Message d'erreur plus informatif
     let userMessage = error.message;
-    if (userMessage.includes('En-tête PDF invalide')) {
-      userMessage += '\n\nCela indique que le serveur PDF a rencontré une erreur. Vérifiez les logs du serveur.';
+    if (userMessage.includes('non-PDF') || userMessage.includes('En-tête PDF invalide')) {
+      userMessage += '\n\nConseil: configurez VITE_PDF_ENDPOINT avec l\'URL complète du backend PDF (ex: https://votre-backend/api/generate-pdf).';
     }
     
     alert(`Erreur lors de la génération du PDF:\n${userMessage}`);

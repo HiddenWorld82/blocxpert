@@ -82,10 +82,29 @@ const looksLikeSpaFallback = (previewText) => {
   );
 };
 
+const parseJsonErrorPayload = (previewText, uint8Array) => {
+  const normalizedPreview = (previewText || '').trim();
+  if (!normalizedPreview.startsWith('{')) {
+    return null;
+  }
+
+  try {
+    const fullText = new TextDecoder().decode(uint8Array);
+    const parsed = JSON.parse(fullText);
+    return parsed?.error || parsed?.message || null;
+  } catch {
+    return null;
+  }
+};
+
 export const requestPdfWithFallback = async ({
   html,
   endpointCandidates = getPdfEndpointCandidates(),
 }) => {
+  if (!endpointCandidates.length) {
+    throw new Error('Aucun endpoint PDF configuré. Définissez VITE_PDF_ENDPOINT (URL complète).');
+  }
+  
   let lastError;
 
   for (let index = 0; index < endpointCandidates.length; index += 1) {
@@ -114,11 +133,15 @@ export const requestPdfWithFallback = async ({
       if (!response.ok || (!isPdfPayload && isHtmlFallback)) {
         const statusHint = `${response.status} ${response.statusText}`.trim();
         const responsePreview = previewText.trim().slice(0, 120);
+        const jsonErrorMessage = parseJsonErrorPayload(responsePreview, uint8Array);
         const spaFallbackHint = looksLikeSpaFallback(responsePreview)
-          ? ' Le serveur semble renvoyer la page HTML de l\'application. Vérifiez VITE_PDF_ENDPOINT/VITE_PDF_URL pour cibler le backend PDF.'
+          ? ' Le serveur semble renvoyer la page HTML de l\'application. Vérifiez VITE_PDF_ENDPOINT (URL complète du backend PDF) côté frontend.'
+          : '';
+        const jsonErrorHint = jsonErrorMessage
+          ? ` Détail backend: ${jsonErrorMessage}`
           : '';
         lastError = new Error(
-          `Endpoint ${endpoint} a renvoyé une réponse non-PDF (${statusHint}, ${contentType || 'sans Content-Type'}, aperçu: ${JSON.stringify(responsePreview)}).${spaFallbackHint}`,
+          `Endpoint ${endpoint} a renvoyé une réponse non-PDF (${statusHint}, ${contentType || 'sans Content-Type'}, aperçu: ${JSON.stringify(responsePreview)}).${jsonErrorHint}${spaFallbackHint}`,
         );
 
         if (!isLastEndpoint) {
@@ -134,8 +157,10 @@ export const requestPdfWithFallback = async ({
 
       if (!isPdfPayload) {
         const responsePreview = previewText.trim().slice(0, 120);
+        const jsonErrorMessage = parseJsonErrorPayload(responsePreview, uint8Array);
+        const jsonErrorHint = jsonErrorMessage ? `; détail backend: ${jsonErrorMessage}` : '';
         throw new Error(
-          `En-tête PDF invalide: ${JSON.stringify(header)} (reçu: ${JSON.stringify(responsePreview)})`,
+          `En-tête PDF invalide: ${JSON.stringify(header)} (reçu: ${JSON.stringify(responsePreview)})${jsonErrorHint}`,
         );
       }
 
