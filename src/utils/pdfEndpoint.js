@@ -18,7 +18,7 @@ const normalizeBaseUrl = (baseUrl) => {
   return absoluteUrl.replace(/\/+$/, '');
 };
 
-const buildCandidateEndpointsFromBase = (baseUrl) => {
+const buildCandidateEndpointsFromBase = (baseUrl, { includeLegacyRoute = false } = {}) => {
   const normalizedBaseUrl = normalizeBaseUrl(baseUrl);
   if (!normalizedBaseUrl) return [];
 
@@ -26,10 +26,13 @@ const buildCandidateEndpointsFromBase = (baseUrl) => {
     return [normalizedBaseUrl];
   }
 
-  return [
-    `${normalizedBaseUrl}/api/generate-pdf`,
-    `${normalizedBaseUrl}/generate-pdf`,
-  ];
+  const candidates = [`${normalizedBaseUrl}/api/generate-pdf`];
+
+  if (includeLegacyRoute) {
+    candidates.push(`${normalizedBaseUrl}/generate-pdf`);
+  }
+
+  return candidates;
 };
 
 export const getPdfEndpointCandidates = () => {
@@ -46,12 +49,22 @@ export const getPdfEndpointCandidates = () => {
     import.meta.env.VITE_API_BASE_URL,
     import.meta.env.VITE_API_URL,
     window.location.origin,
-  ].filter(Boolean);
+  ]
+    .filter(Boolean)
+    .map((baseUrl) => ({
+      baseUrl,
+      isWindowOrigin:
+        normalizeBaseUrl(baseUrl) === normalizeBaseUrl(window.location.origin),
+    }));
 
   const uniqueCandidates = [];
 
-  rawBaseUrls.forEach((baseUrl) => {
-    const candidates = buildCandidateEndpointsFromBase(baseUrl);
+  rawBaseUrls.forEach(({ baseUrl, isWindowOrigin }) => {
+    const candidates = buildCandidateEndpointsFromBase(baseUrl, {
+      // Sur la même origine que le frontend, /generate-pdf est souvent une route SPA
+      // qui renvoie index.html. On évite ce fallback trompeur par défaut.
+      includeLegacyRoute: !isWindowOrigin,
+    });
     candidates.forEach((candidate) => {
       if (candidate && !uniqueCandidates.includes(candidate)) {
         uniqueCandidates.push(candidate);
@@ -106,10 +119,12 @@ export const requestPdfWithFallback = async ({
   }
   
   let lastError;
+  const attemptedEndpoints = [];
 
   for (let index = 0; index < endpointCandidates.length; index += 1) {
     const endpoint = endpointCandidates[index];
     const isLastEndpoint = index === endpointCandidates.length - 1;
+    attemptedEndpoints.push(endpoint);
 
     try {
       const response = await fetch(endpoint, {
@@ -122,12 +137,13 @@ export const requestPdfWithFallback = async ({
       });
 
       const contentType = response.headers.get('Content-Type') || '';
+      const normalizedContentType = contentType.toLowerCase();
       const arrayBuffer = await response.arrayBuffer();
       const uint8Array = new Uint8Array(arrayBuffer);
       const previewText = new TextDecoder().decode(uint8Array.slice(0, 80));
       const header = String.fromCharCode(...uint8Array.slice(0, 4));
 
-      const isHtmlFallback = looksLikeHtmlResponse(contentType, previewText);
+      const isHtmlFallback = looksLikeHtmlResponse(normalizedContentType, previewText);
       const isPdfPayload = header === '%PDF';
 
       if (!response.ok || (!isPdfPayload && isHtmlFallback)) {
@@ -141,14 +157,14 @@ export const requestPdfWithFallback = async ({
           ? ` Détail backend: ${jsonErrorMessage}`
           : '';
         lastError = new Error(
-          `Endpoint ${endpoint} a renvoyé une réponse non-PDF (${statusHint}, ${contentType || 'sans Content-Type'}, aperçu: ${JSON.stringify(responsePreview)}).${jsonErrorHint}${spaFallbackHint}`,
+          `Endpoint ${endpoint} a renvoyé une réponse non-PDF (${statusHint}, ${normalizedContentType || 'sans Content-Type'}, aperçu: ${JSON.stringify(responsePreview)}).${jsonErrorHint}${spaFallbackHint}`,
         );
 
         if (!isLastEndpoint) {
           console.warn('Endpoint PDF invalide, tentative du prochain endpoint...', {
             endpoint,
             status: response.status,
-            contentType,
+            contentType: normalizedContentType,
             previewText: responsePreview,
           });
           continue;
@@ -182,5 +198,12 @@ export const requestPdfWithFallback = async ({
     }
   }
 
-  throw lastError || new Error('Aucun endpoint PDF disponible');
+  if (lastError) {
+    const attemptsHint = attemptedEndpoints.length
+      ? ` Endpoints testés: ${attemptedEndpoints.join(', ')}.`
+      : '';
+    throw new Error(`${lastError.message}${attemptsHint}`);
+  }
+
+  throw new Error('Aucun endpoint PDF disponible');
 };
