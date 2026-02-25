@@ -4,11 +4,15 @@ RewriteEngine On
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
+  # Ne pas réécrire les appels API, ils doivent être gérés par le backend (Node, PHP, proxy, etc.)
+  RewriteCond %{REQUEST_URI} ^/api/ [NC]
+  RewriteRule ^ - [L]
+
   # Ne pas réécrire les fichiers/dossiers existants (images, assets, css, js, etc.)
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
 
-  # SPA fallback
+  # SPA fallback pour toutes les autres routes frontend
   RewriteRule . /index.html [L]
 </IfModule>
