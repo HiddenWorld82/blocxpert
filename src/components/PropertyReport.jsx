@@ -15,6 +15,7 @@ import calculateReturnAfterYears from '../utils/calculateReturnAfterYears';
 import calculateOptimisationScenario from '../utils/calculateOptimisationScenario';
 import { getScenarios } from '../services/dataService';
 import { getAphMaxLtvRatio } from '../utils/cmhc';
+import { getPdfEndpointCandidates } from '../utils/pdfEndpoint';
 
 const DEFAULT_INCOME_GROWTH = 2;
 const DEFAULT_EXPENSE_GROWTH = 2.5;
@@ -410,17 +411,38 @@ const handleGeneratePDF = async () => {
     
     console.log('HTML préparé, taille:', htmlContent.length);
     
-    const pdfUrl = `${import.meta.env.VITE_PDF_URL || window.location.origin}/api/generate-pdf`;
-    console.log('URL du serveur PDF:', pdfUrl);
-    
-    const response = await fetch(pdfUrl, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Accept': 'application/pdf',
-      },
-      body: JSON.stringify({ html: htmlContent }),
-    });
+    const endpointCandidates = getPdfEndpointCandidates();
+    console.log('URL du serveur PDF (candidates):', endpointCandidates);
+
+    let response;
+
+    for (let index = 0; index < endpointCandidates.length; index += 1) {
+      const endpoint = endpointCandidates[index];
+
+      console.log(`Tentative PDF ${index + 1}/${endpointCandidates.length}:`, endpoint);
+
+      response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/pdf',
+        },
+        body: JSON.stringify({ html: htmlContent }),
+      });
+
+      const contentType = response.headers.get('Content-Type') || '';
+      const canRetry =
+        index < endpointCandidates.length - 1
+        && response.status === 404
+        && contentType.includes('text/html');
+
+      if (canRetry) {
+        console.warn('Endpoint PDF introuvable, tentative du prochain endpoint...');
+        continue;
+      }
+
+      break;
+    }
 
     console.log('Réponse reçue, status:', response.status);
     console.log('Content-Type:', response.headers.get('Content-Type'));
@@ -474,7 +496,7 @@ const handleGeneratePDF = async () => {
           const fullText = new TextDecoder().decode(uint8Array);
           const jsonError = JSON.parse(fullText);
           throw new Error(`Le serveur a renvoyé une erreur: ${jsonError.error || jsonError.message || 'Erreur inconnue'}`);
-        } catch (parseError) {
+        } catch (_parseError) {
           throw new Error(`Réponse invalide du serveur (pas un PDF): ${first20Chars}`);
         }
       }
