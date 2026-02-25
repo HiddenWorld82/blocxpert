@@ -1,8 +1,83 @@
 // pdf-server.js - Serveur PDF final pour votre projet Rentalyzer
 import express from 'express';
 import puppeteer from 'puppeteer';
+import fs from 'node:fs';
 
 const app = express();
+
+const DEFAULT_CHROME_CANDIDATES = [
+  '/usr/bin/chromium-browser',
+  '/usr/bin/chromium',
+  '/usr/bin/google-chrome',
+  '/usr/bin/google-chrome-stable',
+  '/opt/google/chrome/chrome'
+];
+
+function resolveExecutablePath() {
+  const explicitPath = process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_BIN;
+  if (explicitPath) {
+    return explicitPath;
+  }
+
+  return DEFAULT_CHROME_CANDIDATES.find((path) => fs.existsSync(path));
+}
+
+function getBrowserLaunchOptions() {
+  const executablePath = resolveExecutablePath();
+
+  return {
+    headless: process.env.PUPPETEER_HEADLESS || 'new',
+    executablePath,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-accelerated-2d-canvas',
+      '--disable-gpu',
+      '--no-first-run',
+      '--disable-background-timer-throttling',
+      '--disable-backgrounding-occluded-windows',
+      '--disable-renderer-backgrounding',
+      '--disable-features=TranslateUI',
+      '--disable-ipc-flooding-protection',
+      '--single-process'
+    ],
+    timeout: Number(process.env.PUPPETEER_LAUNCH_TIMEOUT || 120000)
+  };
+}
+
+async function startBrowser() {
+  const wsEndpoint = process.env.PUPPETEER_WS_ENDPOINT;
+
+  if (wsEndpoint) {
+    console.log('🌐 Connexion à un navigateur distant via PUPPETEER_WS_ENDPOINT');
+    return puppeteer.connect({ browserWSEndpoint: wsEndpoint });
+  }
+
+  const launchOptions = getBrowserLaunchOptions();
+  const mode = launchOptions.executablePath ? `binaire: ${launchOptions.executablePath}` : 'binaire intégré Puppeteer';
+  console.log(`🌐 Lancement navigateur local (${mode})...`);
+  return puppeteer.launch(launchOptions);
+}
+
+function formatErrorForDeployment(error) {
+  const message = error?.message || 'Erreur inconnue';
+  const commonHints = [
+    "Vérifiez la variable PUPPETEER_EXECUTABLE_PATH (ou CHROME_BIN) vers un binaire Chromium/Chrome valide.",
+    'Sur cPanel, vous pouvez aussi utiliser un navigateur distant via PUPPETEER_WS_ENDPOINT (Browserless/Playwright service).',
+    'Assurez-vous que le process Node peut écrire dans PUPPETEER_CACHE_DIR (ex: /home/<cpanel-user>/.cache/puppeteer).'
+  ];
+
+  if (
+    message.includes('Could not find Chrome') ||
+    message.includes('Failed to launch the browser process') ||
+    message.includes('spawn')
+  ) {
+    return `${message}\n\nPiste cPanel: ${commonHints.join(' ')}`;
+  }
+
+  return message;
+}
 
 // Configuration middleware
 app.use(express.json({ limit: '50mb' }));
@@ -54,11 +129,15 @@ function ensureBuffer(data) {
 
 // Route de santé
 app.get('/api/health', (req, res) => {
+  const launchOptions = getBrowserLaunchOptions();
+
   res.json({ 
     status: 'OK', 
     service: 'Rentalyzer PDF Generator',
     version: '1.0.0',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    browserMode: process.env.PUPPETEER_WS_ENDPOINT ? 'remote' : 'local',
+    executablePath: launchOptions.executablePath || null
   });
 });
 
@@ -70,11 +149,7 @@ app.get('/api/test', async (req, res) => {
   try {
     console.log('🧪 Test PDF rapide...');
     
-    browser = await puppeteer.launch({
-      headless: 'new',
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-      timeout: 60000
-    });
+    browser = await startBrowser();
 
     page = await browser.newPage();
     await page.setDefaultTimeout(30000);
@@ -128,7 +203,7 @@ app.get('/api/test', async (req, res) => {
     }
     
     if (!res.headersSent) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: formatErrorForDeployment(error) });
     }
   }
 });
@@ -156,24 +231,7 @@ app.post('/api/generate-pdf', async (req, res) => {
     console.log(`📄 HTML reçu: ${html.length} caractères`);
 
     // Configuration Puppeteer robuste avec timeouts plus longs
-    console.log('🌐 Lancement navigateur...');
-    browser = await puppeteer.launch({
-      headless: 'new',
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--disable-gpu',
-        '--no-first-run',
-        '--disable-background-timer-throttling',
-        '--disable-backgrounding-occluded-windows',
-        '--disable-renderer-backgrounding',
-        '--disable-features=TranslateUI',
-        '--disable-ipc-flooding-protection'
-      ],
-      timeout: 120000 // 2 minutes
-    });
+    browser = await startBrowser();
 
     page = await browser.newPage();
     
@@ -568,7 +626,7 @@ app.post('/api/generate-pdf', async (req, res) => {
     if (!res.headersSent) {
       res.status(500).json({
         error: 'Erreur lors de la génération du rapport PDF',
-        message: error.message,
+        message: formatErrorForDeployment(error),
         processingTime: `${processingTime}ms`,
         timestamp: new Date().toISOString()
       });
