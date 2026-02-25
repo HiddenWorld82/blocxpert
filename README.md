@@ -53,6 +53,32 @@ VITE_PDF_URL=http://localhost:3001
 
 Si la variable n'est pas définie, l'application utilisera l'origine du navigateur (`window.location.origin`).
 
+#### Déploiement cPanel (important)
+
+Sur beaucoup d'hébergements cPanel, Puppeteer ne peut pas lancer Chromium automatiquement (binaire absent ou permissions limitées). Le serveur PDF supporte maintenant **2 modes** :
+
+1. **Navigateur local** (si Chromium/Chrome est disponible sur le serveur)
+2. **Navigateur distant** via `PUPPETEER_WS_ENDPOINT` (Browserless, Playwright service, etc.)
+
+Exemple de variables d'environnement pour cPanel :
+
+```bash
+# Option A: Chrome local installé sur le serveur
+PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+PUPPETEER_CACHE_DIR=/home/<cpanel-user>/.cache/puppeteer
+
+# Option B: navigateur distant (recommandé si Chrome local indisponible)
+PUPPETEER_WS_ENDPOINT=wss://<votre-endpoint-browserless>?token=<token>
+```
+
+Puis lancez le serveur :
+
+```bash
+npm run pdf-server
+```
+
+Pour diagnostiquer, utilisez `GET /api/health` : la réponse indique `browserMode` (`local` ou `remote`) et le chemin `executablePath` détecté.
+
 ### 4. Lancer l'application
 
 ### 3. Lancer l'application
