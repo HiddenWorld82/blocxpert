@@ -45,13 +45,15 @@ npm install @rollup/rollup-win32-x64-msvc
 
 ### 3. Configurer le serveur PDF (optionnel)
 
-Pour générer des rapports PDF via un serveur externe ou un tunnel (ex.: ngrok), définissez `VITE_PDF_URL` dans votre fichier `.env` :
+Pour générer des rapports PDF via un serveur externe ou un tunnel (ex.: ngrok), définissez idéalement `VITE_PDF_ENDPOINT` dans votre fichier `.env` :
 
 ```bash
-VITE_PDF_URL=http://localhost:3001
+VITE_PDF_ENDPOINT=http://localhost:3001/api/generate-pdf
 ```
 
-Si la variable n'est pas définie, l'application utilisera l'origine du navigateur (`window.location.origin`).
+Vous pouvez aussi définir `VITE_PDF_URL` (base URL), et l'application essaiera automatiquement `/api/generate-pdf` puis `/generate-pdf`.
+
+Si aucune variable n'est définie, l'application utilisera l'origine du navigateur (`window.location.origin`), ce qui peut retourner la page HTML de l'app au lieu d'un PDF en production si le backend PDF n'est pas sur le même domaine.
 
 #### Déploiement cPanel (important)
 

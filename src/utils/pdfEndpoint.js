@@ -9,6 +9,29 @@ const toAbsoluteUrl = (url) => {
   }
 };
 
+const normalizeBaseUrl = (baseUrl) => {
+  if (!baseUrl) return null;
+
+  const absoluteUrl = toAbsoluteUrl(baseUrl.trim());
+  if (!absoluteUrl) return null;
+
+  return absoluteUrl.replace(/\/+$/, '');
+};
+
+const buildCandidateEndpointsFromBase = (baseUrl) => {
+  const normalizedBaseUrl = normalizeBaseUrl(baseUrl);
+  if (!normalizedBaseUrl) return [];
+
+  if (/\/api\/generate-pdf$/i.test(normalizedBaseUrl) || /\/generate-pdf$/i.test(normalizedBaseUrl)) {
+    return [normalizedBaseUrl];
+  }
+
+  return [
+    `${normalizedBaseUrl}/api/generate-pdf`,
+    `${normalizedBaseUrl}/generate-pdf`,
+  ];
+};
+
 export const getPdfEndpointCandidates = () => {
   const explicitEndpoint =
     import.meta.env.VITE_PDF_ENDPOINT || import.meta.env.VITE_PDF_GENERATE_URL;
@@ -18,18 +41,25 @@ export const getPdfEndpointCandidates = () => {
     return [explicitUrl];
   }
 
-  const baseUrl = (import.meta.env.VITE_PDF_URL || window.location.origin).trim();
-  const trimmedBaseUrl = baseUrl.replace(/\/+$/, '');
-  const hasGeneratePath = /\/generate-pdf$/i.test(trimmedBaseUrl);
-  const primaryEndpoint = hasGeneratePath
-    ? trimmedBaseUrl
-    : `${trimmedBaseUrl}/api/generate-pdf`;
+  const rawBaseUrls = [
+    import.meta.env.VITE_PDF_URL,
+    import.meta.env.VITE_API_BASE_URL,
+    import.meta.env.VITE_API_URL,
+    window.location.origin,
+  ].filter(Boolean);
 
-  const fallbackEndpoint = primaryEndpoint.replace(/\/api\/generate-pdf$/i, '/generate-pdf');
+  const uniqueCandidates = [];
 
-  return primaryEndpoint === fallbackEndpoint
-    ? [primaryEndpoint]
-    : [primaryEndpoint, fallbackEndpoint];
+  rawBaseUrls.forEach((baseUrl) => {
+    const candidates = buildCandidateEndpointsFromBase(baseUrl);
+    candidates.forEach((candidate) => {
+      if (candidate && !uniqueCandidates.includes(candidate)) {
+        uniqueCandidates.push(candidate);
+      }
+    });
+  });
+
+  return uniqueCandidates;
 };
 
 const looksLikeHtmlResponse = (contentType, previewText) => {
@@ -41,6 +71,14 @@ const looksLikeHtmlResponse = (contentType, previewText) => {
   return (
     normalizedPreview.startsWith('<!doctype html')
     || normalizedPreview.startsWith('<html')
+  );
+};
+
+const looksLikeSpaFallback = (previewText) => {
+  const normalizedPreview = (previewText || '').trim().toLowerCase();
+  return (
+    normalizedPreview.startsWith('<!doctype html')
+    && normalizedPreview.includes('<html')
   );
 };
 
@@ -76,8 +114,11 @@ export const requestPdfWithFallback = async ({
       if (!response.ok || (!isPdfPayload && isHtmlFallback)) {
         const statusHint = `${response.status} ${response.statusText}`.trim();
         const responsePreview = previewText.trim().slice(0, 120);
+        const spaFallbackHint = looksLikeSpaFallback(responsePreview)
+          ? ' Le serveur semble renvoyer la page HTML de l\'application. Vérifiez VITE_PDF_ENDPOINT/VITE_PDF_URL pour cibler le backend PDF.'
+          : '';
         lastError = new Error(
-          `Endpoint ${endpoint} a renvoyé une réponse non-PDF (${statusHint}, ${contentType || 'sans Content-Type'}, aperçu: ${JSON.stringify(responsePreview)})`,
+          `Endpoint ${endpoint} a renvoyé une réponse non-PDF (${statusHint}, ${contentType || 'sans Content-Type'}, aperçu: ${JSON.stringify(responsePreview)}).${spaFallbackHint}`,
         );
 
         if (!isLastEndpoint) {
