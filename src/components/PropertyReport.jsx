@@ -1,5 +1,6 @@
 // components/PropertyReport.jsx
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { PDFDownloadLink } from '@react-pdf/renderer';
 import { useLanguage } from '../contexts/LanguageContext';
 import KeyIndicators from './sections/KeyIndicators';
 import FinancialSummary from './sections/FinancialSummary';
@@ -15,7 +16,7 @@ import calculateReturnAfterYears from '../utils/calculateReturnAfterYears';
 import calculateOptimisationScenario from '../utils/calculateOptimisationScenario';
 import { getScenarios } from '../services/dataService';
 import { getAphMaxLtvRatio } from '../utils/cmhc';
-import { getPdfEndpointCandidates, requestPdfWithFallback } from '../utils/pdfEndpoint';
+import { RentalizerPdfDocument } from '../pdf/RentalizerPdfDocument';
 
 const DEFAULT_INCOME_GROWTH = 2;
 const DEFAULT_EXPENSE_GROWTH = 2.5;
@@ -365,105 +366,6 @@ const PropertyReport = ({
 
   const isRefinancing = selectedSubScenario?.type === 'refinancing';
   const isOptimization = selectedSubScenario?.type === 'optimization';
-
-// Fonction corrigée pour gérer les réponses JSON d'erreur
-const handleGeneratePDF = async () => {
-  if (!reportRef.current) {
-    console.error('Référence du rapport introuvable');
-    return;
-  }
-
-  try {
-    console.log('Début de la génération PDF...');
-    
-    // Préparation du HTML (même logique qu'avant)
-    const reportElement = reportRef.current;
-    const clonedElement = reportElement.cloneNode(true);
-    
-    // Nettoyer le contenu
-    const buttonsToRemove = clonedElement.querySelectorAll('button, .no-print');
-    buttonsToRemove.forEach(btn => btn.remove());
-    
-    // Styles essentiels uniquement
-    const htmlContent = `
-      <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { 
-          font-family: Arial, sans-serif; 
-          line-height: 1.4; 
-          color: #333; 
-          padding: 20px;
-        }
-        .text-gray-600 { color: #4b5563; }
-        .text-green-600 { color: #16a34a; }
-        .text-red-600 { color: #dc2626; }
-        .font-semibold { font-weight: 600; }
-        .text-xl { font-size: 1.25rem; }
-        .p-4 { padding: 1rem; }
-        .mb-4 { margin-bottom: 1rem; }
-        .border { border: 1px solid #e5e7eb; }
-        .rounded-lg { border-radius: 0.5rem; }
-        .grid { display: grid; gap: 1rem; }
-        .grid-cols-2 { grid-template-columns: 1fr 1fr; }
-      </style>
-      <div>${clonedElement.innerHTML}</div>
-    `;
-    
-    console.log('HTML préparé, taille:', htmlContent.length);
-    
-    const endpointCandidates = getPdfEndpointCandidates();
-    console.log('URL du serveur PDF (candidates):', endpointCandidates);
-
-    endpointCandidates.forEach((endpoint, index) => {
-      console.log(`Tentative PDF ${index + 1}/${endpointCandidates.length}:`, endpoint);
-    });
-
-    const { endpoint, contentType, arrayBuffer } = await requestPdfWithFallback({
-      html: htmlContent,
-      endpointCandidates,
-    });
-
-    console.log('Réponse reçue depuis:', endpoint);
-    console.log('Content-Type:', contentType);
-    console.log('Récupération du PDF...');
-    console.log('ArrayBuffer reçu, taille:', arrayBuffer.byteLength);
-    
-    if (arrayBuffer.byteLength === 0) {
-      throw new Error('Le fichier PDF reçu est vide');
-    }
-    
-    // La validation du payload PDF est déjà effectuée dans requestPdfWithFallback.
-    // Ici, on ne télécharge que si la réponse est confirmée valide.
-    const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
-    const url = URL.createObjectURL(blob);
-    
-    const downloadLink = document.createElement('a');
-    downloadLink.href = url;
-    downloadLink.download = `rapport-${new Date().toISOString().split('T')[0]}.pdf`;
-    downloadLink.style.display = 'none';
-    
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
-    
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-    
-    console.log('PDF téléchargé avec succès');
-    alert('PDF généré avec succès !');
-    
-  } catch (error) {
-    console.error('Erreur complète:', error);
-    
-    // Message d'erreur plus informatif
-    let userMessage = error.message;
-    if (userMessage.includes('non-PDF') || userMessage.includes('En-tête PDF invalide')) {
-      userMessage += '\n\nConseil: configurez VITE_PDF_ENDPOINT avec l\'URL complète du backend PDF (ex: https://votre-backend/api/generate-pdf).';
-    }
-    
-    alert(`Erreur lors de la génération du PDF:\n${userMessage}`);
-  }
-};
-
 
   const renderScenarioForm = () => {
     if (!editingScenario) return null;
@@ -877,12 +779,34 @@ const handleGeneratePDF = async () => {
             >
               {t('propertyReport.newScenario')}
             </button>
-            <button
-              onClick={handleGeneratePDF}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+            <PDFDownloadLink
+              document={
+                <RentalizerPdfDocument
+                  title={t('propertyReport.title')}
+                  property={reportProperty}
+                  analysis={reportAnalysis}
+                  futureReturns={{
+                    years: returnYears,
+                    totalReturn: multiYearReturn,
+                    annualizedReturn: multiYearAnnualized,
+                    irr: multiYearIRR,
+                  }}
+                />
+              }
+              fileName={`rapport-${new Date().toISOString().split('T')[0]}.pdf`}
             >
-              {t('propertyReport.generatePdf')}
-            </button>
+              {({ loading }) => (
+                <button
+                  type="button"
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                  disabled={loading}
+                >
+                  {loading
+                    ? t('propertyReport.generatingPdf')
+                    : t('propertyReport.generatePdf')}
+                </button>
+              )}
+            </PDFDownloadLink>
           </div>
 
           <div className="mb-8">

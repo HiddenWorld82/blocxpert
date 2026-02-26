@@ -13,6 +13,7 @@
     "deploy": "gh-pages -d dist --cname rentalyzer.dmii.ca"
   },
   "dependencies": {
+    "@react-pdf/renderer": "^4.3.2",
     "@tailwindcss/postcss": "^4.1.11",
     "express": "^4.21.2",
     "firebase": "^12.1.0",

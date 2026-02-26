@@ -1,10 +1,11 @@
 import React, { useMemo, useRef, useState } from 'react';
+import { PDFDownloadLink } from '@react-pdf/renderer';
 import KeyIndicators from './sections/KeyIndicators';
 import FinancialSummary from './sections/FinancialSummary';
 import FinancingSummary from './sections/FinancingSummary';
 import calculateRentability from '../utils/calculateRentability';
 import calculateReturnAfterYears from '../utils/calculateReturnAfterYears';
-import { getPdfEndpointCandidates, requestPdfWithFallback } from '../utils/pdfEndpoint';
+import { RentalizerPdfDocument } from '../pdf/RentalizerPdfDocument';
 
 function formatCurrency(val) {
   return new Intl.NumberFormat('fr-CA', {
@@ -126,36 +127,6 @@ const PortfolioPropertyReport = ({ property, onClose }) => {
     .filter(Boolean)
     .join(', ');
 
-  const handleGeneratePDF = async () => {
-    if (!reportRef.current) return;
-
-    const styles = Array.from(
-      document.querySelectorAll('link[rel="stylesheet"], style'),
-    )
-      .map((el) => el.outerHTML)
-      .join('');
-
-    const html = `<!doctype html><html><head>${styles}</head><body class="p-4">${reportRef.current.innerHTML}</body></html>`;
-
-    try {
-      const endpointCandidates = getPdfEndpointCandidates();
-      const { arrayBuffer } = await requestPdfWithFallback({
-        html,
-        endpointCandidates,
-      });
-
-      const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'rapport.pdf';
-      a.click();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('PDF generation failed', err);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-6xl mx-auto">
@@ -172,12 +143,32 @@ const PortfolioPropertyReport = ({ property, onClose }) => {
               >
                 ← Retour
               </button>
-              <button
-                onClick={handleGeneratePDF}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+              <PDFDownloadLink
+                document={
+                  <RentalizerPdfDocument
+                    title="Rapport d'analyse de rentabilité"
+                    property={property}
+                    analysis={analysis}
+                    futureReturns={{
+                      years: returnYears,
+                      totalReturn: multiYearReturn,
+                      annualizedReturn: multiYearAnnualized,
+                      irr: multiYearIRR,
+                    }}
+                  />
+                }
+                fileName={`rapport-${new Date().toISOString().split('T')[0]}.pdf`}
               >
-                Générer PDF
-              </button>
+                {({ loading }) => (
+                  <button
+                    type="button"
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                    disabled={loading}
+                  >
+                    {loading ? 'Génération en cours...' : 'Générer PDF'}
+                  </button>
+                )}
+              </PDFDownloadLink>
             </div>
           </div>
 
