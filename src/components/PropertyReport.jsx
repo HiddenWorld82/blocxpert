@@ -5,8 +5,9 @@ import { useLanguage } from '../contexts/LanguageContext';
 import KeyIndicators from './sections/KeyIndicators';
 import FinancialSummary from './sections/FinancialSummary';
 import FinancingSummary from './sections/FinancingSummary';
-import Recommendations from './sections/Recommendations';
 import ExecutiveSummary from './sections/ExecutiveSummary';
+import DealSummary from './sections/DealSummary';
+import SchlComplianceSection from './sections/SchlComplianceSection';
 import ScenarioList from './ScenarioList';
 import FutureScenarioForm from './FutureScenarioForm';
 import RenewScenarioForm from './RenewScenarioForm';
@@ -14,9 +15,14 @@ import OptimisationScenarioForm from './OptimisationScenarioForm';
 import calculateRentability from '../utils/calculateRentability';
 import calculateReturnAfterYears from '../utils/calculateReturnAfterYears';
 import calculateOptimisationScenario from '../utils/calculateOptimisationScenario';
-import { getScenarios } from '../services/dataService';
+import calculateRenewScenario from '../utils/calculateRenewScenario';
+import calculateFutureScenario from '../utils/calculateFutureScenario';
+import { getScenarios, getScenario } from '../services/dataService';
+import { getShareScenarios, getShare, getShareScenariosOnce } from '../services/shareService';
 import { getAphMaxLtvRatio } from '../utils/cmhc';
+import { getMarketParamsById } from '../services/marketParamsService';
 import { RentalizerPdfDocument } from '../pdf/RentalizerPdfDocument';
+import { useAuth } from '../contexts/AuthContext';
 
 const DEFAULT_INCOME_GROWTH = 2;
 const DEFAULT_EXPENSE_GROWTH = 2.5;
@@ -30,8 +36,71 @@ const PropertyReport = ({
   advancedExpenses,
   scenario,
   onViewAmortization,
+  shareToken = null,
+  shareFilterByCreatorUid = null,
+  baseScenarios: baseScenariosProp = null,
+  shareCreatorInfo = null,
+  sharedScenariosFromClients = null,
 }) => {
   const { t } = useLanguage();
+  const { userProfile } = useAuth();
+  const [marketParamsVersion, setMarketParamsVersion] = useState(null);
+  const [expandedClientScenario, setExpandedClientScenario] = useState(null);
+  const [clientScenarioShareData, setClientScenarioShareData] = useState(null);
+  const [parentScenarioForRenewal, setParentScenarioForRenewal] = useState(null);
+
+  useEffect(() => {
+    const id = userProfile?.selectedMarketParamsId;
+    if (!id) {
+      setMarketParamsVersion(null);
+      return;
+    }
+    getMarketParamsById(id)
+      .then((v) => setMarketParamsVersion(v ? { label: v.label, createdAt: v.createdAt } : null))
+      .catch(() => setMarketParamsVersion(null));
+  }, [userProfile?.selectedMarketParamsId]);
+
+  useEffect(() => {
+    if (!expandedClientScenario?.shareToken) {
+      setClientScenarioShareData(null);
+      return;
+    }
+    let cancelled = false;
+    Promise.all([
+      getShare(expandedClientScenario.shareToken),
+      getShareScenariosOnce(expandedClientScenario.shareToken),
+    ])
+      .then(([shareData, shareScenarios]) => {
+        if (cancelled || !shareData?.snapshot) return;
+        const base = shareData.snapshot.scenarios || [];
+        setClientScenarioShareData({
+          property: shareData.snapshot.property || currentProperty,
+          baseScenarios: base,
+          shareScenarios: shareScenarios || [],
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setClientScenarioShareData(null);
+      });
+    return () => { cancelled = true; };
+  }, [expandedClientScenario?.shareToken, expandedClientScenario?.id, currentProperty]);
+
+  useEffect(() => {
+    if (!currentProperty?.id || !scenario || scenario.type !== 'renewal' || !scenario.parentScenarioId || shareToken) {
+      setParentScenarioForRenewal(null);
+      return;
+    }
+    let cancelled = false;
+    getScenario(currentProperty.id, scenario.parentScenarioId)
+      .then((parent) => {
+        if (!cancelled) setParentScenarioForRenewal(parent);
+      })
+      .catch(() => {
+        if (!cancelled) setParentScenarioForRenewal(null);
+      });
+    return () => { cancelled = true; };
+  }, [currentProperty?.id, scenario, shareToken]);
+
   const typeLabels = {
     refinancing: t('scenario.refinancing'),
     renewal: t('scenario.renewal'),
@@ -53,13 +122,29 @@ const PropertyReport = ({
       maximumFractionDigits: 2,
     }).format(value || 0)}%`;
 
-  const reportProperty = useMemo(
-    () =>
-      scenario
-        ? { ...currentProperty, ...scenario.financing, ...scenario.acquisitionCosts }
-        : currentProperty,
-    [currentProperty, scenario]
-  );
+  const renewalResult = useMemo(() => {
+    if (scenario?.type === 'renewal' && parentScenarioForRenewal && currentProperty) {
+      return calculateRenewScenario(scenario, currentProperty, parentScenarioForRenewal, advancedExpenses);
+    }
+    return null;
+  }, [scenario, currentProperty, parentScenarioForRenewal, advancedExpenses]);
+
+  const reportProperty = useMemo(() => {
+    if (!scenario) return currentProperty;
+    if (renewalResult) {
+      return { ...renewalResult.analysisProperty, ...renewalResult.combinedFinancing };
+    }
+    const merged = { ...currentProperty, ...(scenario.financing || {}), ...(scenario.acquisitionCosts || {}) };
+    return merged;
+  }, [currentProperty, scenario, renewalResult]);
+
+  const financingTypeLabel = useMemo(() => {
+    const ft = reportProperty.financingType;
+    if (ft === 'conventional') return t('propertyReport.financingType.conventional');
+    if (ft === 'cmhc') return t('propertyReport.financingType.cmhc');
+    if (ft === 'cmhc_aph') return `${t('propertyReport.financingType.cmhc_aph')} (${reportProperty.aphPoints ?? ''} pts)`;
+    return ft ? String(ft) : '—';
+  }, [reportProperty.financingType, reportProperty.aphPoints, t]);
 
   const fullAddress = [
     reportProperty.address,
@@ -73,9 +158,11 @@ const PropertyReport = ({
   const reportAnalysis = useMemo(
     () =>
       scenario
-        ? calculateRentability(reportProperty, advancedExpenses)
+        ? renewalResult
+          ? renewalResult.analysis
+          : calculateRentability(reportProperty, advancedExpenses)
         : baseAnalysis,
-    [scenario, reportProperty, advancedExpenses, baseAnalysis]
+    [scenario, reportProperty, advancedExpenses, baseAnalysis, renewalResult]
   );
 
   const averageRentPerDoor =
@@ -89,9 +176,17 @@ const PropertyReport = ({
   const [valueGrowth, setValueGrowth] = useState(DEFAULT_VALUE_GROWTH);
   const [subScenarios, setSubScenarios] = useState([]);
   const [selectedSubScenarioId, setSelectedSubScenarioId] = useState('');
+  const [reportType, setReportType] = useState('client'); // client | bank | advanced
   const selectedSubScenario = useMemo(
     () => subScenarios.find((s) => s.id === selectedSubScenarioId),
     [subScenarios, selectedSubScenarioId]
+  );
+  const subScenarioProperty = useMemo(
+    () =>
+      selectedSubScenario
+        ? { ...currentProperty, ...selectedSubScenario.financing, ...selectedSubScenario.acquisitionCosts }
+        : null,
+    [currentProperty, selectedSubScenario]
   );
   const manualGrowthRef = useRef({
     income: DEFAULT_INCOME_GROWTH,
@@ -259,6 +354,18 @@ const PropertyReport = ({
         advancedExpenses,
       );
       return analysis;
+    } else if (selectedSubScenario.type === 'renewal') {
+      const parentScenario =
+        scenario?.id === selectedSubScenario.parentScenarioId
+          ? scenario
+          : subScenarios.find((s) => s.id === selectedSubScenario.parentScenarioId);
+      const { analysis } = calculateRenewScenario(
+        selectedSubScenario,
+        currentProperty,
+        parentScenario,
+        advancedExpenses,
+      );
+      return analysis;
     }
     return null;
   }, [
@@ -268,6 +375,31 @@ const PropertyReport = ({
     advancedExpenses,
     scenario,
     subScenarios,
+  ]);
+  const subScenarioPropertyForList = useMemo(() => {
+    if (!selectedSubScenario || !subScenarioAnalysis) return subScenarioProperty;
+    if (selectedSubScenario.type === 'renewal') {
+      const parent =
+        scenario?.id === selectedSubScenario.parentScenarioId
+          ? scenario
+          : subScenarios.find((s) => s.id === selectedSubScenario.parentScenarioId);
+      const { analysisProperty, combinedFinancing } = calculateRenewScenario(
+        selectedSubScenario,
+        currentProperty,
+        parent,
+        advancedExpenses,
+      );
+      return { ...analysisProperty, ...combinedFinancing };
+    }
+    return subScenarioProperty;
+  }, [
+    selectedSubScenario,
+    subScenarioAnalysis,
+    subScenarioProperty,
+    scenario,
+    subScenarios,
+    currentProperty,
+    advancedExpenses,
   ]);
   const [showIRRInfo, setShowIRRInfo] = useState(false);
   const {
@@ -302,11 +434,53 @@ const PropertyReport = ({
 
   const reportRef = useRef(null);
 
+  const expandedClientScenarioAnalysis = useMemo(() => {
+    if (!expandedClientScenario || !clientScenarioShareData) return null;
+    const { property, baseScenarios, shareScenarios } = clientScenarioShareData;
+    const sc = expandedClientScenario;
+    const allScenarios = [...baseScenarios, ...shareScenarios];
+    let parent = sc.parentScenarioId
+      ? allScenarios.find((s) => s.id === sc.parentScenarioId)
+      : allScenarios.find((s) => s.type === 'initialFinancing');
+    if (sc.type === 'renewal') {
+      const initialAmort = parent?.financing?.amortization ?? property?.amortization ?? 25;
+      const initialTerm = parent?.financing?.term ?? sc.financing?.term ?? 0;
+      if (!parent || parent.financing?.amortization == null || parent.financing?.term == null) {
+        parent = {
+          ...(parent || {}),
+          financing: {
+            ...(parent?.financing || {}),
+            amortization: initialAmort,
+            term: initialTerm,
+          },
+        };
+      }
+      const { analysis, analysisProperty, combinedFinancing } = calculateRenewScenario(sc, property, parent, advancedExpenses);
+      return {
+        analysis,
+        property: { ...analysisProperty, ...combinedFinancing },
+        combinedFinancing,
+      };
+    }
+    if (sc.type === 'refinancing') {
+      const { analysis, analysisProperty } = calculateFutureScenario(sc, property, parent, advancedExpenses);
+      return { analysis, property: analysisProperty || property };
+    }
+    if (sc.type === 'optimization') {
+      const { analysis } = calculateOptimisationScenario(sc, property, parent, advancedExpenses);
+      return { analysis, property: property };
+    }
+    return null;
+  }, [expandedClientScenario, clientScenarioShareData, advancedExpenses]);
+
+  const isClientScenarioExpanded = (sc) =>
+    expandedClientScenario && expandedClientScenario.shareToken === sc.shareToken && expandedClientScenario.id === sc.id;
+
   const baseScenarioId = scenario ? scenario.parentScenarioId || scenario.id : null;
 
   useEffect(() => {
     if (!currentProperty?.id) return;
-    const unsub = getScenarios(currentProperty.id, (scs) => {
+    const loadScenarios = (scs) => {
       const filtered = baseScenarioId
         ? scs.filter(
             (sc) => sc.parentScenarioId === baseScenarioId && sc.type !== 'renewal',
@@ -318,9 +492,24 @@ const PropertyReport = ({
           ? currentSelectedId
           : '',
       );
-    });
-    return () => unsub && unsub();
-  }, [currentProperty?.id, baseScenarioId]);
+    };
+    let unsub;
+    if (shareToken) {
+      unsub = getShareScenarios(shareToken, (list) => {
+        const filteredByCreator = shareFilterByCreatorUid
+          ? list.filter((s) => !s.createdByUid || s.createdByUid === shareFilterByCreatorUid)
+          : list;
+        const full = [...(baseScenariosProp || []), ...filteredByCreator];
+        loadScenarios(full);
+      });
+    } else {
+      unsub = getScenarios(currentProperty.id, loadScenarios);
+    }
+    return () => {
+      const u = unsub;
+      queueMicrotask(() => u?.());
+    };
+  }, [currentProperty?.id, baseScenarioId, shareToken, shareFilterByCreatorUid, baseScenariosProp]);
 
   useEffect(() => {
     const previousSubScenario = previousSubScenarioRef.current;
@@ -403,7 +592,12 @@ const PropertyReport = ({
       property: currentProperty,
       advancedExpenses,
       onSaved: () => setEditingScenario(null),
+      onBack: () => setEditingScenario(null),
       initialScenario: editingScenario,
+      shareToken: shareToken || undefined,
+      shareFilterByCreatorUid: shareFilterByCreatorUid || undefined,
+      shareCreatorInfo: shareCreatorInfo || undefined,
+      baseScenarios: shareToken ? baseScenariosProp || [] : undefined,
     };
     const formComponents = {
       refinancing: FutureScenarioForm,
@@ -520,11 +714,25 @@ const PropertyReport = ({
                     {reportProperty.financingType !== 'private' && (
                     <div>
                       <span className="text-gray-600">{t('propertyReport.financing')}:</span>
-                      <div className="font-semibold">
-                        {reportProperty.financingType === 'conventional' && t('propertyReport.financingType.conventional')}
-                        {reportProperty.financingType === 'cmhc' && t('propertyReport.financingType.cmhc')}
-                        {reportProperty.financingType === 'cmhc_aph' && `${t('propertyReport.financingType.cmhc_aph')} (${reportProperty.aphPoints} pts)`}
-                      </div>
+                      <div className="font-semibold">{financingTypeLabel}</div>
+                    </div>
+                    )}
+                    {(reportAnalysis.mortgageRate != null && reportAnalysis.mortgageRate !== '') && (
+                    <div>
+                      <span className="text-gray-600">{t('propertyReport.interestRate')}:</span>
+                      <div className="font-semibold">{formatPercent(reportAnalysis.mortgageRate)}</div>
+                    </div>
+                    )}
+                    {(reportProperty.amortization != null && reportProperty.amortization !== '') && (
+                    <div>
+                      <span className="text-gray-600">{t('propertyReport.amortizationYears')}:</span>
+                      <div className="font-semibold">{reportProperty.amortization} {t('propertyReport.years')}</div>
+                    </div>
+                    )}
+                    {(reportProperty.term != null && reportProperty.term !== '') && (
+                    <div>
+                      <span className="text-gray-600">{t('propertyReport.financingTerm')}:</span>
+                      <div className="font-semibold">{reportProperty.term} {t('propertyReport.years')}</div>
                     </div>
                     )}
                     {reportProperty.financingType !== 'private' && (
@@ -587,11 +795,25 @@ const PropertyReport = ({
                     {reportProperty.financingType !== 'private' && (
                     <div>
                       <span className="text-gray-600">{t('propertyReport.financing')}:</span>
-                      <div className="font-semibold">
-                        {reportProperty.financingType === 'conventional' && t('propertyReport.financingType.conventional')}
-                        {reportProperty.financingType === 'cmhc' && t('propertyReport.financingType.cmhc')}
-                        {reportProperty.financingType === 'cmhc_aph' && `${t('propertyReport.financingType.cmhc_aph')} (${reportProperty.aphPoints} pts)`}
-                      </div>
+                      <div className="font-semibold">{financingTypeLabel}</div>
+                    </div>
+                    )}
+                    {(reportAnalysis.mortgageRate != null && reportAnalysis.mortgageRate !== '') && (
+                    <div>
+                      <span className="text-gray-600">{t('propertyReport.interestRate')}:</span>
+                      <div className="font-semibold">{formatPercent(reportAnalysis.mortgageRate)}</div>
+                    </div>
+                    )}
+                    {(reportProperty.amortization != null && reportProperty.amortization !== '') && (
+                    <div>
+                      <span className="text-gray-600">{t('propertyReport.amortizationYears')}:</span>
+                      <div className="font-semibold">{reportProperty.amortization} {t('propertyReport.years')}</div>
+                    </div>
+                    )}
+                    {(reportProperty.term != null && reportProperty.term !== '') && (
+                    <div>
+                      <span className="text-gray-600">{t('propertyReport.financingTerm')}:</span>
+                      <div className="font-semibold">{reportProperty.term} {t('propertyReport.years')}</div>
                     </div>
                     )}
                     <div>
@@ -625,12 +847,15 @@ const PropertyReport = ({
                 ? "private"
                 : "acquisition"
             }
+            exclude={scenario?.type === 'renewal' ? ['mrb', 'mrn', 'tga'] : []}
           />
+          <SchlComplianceSection analysis={reportAnalysis} property={reportProperty} />
           <div className="grid md:grid-cols-2 gap-8 mb-8">
             <FinancialSummary analysis={reportAnalysis} advancedExpenses={advancedExpenses} />
             <FinancingSummary
               analysis={reportAnalysis}
               currentProperty={reportProperty}
+              financing={reportProperty}
               scenarioType="initialFinancing"
             />
           </div>
@@ -640,20 +865,35 @@ const PropertyReport = ({
             <p className="text-sm text-gray-500 mb-4">
               {t('propertyReport.futureReturns.desc1')} {returnYears} {t('propertyReport.futureReturns.desc2')}
             </p>
-            <div className="mb-4">
-              <label className="block text-xs text-gray-500 mb-1">{t('propertyReport.subScenario')}</label>
-              <select
-                value={selectedSubScenarioId}
-                onChange={(e) => setSelectedSubScenarioId(e.target.value)}
-                className="w-full px-2 py-1 border rounded"
-              >
-                <option value="">{t('propertyReport.none')}</option>
-                {subScenarios.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.title || t('propertyReport.untitled')} ({typeLabels[s.type] || s.type})
-                  </option>
-                ))}
-              </select>
+            <div className="mb-4 flex flex-wrap items-end gap-2">
+              <div className="flex-1 min-w-[200px]">
+                <label className="block text-xs text-gray-500 mb-1">{t('propertyReport.subScenario')}</label>
+                <select
+                  value={selectedSubScenarioId}
+                  onChange={(e) => {
+                    const nextId = e.target.value;
+                    setSelectedSubScenarioId(nextId);
+                    if (nextId) setExpandedClientScenario(null);
+                  }}
+                  className="w-full px-2 py-1 border rounded"
+                >
+                  <option value="">{t('propertyReport.none')}</option>
+                  {subScenarios.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.title || t('propertyReport.untitled')} ({typeLabels[s.type] || s.type})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {selectedSubScenarioId && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedSubScenarioId('')}
+                  className="px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50 text-sm font-medium"
+                >
+                  {t('close')}
+                </button>
+              )}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
               <div>
@@ -757,7 +997,7 @@ const PropertyReport = ({
             </div>
           </div>
 
-          <div className="flex justify-center gap-4 mb-8">
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-8">
             <button
               onClick={() =>
                 onViewAmortization(
@@ -779,18 +1019,40 @@ const PropertyReport = ({
             >
               {t('propertyReport.newScenario')}
             </button>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-gray-500">
+                {t('propertyReport.reportType')}
+              </label>
+              <select
+                value={reportType}
+                onChange={(e) => setReportType(e.target.value)}
+                className="border rounded px-2 py-1 text-sm"
+              >
+                <option value="client">
+                  {t('propertyReport.reportType.client')}
+                </option>
+                <option value="bank">
+                  {t('propertyReport.reportType.bank')}
+                </option>
+                <option value="advanced">
+                  {t('propertyReport.reportType.advanced')}
+                </option>
+              </select>
+            </div>
             <PDFDownloadLink
               document={
                 <RentalizerPdfDocument
                   title={t('propertyReport.title')}
                   property={reportProperty}
                   analysis={reportAnalysis}
+                  reportType={reportType}
                   futureReturns={{
                     years: returnYears,
                     totalReturn: multiYearReturn,
                     annualizedReturn: multiYearAnnualized,
                     irr: multiYearIRR,
                   }}
+                  marketParamsVersion={marketParamsVersion}
                 />
               }
               fileName={`rapport-${new Date().toISOString().split('T')[0]}.pdf`}
@@ -812,19 +1074,103 @@ const PropertyReport = ({
           <div className="mb-8">
             <ScenarioList
               propertyId={currentProperty.id}
+              shareToken={shareToken || undefined}
+              baseScenarios={shareToken ? baseScenariosProp : undefined}
+              shareCreatorInfo={shareToken ? shareCreatorInfo : undefined}
+              shareFilterByCreatorUid={shareToken ? shareFilterByCreatorUid : undefined}
               onEdit={(sc) => setEditingScenario(sc)}
               excludeTypes={['initialFinancing']}
               parentScenarioId={baseScenarioId}
+              selectedSubScenarioId={selectedSubScenarioId}
+              expandedContent={
+                selectedSubScenarioId && subScenarioAnalysis && subScenarioPropertyForList
+                  ? {
+                      analysis: subScenarioAnalysis,
+                      property: subScenarioPropertyForList,
+                      scenarioType: selectedSubScenario?.type,
+                      advancedExpenses,
+                    }
+                  : null
+              }
+              editingScenarioId={
+                editingScenario?.id && editingScenario?.parentScenarioId === baseScenarioId
+                  ? editingScenario.id
+                  : null
+              }
+              renderEditForm={
+                editingScenario?.id && editingScenario?.parentScenarioId === baseScenarioId
+                  ? () => renderScenarioForm()
+                  : undefined
+              }
             />
+            {sharedScenariosFromClients && sharedScenariosFromClients.length > 0 && (
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                  {t('building.clientSubScenarios')}
+                </h3>
+                <div className="space-y-2">
+                  {sharedScenariosFromClients.map((sc) => (
+                    <div key={`${sc.shareToken}-${sc.id}`} className="rounded-lg border border-indigo-100 overflow-hidden">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 p-3 bg-indigo-50">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                          <span className="font-medium text-gray-800">{sc.title || t('propertyReport.untitled')}</span>
+                          <span className="text-sm text-indigo-700">
+                            {t('building.createdBy')} {sc.createdByName || sc.createdByUid || '—'}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const isCurrentlyThis = expandedClientScenario?.shareToken === sc.shareToken && expandedClientScenario?.id === sc.id;
+                            const next = isCurrentlyThis ? null : sc;
+                            setExpandedClientScenario(next);
+                            if (next) setSelectedSubScenarioId('');
+                          }}
+                          className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
+                        >
+                          {isClientScenarioExpanded(sc) ? t('close') : t('view')}
+                        </button>
+                      </div>
+                      {isClientScenarioExpanded(sc) && expandedClientScenarioAnalysis?.analysis && (
+                        <div className="p-4 bg-white border-t border-indigo-100">
+                          <KeyIndicators
+                            analysis={expandedClientScenarioAnalysis.analysis}
+                            variant={
+                              expandedClientScenarioAnalysis.property?.financingType === 'private'
+                                ? 'private'
+                                : 'acquisition'
+                            }
+                            exclude={sc.type === 'renewal' ? ['mrb', 'mrn', 'tga'] : []}
+                          />
+                          <div className="grid md:grid-cols-2 gap-6 mt-6">
+                            <FinancialSummary
+                              analysis={expandedClientScenarioAnalysis.analysis}
+                              advancedExpenses={advancedExpenses}
+                            />
+                            <FinancingSummary
+                              analysis={expandedClientScenarioAnalysis.analysis}
+                              currentProperty={expandedClientScenarioAnalysis.property}
+                              financing={expandedClientScenarioAnalysis.combinedFinancing ?? expandedClientScenarioAnalysis.property}
+                              scenarioType={sc.type || 'renewal'}
+                            />
+                          </div>
+                        </div>
+                      )}
+                      {isClientScenarioExpanded(sc) && !clientScenarioShareData && (
+                        <div className="p-4 bg-white border-t border-indigo-100 text-sm text-gray-500">
+                          {t('loading')}…
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
-          {renderScenarioForm()}
+          {editingScenario && (!editingScenario.id || editingScenario.parentScenarioId !== baseScenarioId) && renderScenarioForm()}
 
-          <Recommendations
-            analysis={reportAnalysis}
-            currentProperty={reportProperty}
-          />
-
+          <DealSummary analysis={reportAnalysis} property={reportProperty} />
           <ExecutiveSummary
             analysis={reportAnalysis}
             currentProperty={reportProperty}

@@ -74,14 +74,14 @@ export default function FinancingSummary({
             <span className="font-medium">{financing.aphPoints}</span>
           </div>
         )}
-        {financing.qualificationRate && (
+        {(financing.qualificationRate != null && financing.qualificationRate !== '') || (financing.mortgageRate != null && financing.mortgageRate !== '') ? (
           <div className="flex justify-between">
-            <span className="text-gray-600">{t('financingSummary.qualificationRate')}:</span>
+            <span className="text-gray-600">{isRefinancing ? t('financingSummary.newInterestRate') : t('financingSummary.qualificationRate')}:</span>
             <span className="font-medium">
-              {formatPercent(financing.qualificationRate)}
+              {formatPercent(financing.qualificationRate ?? financing.mortgageRate)}
             </span>
           </div>
-        )}
+        ) : null}
         {financing.amortization && (
           <div className="flex justify-between">
             <span className="text-gray-600">{t('financingSummary.remainingAmortization')}:</span>

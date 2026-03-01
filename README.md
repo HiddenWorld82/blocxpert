@@ -42,6 +42,14 @@ npm install @rollup/rollup-win32-x64-msvc
 1. Créer un projet sur [Firebase Console](https://console.firebase.google.com/).
 2. Ajouter une application web pour obtenir les clés de configuration.
 3. Copier `.env.example` vers `.env` et y renseigner les clés Firebase et Google Maps.
+4. **Déployer les règles Firestore** (requis pour le profil utilisateur et l’onboarding) :
+   ```bash
+   npm install -g firebase-tools
+   firebase login
+   firebase use <votre-project-id>
+   firebase deploy --only firestore:rules
+   ```
+   Le fichier `firestore.rules` autorise chaque utilisateur à lire/écrire son propre document dans la collection `users`.
 
 ### 3. Configurer le serveur PDF (optionnel)
 

@@ -8,6 +8,7 @@ import FinancialSummary from "./sections/FinancialSummary";
 import FinancingSummary from "./sections/FinancingSummary";
 import calculateRenewScenario from "../utils/calculateRenewScenario";
 import { getScenarios, saveScenario, updateScenario } from "../services/dataService";
+import { getShareScenarios, saveShareScenario, updateShareScenario } from "../services/shareService";
 import { useLanguage } from "../contexts/LanguageContext";
 
 export default function RenewScenarioForm({
@@ -17,6 +18,10 @@ export default function RenewScenarioForm({
   initialScenario = {},
   property,
   advancedExpenses,
+  shareToken = null,
+  shareFilterByCreatorUid = null,
+  shareCreatorInfo = null,
+  baseScenarios = null,
 }) {
   const [scenario, setScenario] = useState({
     title: "",
@@ -33,16 +38,31 @@ export default function RenewScenarioForm({
   const { t } = useLanguage();
 
   useEffect(() => {
-    if (!propertyId) return;
-    const unsub = getScenarios(propertyId, (scenarios) => {
+    if (!propertyId && !shareToken) return;
+    const onList = (scenarios) => {
       const baseId = scenario.parentScenarioId;
       const parent = baseId
         ? scenarios.find((s) => s.id === baseId)
         : scenarios.find((s) => s.type === "initialFinancing");
       setParentScenario(parent);
-    });
-    return () => unsub && unsub();
-  }, [propertyId, scenario.parentScenarioId]);
+    };
+    let unsub;
+    if (shareToken) {
+      unsub = getShareScenarios(shareToken, (list) => {
+        const filtered = shareFilterByCreatorUid
+          ? list.filter((s) => !s.createdByUid || s.createdByUid === shareFilterByCreatorUid)
+          : list;
+        const full = [...(baseScenarios || []), ...filtered];
+        onList(full);
+      });
+    } else {
+      unsub = getScenarios(propertyId, onList);
+    }
+    return () => {
+      const u = unsub;
+      queueMicrotask(() => u?.());
+    };
+  }, [propertyId, shareToken, shareFilterByCreatorUid, scenario.parentScenarioId, baseScenarios]);
 
   useEffect(() => {
     setScenario({
@@ -77,15 +97,32 @@ export default function RenewScenarioForm({
     }
   }, [scenario.financing.term, scenario.financing.mortgageRate]);
 
+  const parentForCalculation = useMemo(() => {
+    if (!parentScenario && !property) return null;
+    const initialAmort = parentScenario?.financing?.amortization ?? property?.amortization ?? 25;
+    const initialTerm = parentScenario?.financing?.term ?? scenario.financing?.term ?? 0;
+    if (!parentScenario || parentScenario.financing?.amortization == null || parentScenario.financing?.term == null) {
+      return {
+        ...(parentScenario || {}),
+        financing: {
+          ...(parentScenario?.financing || {}),
+          amortization: initialAmort,
+          term: initialTerm,
+        },
+      };
+    }
+    return parentScenario;
+  }, [parentScenario, property, scenario.financing?.term]);
+
   const { analysisProperty, combinedFinancing, analysis } = useMemo(
     () =>
       calculateRenewScenario(
         scenario,
         property,
-        parentScenario,
+        parentForCalculation,
         advancedExpenses,
       ),
-    [scenario, property, parentScenario, advancedExpenses],
+    [scenario, property, parentForCalculation, advancedExpenses],
   );
 
   const handleSave = async () => {
@@ -95,12 +132,22 @@ export default function RenewScenarioForm({
       type: "renewal",
       financing: combinedFinancing,
     };
-    if (id) {
-      await updateScenario(propertyId, id, data);
-      onSaved && onSaved({ id, ...data });
+    if (shareToken) {
+      if (id) {
+        await updateShareScenario(shareToken, id, data);
+        onSaved && onSaved({ id, ...data });
+      } else {
+        const newId = await saveShareScenario(shareToken, data, shareCreatorInfo);
+        onSaved && onSaved({ id: newId, ...data });
+      }
     } else {
-      const newId = await saveScenario(propertyId, data);
-      onSaved && onSaved({ id: newId, ...data });
+      if (id) {
+        await updateScenario(propertyId, id, data);
+        onSaved && onSaved({ id, ...data });
+      } else {
+        const newId = await saveScenario(propertyId, data);
+        onSaved && onSaved({ id: newId, ...data });
+      }
     }
   };
 
@@ -133,9 +180,21 @@ export default function RenewScenarioForm({
                 </button>
               )}
               {onBack && (
-                <button onClick={onBack} className="text-gray-600 hover:text-gray-800">
-                  ← {t('back')}
-                </button>
+                <>
+                  {canToggleView && (
+                    <button
+                      onClick={onBack}
+                      className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-200 rounded text-gray-600 hover:text-gray-800 hover:border-gray-300"
+                    >
+                      {t('close')}
+                    </button>
+                  )}
+                  {!canToggleView && (
+                    <button onClick={onBack} className="text-gray-600 hover:text-gray-800">
+                      ← {t('back')}
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </div>

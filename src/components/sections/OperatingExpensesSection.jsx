@@ -29,6 +29,34 @@ export default function OperatingExpensesSection({
     }
   }
 
+  const getProvinceLabel = (code) => {
+    const map = {
+      QC: "Québec",
+      ON: "Ontario",
+      NB: "Nouveau-Brunswick",
+      NS: "Nouvelle-Écosse",
+      PE: "Île-du-Prince-Édouard",
+      NL: "Terre-Neuve-et-Labrador",
+      MB: "Manitoba",
+      SK: "Saskatchewan",
+      AB: "Alberta",
+      BC: "Colombie-Britannique",
+      NT: "Territoires du Nord-Ouest",
+      NU: "Nunavut",
+      YT: "Yukon",
+    };
+    return map[code] || code || "";
+  };
+
+  const getStructureLabel = (type) =>
+    type === "concrete" ? "béton" : "bois";
+
+  const getSizeLabel = () => {
+    if (!numberOfUnits) return "";
+    if (structureType === "concrete") return "grand immeuble";
+    return numberOfUnits <= 11 ? "petit immeuble" : "grand immeuble";
+  };
+
   const totalRevenue = [
     "annualRent",
     "parkingRevenue",
@@ -89,26 +117,80 @@ export default function OperatingExpensesSection({
   };
 
   const prevProvinceRef = useRef(province);
+  const prevSchlConfigRef = useRef(schlConfig);
 
   useEffect(() => {
     if (!schlConfig) return;
-    const updates = {};
-    const prevProvince = prevProvinceRef.current;
 
+    const prevProvince = prevProvinceRef.current;
+    const prevSchlConfig = prevSchlConfigRef.current;
+
+    const defaultMaintenance = schlConfig.maintenance?.toString();
+    const defaultManagementRate = schlConfig.managementRate?.toString();
+    const defaultConcierge = schlConfig.salaries?.toString();
+
+    const updates = {};
+
+    // 1) Si la province change, on réapplique toujours les barèmes actuels
     if (province !== prevProvince) {
-      updates.maintenance = schlConfig.maintenance.toString();
-      updates.managementRate = schlConfig.managementRate.toString();
-      updates.concierge = schlConfig.salaries.toString();
+      if (defaultMaintenance !== undefined) updates.maintenance = defaultMaintenance;
+      if (defaultManagementRate !== undefined) updates.managementRate = defaultManagementRate;
+      if (defaultConcierge !== undefined) updates.concierge = defaultConcierge;
     } else {
-      if (!expenses.maintenance) updates.maintenance = schlConfig.maintenance.toString();
-      if (!expenses.managementRate) updates.managementRate = schlConfig.managementRate.toString();
-      if (!expenses.concierge) updates.concierge = schlConfig.salaries.toString();
+      // 2) Même province: on utilise une logique plus fine
+      //    a) Si le config SCHL a changé (ex: nombre d’unités petite vs grande),
+      //       on met à jour seulement les champs qui étaient encore exactement au barème précédent
+      if (prevSchlConfig && prevSchlConfig !== schlConfig) {
+        const prevDefaultMaintenance = prevSchlConfig.maintenance?.toString();
+        const prevDefaultManagementRate = prevSchlConfig.managementRate?.toString();
+        const prevDefaultConcierge = prevSchlConfig.salaries?.toString();
+
+        if (
+          defaultMaintenance !== undefined &&
+          (!expenses.maintenance || expenses.maintenance === prevDefaultMaintenance)
+        ) {
+          updates.maintenance = defaultMaintenance;
+        }
+        if (
+          defaultManagementRate !== undefined &&
+          (!expenses.managementRate || expenses.managementRate === prevDefaultManagementRate)
+        ) {
+          updates.managementRate = defaultManagementRate;
+        }
+        if (
+          defaultConcierge !== undefined &&
+          (!expenses.concierge || expenses.concierge === prevDefaultConcierge)
+        ) {
+          updates.concierge = defaultConcierge;
+        }
+      } else {
+        // 3) Même config SCHL qu'avant: on ne remplit que les champs vides
+        if (defaultMaintenance !== undefined && !expenses.maintenance) {
+          updates.maintenance = defaultMaintenance;
+        }
+        if (defaultManagementRate !== undefined && !expenses.managementRate) {
+          updates.managementRate = defaultManagementRate;
+        }
+        if (defaultConcierge !== undefined && !expenses.concierge) {
+          updates.concierge = defaultConcierge;
+        }
+      }
     }
+
     if (Object.keys(updates).length > 0) {
-      onChange(prev => ({ ...prev, ...updates }));
+      onChange((prev) => ({ ...prev, ...updates }));
     }
+
     prevProvinceRef.current = province;
-  }, [schlConfig, province, expenses.maintenance, expenses.managementRate, expenses.concierge, onChange]);
+    prevSchlConfigRef.current = schlConfig;
+  }, [
+    schlConfig,
+    province,
+    expenses.maintenance,
+    expenses.managementRate,
+    expenses.concierge,
+    onChange,
+  ]);
 
   /**useEffect(() => {
     if (!advancedExpenses) return;
@@ -179,6 +261,78 @@ export default function OperatingExpensesSection({
     }
   }, [total, advancedExpenses, onChange, expenses.operatingExpenses]);
 
+  const renderSchlComparison = (field) => {
+    if (!schlConfig) return null;
+
+    if (field === "maintenance") {
+      const bench = schlConfig.maintenance || 0;
+      const current = parseFloat(expenses.maintenance) || 0;
+      if (!bench || !current) return null;
+      const diffPct = ((current - bench) / bench) * 100;
+      const diffLabel = `${diffPct >= 0 ? "+" : ""}${diffPct.toFixed(1)}%`;
+      const color =
+        Math.abs(diffPct) <= 10
+          ? "text-green-600"
+          : diffPct < -10
+          ? "text-orange-500"
+          : "text-red-600";
+      return (
+        <p className="text-xs text-gray-500 mt-1">
+          Barème SCHL: <span className="font-medium">{formatCurrency(bench)}</span>{" "}
+          /logement/an — vous:{" "}
+          <span className={`font-medium ${color}`}>{diffLabel}</span>{" "}
+          par rapport au barème.
+        </p>
+      );
+    }
+
+    if (field === "managementRate") {
+      const bench = schlConfig.managementRate || 0;
+      const current = parseFloat(expenses.managementRate) || 0;
+      if (!bench || !current) return null;
+      const diffPct = ((current - bench) / bench) * 100;
+      const diffLabel = `${diffPct >= 0 ? "+" : ""}${diffPct.toFixed(1)}%`;
+      const color =
+        Math.abs(diffPct) <= 10
+          ? "text-green-600"
+          : diffPct < -10
+          ? "text-orange-500"
+          : "text-red-600";
+      return (
+        <p className="text-xs text-gray-500 mt-1">
+          Barème SCHL: <span className="font-medium">{bench.toFixed(2)}%</span>{" "}
+          — vous:{" "}
+          <span className={`font-medium ${color}`}>{diffLabel}</span>{" "}
+          par rapport au barème.
+        </p>
+      );
+    }
+
+    if (field === "concierge") {
+      const bench = schlConfig.salaries || 0;
+      const current = parseFloat(expenses.concierge) || 0;
+      if (!bench || !current) return null;
+      const diffPct = ((current - bench) / bench) * 100;
+      const diffLabel = `${diffPct >= 0 ? "+" : ""}${diffPct.toFixed(1)}%`;
+      const color =
+        Math.abs(diffPct) <= 10
+          ? "text-green-600"
+          : diffPct < -10
+          ? "text-orange-500"
+          : "text-red-600";
+      return (
+        <p className="text-xs text-gray-500 mt-1">
+          Barème SCHL: <span className="font-medium">{formatCurrency(bench)}</span>{" "}
+          /logement/an — vous:{" "}
+          <span className={`font-medium ${color}`}>{diffLabel}</span>{" "}
+          par rapport au barème.
+        </p>
+      );
+    }
+
+    return null;
+  };
+
   if (!advancedExpenses) {
     const simpleFields = [
       { field: "vacancyRate", label: t("operatingExpenses.vacancyRate") },
@@ -198,6 +352,13 @@ export default function OperatingExpensesSection({
           <TrendingUp className="w-5 h-5 mr-2" />
           {t("operatingExpenses.title")}
         </h2>
+        {schlConfig && (
+          <div className="mb-4 text-xs text-gray-700 bg-blue-50 border border-blue-100 rounded px-3 py-2">
+            Basé sur barème SCHL – {getProvinceLabel(province)}
+            {structureType && `, ${getStructureLabel(structureType)}`}
+            {getSizeLabel() && `, ${getSizeLabel()}`}.
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-4">
           {simpleFields.map(({ field, label }) => (
             <div key={field} className="col-span-1">
@@ -248,6 +409,7 @@ export default function OperatingExpensesSection({
                 {`${otherCostRate}% de ${formatCurrency(effectiveRevenue)} = ${formatCurrency(otherExpensesDefault)}`}
               </p>
             )}
+            {renderSchlComparison(field)}
             </div>
           ))}
         </div>
@@ -313,6 +475,13 @@ export default function OperatingExpensesSection({
         <TrendingUp className="w-5 h-5 mr-2" />
         {t("operatingExpenses.title")}
       </h2>
+      {schlConfig && (
+        <div className="mb-4 text-xs text-gray-700 bg-blue-50 border border-blue-100 rounded px-3 py-2">
+          Basé sur barème SCHL – {getProvinceLabel(province)}
+          {structureType && `, ${getStructureLabel(structureType)}`}
+          {getSizeLabel() && `, ${getSizeLabel()}`}.
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-4">
         {fields.map(({ field, label }) => {
           const isDisabled = otherCostRate > 0 && [
@@ -394,6 +563,7 @@ export default function OperatingExpensesSection({
                   )}`}
                 </p>
               )}
+              {renderSchlComparison(field)}
             </div>
           );
         })}

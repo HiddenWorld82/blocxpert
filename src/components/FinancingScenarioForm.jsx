@@ -18,6 +18,8 @@ export default function FinancingScenarioForm({
   type = "initialFinancing",
   property,
   advancedExpenses,
+  onSaveScenario = null,
+  onUpdateScenario = null,
 }) {
   const [scenario, setScenario] = useState({
     title: "",
@@ -197,7 +199,15 @@ export default function FinancingScenarioForm({
   const handleSave = async () => {
     const { id, ...dataWithoutId } = scenario;
     const data = { ...dataWithoutId, type };
-    if (id) {
+    if (onSaveScenario && onUpdateScenario) {
+      if (id) {
+        await onUpdateScenario(id, data);
+        onSaved && onSaved({ id, ...data });
+      } else {
+        const newId = await onSaveScenario(data);
+        onSaved && onSaved({ id: newId, ...data });
+      }
+    } else if (id) {
       await updateScenario(propertyId, id, data);
       onSaved && onSaved({ id, ...data });
     } else {

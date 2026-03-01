@@ -33,10 +33,17 @@ const LoginPage = () => {
     }
   };
 
+  const invitationInUrl = new URLSearchParams(location.search).get('invitation');
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded shadow">
         <h2 className="text-2xl font-bold text-center">{t('auth.login.title')}</h2>
+        {invitationInUrl && (
+          <p className="text-sm text-blue-700 bg-blue-50 p-3 rounded">
+            {t('auth.login.invitedByBroker')}
+          </p>
+        )}
         {error && <div className="p-2 text-red-600 bg-red-100 rounded">{error}</div>}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

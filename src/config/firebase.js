@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -17,6 +17,7 @@ export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 export const firestore = getFirestore(app);
 
-enableIndexedDbPersistence(firestore).catch((err) => {
-  console.error('Failed to enable persistence', err);
-});
+// Persistence désactivée pour éviter le bug Firestore "Unexpected state" (ca9/b815)
+// avec plusieurs listeners + navigation. Réactiver quand le SDK sera corrigé:
+// import { enableIndexedDbPersistence } from 'firebase/firestore';
+// enableIndexedDbPersistence(firestore).catch(() => {});

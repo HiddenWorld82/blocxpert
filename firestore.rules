@@ -1,21 +1,104 @@
 rules_version = '2';
 service cloud.firestore {
+  function propertyData(propertyId) {
+    return get(/databases/$(database)/documents/properties/$(propertyId)).data;
+  }
   function isOwner(propertyId) {
-    return request.auth != null &&
-      get(/databases/$(database)/documents/properties/$(propertyId)).data.uid == request.auth.uid;
+    return request.auth != null && propertyData(propertyId).uid == request.auth.uid;
+  }
+  function isBroker(propertyId) {
+    return request.auth != null && propertyData(propertyId).brokerUid == request.auth.uid;
+  }
+  // db et propertyId doivent être passés depuis le bloc match (variables en scope).
+  function canAccessProperty(db, propertyId) {
+    let p = get(/databases/$(db)/documents/properties/$(propertyId)).data;
+    return request.auth != null && (p.uid == request.auth.uid || p.brokerUid == request.auth.uid);
+  }
+  function shareAllowsScenarioWrite(db, tok) {
+    let share = get(/databases/$(db)/documents/shares/$(tok)).data;
+    return share.get('access', '') == 'write' || share.get('allowSubScenariosEdit', false) == true;
   }
 
   match /databases/{database}/documents {
+    match /userEmails/{email} {
+      allow read: if request.auth != null;
+      allow create, update: if request.auth != null && request.resource.data.uid == request.auth.uid;
+    }
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
+      match /sharedWithMe/{docId} {
+        allow create: if request.auth != null && request.resource.data.fromUid == request.auth.uid;
+        allow read, update, delete: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+    // Collection group: allow share owner to read/delete sharedWithMe entries that reference their share (when broker deletes property)
+    match /databases/{database}/documents/{path=**}/sharedWithMe/{docId} {
+      allow read, delete: if request.auth != null
+        && resource.data.get('shareToken', '') != ''
+        && get(/databases/$(database)/documents/shares/$(resource.data.shareToken)).data.uid == request.auth.uid;
+    }
+
+    match /clients/{clientId} {
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow read, delete: if request.auth != null && request.auth.uid == resource.data.uid;
+      allow update: if request.auth != null && (
+        request.auth.uid == resource.data.uid
+        || (resource.data.invitationToken != null && resource.data.clientUserId == null
+            && request.resource.data.clientUserId == request.auth.uid)
+      );
+    }
+
+    match /inviteTokens/{token} {
+      allow read: if true;
+      allow create: if request.auth != null && request.resource.data.brokerUid == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.brokerUid == request.auth.uid;
+    }
+
+    match /shares/{token} {
+      allow read: if true;
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.uid;
+      match /scenarios/{scenarioId} {
+        allow read: if true;
+        allow create, update: if request.auth != null
+          && shareAllowsScenarioWrite(database, token);
+        allow delete: if request.auth != null
+          && (shareAllowsScenarioWrite(database, token)
+              || get(/databases/$(database)/documents/shares/$(token)).data.uid == request.auth.uid);
+      }
+    }
+
+    match /invitationEmails/{docId} {
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasAll(['to', 'invitationLink'])
+        && request.resource.data.to is string
+        && request.resource.data.invitationLink is string;
+      allow read, update, delete: if false;
+    }
+    match /shareLinkEmails/{docId} {
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasAll(['to', 'shareLink'])
+        && request.resource.data.to is string
+        && request.resource.data.shareLink is string;
+      allow read, update, delete: if false;
+    }
+
+    match /marketParams/{docId} {
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow read, update, delete: if request.auth != null && request.auth.uid == resource.data.uid;
     }
 
     match /properties/{propertyId} {
       allow create: if request.auth != null && request.auth.uid == request.resource.data.uid;
-      allow read, update, delete: if request.auth != null && request.auth.uid == resource.data.uid;
+      allow read: if request.auth != null && (
+        resource.data.uid == request.auth.uid || resource.data.brokerUid == request.auth.uid
+      );
+      allow update, delete: if request.auth != null && (
+        resource.data.uid == request.auth.uid || resource.data.brokerUid == request.auth.uid
+      );
 
       match /scenarios/{scenarioId} {
-        allow create, read, update, delete: if isOwner(propertyId);
+        allow create, read, update, delete: if canAccessProperty(database, propertyId);
       }
     }
   }
