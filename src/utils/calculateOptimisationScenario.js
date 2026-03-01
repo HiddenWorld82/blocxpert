@@ -216,6 +216,44 @@ export default function calculateOptimisationScenario(
   const workCost =
     Number(parseLocaleNumber(scenario.financingFees?.workCost || 0)) || 0;
 
+  // Base d'investissement pour les rendements = nouvel argent investi (travaux + frais)
+  const investmentBase = workCost + totalFees;
+  if (
+    adjustedAnalysis &&
+    investmentBase > 0 &&
+    typeof adjustedAnalysis.cashFlow === 'number'
+  ) {
+    const purchasePriceForAppreciation =
+      parseFloat(analysisProperty?.purchasePrice) || 0;
+    const appreciationRate = 0.03;
+    const principalPaidYear1 =
+      (adjustedAnalysis.totalInvestment > 0 && adjustedAnalysis.loanPaydownReturn != null)
+        ? (adjustedAnalysis.loanPaydownReturn / 100) * adjustedAnalysis.totalInvestment
+        : 0;
+    const cashOnCashReturn =
+      (adjustedAnalysis.cashFlow / investmentBase) * 100;
+    const loanPaydownReturn =
+      (principalPaidYear1 / investmentBase) * 100;
+    const appreciationReturn =
+      purchasePriceForAppreciation > 0
+        ? ((purchasePriceForAppreciation * appreciationRate) / investmentBase) * 100
+        : 0;
+    const totalReturn = cashOnCashReturn + loanPaydownReturn + appreciationReturn;
+    const valueGeneratedYear1 =
+      adjustedAnalysis.cashFlow +
+      principalPaidYear1 +
+      purchasePriceForAppreciation * appreciationRate;
+    adjustedAnalysis = {
+      ...adjustedAnalysis,
+      cashOnCashReturn,
+      loanPaydownReturn,
+      appreciationReturn,
+      totalReturn,
+      valueGeneratedYear1,
+      totalInvestment: investmentBase,
+    };
+  }
+
   const optimizationComparison =
     parentAnalysis && adjustedAnalysis
       ? {

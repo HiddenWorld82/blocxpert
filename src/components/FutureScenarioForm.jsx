@@ -22,6 +22,9 @@ export default function FutureScenarioForm({
   shareToken = null,
   shareFilterByCreatorUid = null,
   shareCreatorInfo = null,
+  initialViewMode,
+  onViewResults,
+  embeddedInList = false,
 }) {
   const [scenario, setScenario] = useState({
     title: "",
@@ -42,7 +45,9 @@ export default function FutureScenarioForm({
 
   const [parentScenario, setParentScenario] = useState(null);
   const lastMarketValueEstimateRef = useRef("");
-  const [isViewingOnly, setIsViewingOnly] = useState(Boolean(initialScenario.id));
+  const [isViewingOnly, setIsViewingOnly] = useState(
+    initialViewMode === "edit" ? false : Boolean(initialScenario.id)
+  );
 
   const { t } = useLanguage();
 
@@ -87,8 +92,10 @@ export default function FutureScenarioForm({
     });
     lastMarketValueEstimateRef.current =
       parseLocaleNumber(initialScenario.marketValue) || "";
-    setIsViewingOnly(Boolean(initialScenario.id));
-  }, [initialScenario.id]);
+    setIsViewingOnly(
+      initialViewMode === "edit" ? false : Boolean(initialScenario.id)
+    );
+  }, [initialScenario.id, initialViewMode]);
 
   const handleFinancingChange = (financing, field) => {
     if (field === "debtCoverageRatio") {
@@ -272,51 +279,59 @@ export default function FutureScenarioForm({
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-4xl mx-auto">
+    <div className={embeddedInList ? 'w-full' : 'min-h-screen bg-gray-50 p-4'}>
+      <div className={embeddedInList ? 'w-full' : 'max-w-4xl mx-auto'}>
         <div className="bg-white rounded-lg shadow-lg p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-semibold">{titleText}</h2>
-            <div className="flex items-center gap-2">
-              {canToggleView && (
-                <button
-                  onClick={() => setIsViewingOnly((prev) => !prev)}
-                  className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-200 rounded text-gray-600 hover:text-gray-800 hover:border-gray-300"
-                >
-                  {isViewingOnly ? (
-                    <>
-                      <Pencil className="w-4 h-4" />
-                      {t('scenarioForm.editScenario')}
-                    </>
-                  ) : (
-                    <>
-                      <Eye className="w-4 h-4" />
-                      {t('scenarioForm.viewSummary')}
-                    </>
-                  )}
-                </button>
-              )}
-              {onBack && (
-                <>
-                  {canToggleView && (
-                    <button
-                      onClick={onBack}
-                      className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-200 rounded text-gray-600 hover:text-gray-800 hover:border-gray-300"
-                    >
-                      {t('close')}
-                    </button>
-                  )}
-                  {!canToggleView && (
-                    <button
-                      onClick={onBack}
-                      className="text-gray-600 hover:text-gray-800"
-                    >
-                      ← {t('back')}
-                    </button>
-                  )}
-                </>
-              )}
-            </div>
+            {!embeddedInList && (
+              <div className="flex items-center gap-2">
+                {canToggleView && (
+                  <button
+                    onClick={() => {
+                      if (!isViewingOnly && onViewResults) {
+                        onViewResults(scenario);
+                      } else {
+                        setIsViewingOnly((prev) => !prev);
+                      }
+                    }}
+                    className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-200 rounded text-gray-600 hover:text-gray-800 hover:border-gray-300"
+                  >
+                    {isViewingOnly ? (
+                      <>
+                        <Pencil className="w-4 h-4" />
+                        {t('scenarioForm.editScenario')}
+                      </>
+                    ) : (
+                      <>
+                        <Eye className="w-4 h-4" />
+                        {t('scenarioForm.viewSummary')}
+                      </>
+                    )}
+                  </button>
+                )}
+                {onBack && (
+                  <>
+                    {canToggleView && (
+                      <button
+                        onClick={onBack}
+                        className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-200 rounded text-gray-600 hover:text-gray-800 hover:border-gray-300"
+                      >
+                        {t('close')}
+                      </button>
+                    )}
+                    {!canToggleView && (
+                      <button
+                        onClick={onBack}
+                        className="text-gray-600 hover:text-gray-800"
+                      >
+                        ← {t('back')}
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="space-y-8">
@@ -395,25 +410,25 @@ export default function FutureScenarioForm({
 
             {!isViewingOnly && renderScenarioSections()}
 
+            {isViewingOnly && analysis && (
+              <KeyIndicators
+                analysis={analysis}
+                variant="future"
+                exclude={keyIndicatorExclusions}
+              />
+            )}
             {analysis && (
-              <>
-                <KeyIndicators
+              <div className="grid md:grid-cols-2 gap-4">
+                <FinancialSummary
                   analysis={analysis}
-                  variant="future"
-                  exclude={keyIndicatorExclusions}
+                  advancedExpenses={advancedExpenses}
                 />
-                <div className="grid md:grid-cols-2 gap-4">
-                  <FinancialSummary
-                    analysis={analysis}
-                    advancedExpenses={advancedExpenses}
-                  />
-                  <FinancingSummary
-                    analysis={analysis}
-                    currentProperty={analysisProperty}
-                    equityAmount={equityWithdrawal}
-                  />
-                </div>
-              </>
+                <FinancingSummary
+                  analysis={analysis}
+                  currentProperty={analysisProperty}
+                  equityAmount={equityWithdrawal}
+                />
+              </div>
             )}
 
             {isEquityNegative && (

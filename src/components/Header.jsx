@@ -46,13 +46,15 @@ const Header = ({ onNavigateToClients, onNavigateToMarketParams }) => {
               >
                 {t('home.clients')}
               </button>
-              <button
-                type="button"
-                onClick={() => { onNavigateToMarketParams?.(); setDropdownOpen(false); }}
-                className="text-sm text-gray-700 hover:text-blue-600 px-2 py-1 rounded"
-              >
-                {t('home.marketParams')}
-              </button>
+              {onNavigateToMarketParams && (
+                <button
+                  type="button"
+                  onClick={() => { onNavigateToMarketParams(); setDropdownOpen(false); }}
+                  className="text-sm text-gray-700 hover:text-blue-600 px-2 py-1 rounded"
+                >
+                  {t('home.marketParams')}
+                </button>
+              )}
             </nav>
           )}
         </div>

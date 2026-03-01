@@ -439,7 +439,7 @@ const RentalPropertyAnalyzer = () => {
       )}
       <Header
         onNavigateToClients={isCourtierHypo ? () => setCurrentStep('clients') : undefined}
-        onNavigateToMarketParams={isCourtierHypo ? () => setCurrentStep('marketParams') : undefined}
+        onNavigateToMarketParams={undefined}
       />
       {propertiesLoading ? (
         <div className="flex items-center justify-center py-10">

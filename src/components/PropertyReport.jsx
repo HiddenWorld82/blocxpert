@@ -19,7 +19,6 @@ import calculateRenewScenario from '../utils/calculateRenewScenario';
 import calculateFutureScenario from '../utils/calculateFutureScenario';
 import { getScenarios, getScenario } from '../services/dataService';
 import { getShareScenarios, getShare, getShareScenariosOnce } from '../services/shareService';
-import { getAphMaxLtvRatio } from '../utils/cmhc';
 import { getMarketParamsById } from '../services/marketParamsService';
 import { RentalizerPdfDocument } from '../pdf/RentalizerPdfDocument';
 import { useAuth } from '../contexts/AuthContext';
@@ -181,13 +180,14 @@ const PropertyReport = ({
     () => subScenarios.find((s) => s.id === selectedSubScenarioId),
     [subScenarios, selectedSubScenarioId]
   );
-  const subScenarioProperty = useMemo(
-    () =>
-      selectedSubScenario
-        ? { ...currentProperty, ...selectedSubScenario.financing, ...selectedSubScenario.acquisitionCosts }
-        : null,
-    [currentProperty, selectedSubScenario]
-  );
+  const subScenarioProperty = useMemo(() => {
+    if (!selectedSubScenario) return null;
+    return {
+      ...currentProperty,
+      ...selectedSubScenario.financing,
+      ...selectedSubScenario.acquisitionCosts,
+    };
+  }, [currentProperty, selectedSubScenario]);
   const manualGrowthRef = useRef({
     income: DEFAULT_INCOME_GROWTH,
     expense: DEFAULT_EXPENSE_GROWTH,
@@ -197,147 +197,17 @@ const PropertyReport = ({
   const subScenarioAnalysis = useMemo(() => {
     if (!selectedSubScenario) return null;
     if (selectedSubScenario.type === 'refinancing') {
-      const years = parseFloat(selectedSubScenario.refinanceYears) || 0;
-      const revenueFactor = Math.pow(
-        1 + (parseFloat(selectedSubScenario.revenueGrowthPct) || 0) / 100,
-        years,
+      const parentScenario =
+        scenario?.id === selectedSubScenario.parentScenarioId
+          ? scenario
+          : subScenarios.find((s) => s.id === selectedSubScenario.parentScenarioId);
+      const { analysis, equityWithdrawal } = calculateFutureScenario(
+        selectedSubScenario,
+        currentProperty,
+        parentScenario,
+        advancedExpenses,
       );
-      const expenseFactor = Math.pow(
-        1 + (parseFloat(selectedSubScenario.expenseGrowthPct) || 0) / 100,
-        years,
-      );
-      const appreciationPct =
-        (parseFloat(selectedSubScenario.valueAppreciationPct) || 0) / 100;
-      const purchasePrice = parseFloat(currentProperty.purchasePrice) || 0;
-      const marketValue =
-        parseFloat(selectedSubScenario.marketValue) ||
-        purchasePrice * Math.pow(1 + appreciationPct, years);
-
-      const revenueFields = [
-        'annualRent',
-        'parkingRevenue',
-        'internetRevenue',
-        'storageRevenue',
-        'otherRevenue',
-      ];
-      const expenseFields = [
-        'municipalTaxes',
-        'schoolTaxes',
-        'insurance',
-        'electricityHeating',
-        'maintenance',
-        'concierge',
-        'operatingExpenses',
-        'otherExpenses',
-        'heating',
-        'electricity',
-        'landscaping',
-        'snowRemoval',
-        'extermination',
-        'fireInspection',
-        'advertising',
-        'legal',
-        'accounting',
-        'elevator',
-        'cableInternet',
-        'appliances',
-        'garbage',
-        'washerDryer',
-        'hotWater',
-      ];
-      const acquisitionCostFields = [
-        'inspection',
-        'environmental1',
-        'environmental2',
-        'environmental3',
-        'otherFees',
-        'appraiser',
-        'notary',
-        'renovations',
-        'cmhcAnalysis',
-        'cmhcTax',
-        'welcomeTax',
-        'expertises',
-      ];
-      const baseProp = { ...currentProperty };
-      acquisitionCostFields.forEach((f) => delete baseProp[f]);
-      const scaled = {};
-      revenueFields.forEach((f) => {
-        const val = parseFloat(baseProp[f]);
-        if (!isNaN(val)) scaled[f] = val * revenueFactor;
-      });
-      expenseFields.forEach((f) => {
-        const val = parseFloat(baseProp[f]);
-        if (!isNaN(val)) scaled[f] = val * expenseFactor;
-      });
-      const scenarioProperty = {
-        ...baseProp,
-        ...scaled,
-        purchasePrice: marketValue,
-        ...selectedSubScenario.financing,
-        ...selectedSubScenario.financingFees,
-        ignoreLTV: true,
-      };
-
-      let initialLoanAmount =
-        parseFloat(selectedSubScenario.financing?.existingLoanBalance) || 0;
-      const principal = reportAnalysis?.maxLoanAmount || 0;
-      if (
-        initialLoanAmount === 0 &&
-        ['cmhc', 'cmhc_aph'].includes(currentProperty.financingType)
-      ) {
-        const ltvRatio = purchasePrice > 0 ? (principal / purchasePrice) * 100 : 0;
-        const points = parseInt(currentProperty.aphPoints) || 0;
-        const effectiveLtv =
-          currentProperty.financingType === 'cmhc_aph'
-            ? Math.min(ltvRatio, getAphMaxLtvRatio(points) * 100)
-            : ltvRatio;
-        let premiumRate = 0;
-        if (currentProperty.financingType === 'cmhc_aph' && effectiveLtv > 85) {
-          premiumRate = effectiveLtv <= 90 ? 0.059 : 0.0615;
-        } else {
-          const brackets = [
-            { ltv: 65, rate: 0.026 },
-            { ltv: 70, rate: 0.0285 },
-            { ltv: 75, rate: 0.0335 },
-            { ltv: 80, rate: 0.0435 },
-            { ltv: 85, rate: 0.0535 },
-          ];
-          const b = brackets.find((br) => effectiveLtv <= br.ltv);
-          premiumRate = b?.rate || brackets.at(-1).rate;
-        }
-        const amortYears = parseInt(currentProperty.amortization) || 25;
-        if (amortYears > 25) {
-          premiumRate += ((amortYears - 25) / 5) * 0.0025;
-        }
-        if (currentProperty.financingType === 'cmhc_aph') {
-          const rebate =
-            points >= 100 ? 0.3 : points >= 70 ? 0.2 : points >= 50 ? 0.1 : 0;
-          premiumRate *= 1 - rebate;
-        }
-        const premium = principal * premiumRate;
-        const totalLoanAmount = principal + premium;
-        const mortgageRate = (parseFloat(currentProperty.mortgageRate) || 0) / 100;
-        let monthlyRate =
-          currentProperty.financingType === 'private'
-            ? mortgageRate / 12
-            : Math.pow(1 + mortgageRate / 2, 1 / 6) - 1;
-        const totalPayments = amortYears * 12;
-        const paymentsMade = Math.min(years * 12, totalPayments);
-        if (monthlyRate > 0) {
-          const balance =
-            totalLoanAmount *
-            (Math.pow(1 + monthlyRate, totalPayments) -
-              Math.pow(1 + monthlyRate, paymentsMade)) /
-            (Math.pow(1 + monthlyRate, totalPayments) - 1);
-          initialLoanAmount = balance;
-        } else {
-          initialLoanAmount = principal;
-        }
-      }
-      return calculateRentability(scenarioProperty, advancedExpenses, {
-        initialLoanAmount,
-      });
+      return analysis ? { analysis, equityWithdrawal } : null;
     } else if (selectedSubScenario.type === 'optimization') {
       const parentScenario =
         (scenario &&
@@ -347,13 +217,13 @@ const PropertyReport = ({
           : subScenarios.find(
               (sc) => sc.id === selectedSubScenario.parentScenarioId,
             );
-      const { analysis } = calculateOptimisationScenario(
+      const { analysis, equityWithdrawal } = calculateOptimisationScenario(
         selectedSubScenario,
         currentProperty,
         parentScenario,
         advancedExpenses,
       );
-      return analysis;
+      return analysis ? { analysis, equityWithdrawal } : null;
     } else if (selectedSubScenario.type === 'renewal') {
       const parentScenario =
         scenario?.id === selectedSubScenario.parentScenarioId
@@ -402,6 +272,7 @@ const PropertyReport = ({
     advancedExpenses,
   ]);
   const [showIRRInfo, setShowIRRInfo] = useState(false);
+  const effectiveSubScenarioAnalysis = subScenarioAnalysis?.analysis ?? subScenarioAnalysis;
   const {
     totalReturn: multiYearReturn,
     annualizedReturn: multiYearAnnualized,
@@ -416,7 +287,7 @@ const PropertyReport = ({
         expenseGrowth / 100,
         valueGrowth / 100,
         selectedSubScenario,
-        subScenarioAnalysis,
+        effectiveSubScenarioAnalysis,
       ),
     [
       reportProperty,
@@ -426,7 +297,7 @@ const PropertyReport = ({
       expenseGrowth,
       valueGrowth,
       selectedSubScenario,
-      subScenarioAnalysis,
+      effectiveSubScenarioAnalysis,
     ],
   );
 
@@ -482,9 +353,7 @@ const PropertyReport = ({
     if (!currentProperty?.id) return;
     const loadScenarios = (scs) => {
       const filtered = baseScenarioId
-        ? scs.filter(
-            (sc) => sc.parentScenarioId === baseScenarioId && sc.type !== 'renewal',
-          )
+        ? scs.filter((sc) => sc.parentScenarioId === baseScenarioId)
         : scs.filter((sc) => sc.type !== 'renewal');
       setSubScenarios(filtered);
       setSelectedSubScenarioId((currentSelectedId) =>
@@ -556,7 +425,7 @@ const PropertyReport = ({
   const isRefinancing = selectedSubScenario?.type === 'refinancing';
   const isOptimization = selectedSubScenario?.type === 'optimization';
 
-  const renderScenarioForm = () => {
+  const renderScenarioForm = (opts = {}) => {
     if (!editingScenario) return null;
     if (!editingScenario.type) {
       return (
@@ -598,6 +467,8 @@ const PropertyReport = ({
       shareFilterByCreatorUid: shareFilterByCreatorUid || undefined,
       shareCreatorInfo: shareCreatorInfo || undefined,
       baseScenarios: shareToken ? baseScenariosProp || [] : undefined,
+      initialViewMode: 'edit',
+      ...opts,
     };
     const formComponents = {
       refinancing: FutureScenarioForm,
@@ -616,7 +487,7 @@ const PropertyReport = ({
         >
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
             <h2 className="text-xl sm:text-2xl font-semibold">{t('propertyReport.title')}</h2>
-            <div className="flex items-center gap-2 sm:gap-4 self-end sm:self-auto">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4 self-end sm:self-auto">
               <button
                 onClick={() => setCurrentStep('scenario')}
                 className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
@@ -865,8 +736,8 @@ const PropertyReport = ({
             <p className="text-sm text-gray-500 mb-4">
               {t('propertyReport.futureReturns.desc1')} {returnYears} {t('propertyReport.futureReturns.desc2')}
             </p>
-            <div className="mb-4 flex flex-wrap items-end gap-2">
-              <div className="flex-1 min-w-[200px]">
+            <div className="mb-4">
+              <div className="w-full">
                 <label className="block text-xs text-gray-500 mb-1">{t('propertyReport.subScenario')}</label>
                 <select
                   value={selectedSubScenarioId}
@@ -885,15 +756,6 @@ const PropertyReport = ({
                   ))}
                 </select>
               </div>
-              {selectedSubScenarioId && (
-                <button
-                  type="button"
-                  onClick={() => setSelectedSubScenarioId('')}
-                  className="px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50 text-sm font-medium"
-                >
-                  {t('close')}
-                </button>
-              )}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
               <div>
@@ -1004,7 +866,7 @@ const PropertyReport = ({
                   { ...reportProperty, appreciationRate: valueGrowth / 100 },
                   reportAnalysis,
                   selectedSubScenario,
-                  subScenarioAnalysis,
+                  subScenarioAnalysis?.analysis ?? subScenarioAnalysis,
                 )
               }
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -1078,17 +940,28 @@ const PropertyReport = ({
               baseScenarios={shareToken ? baseScenariosProp : undefined}
               shareCreatorInfo={shareToken ? shareCreatorInfo : undefined}
               shareFilterByCreatorUid={shareToken ? shareFilterByCreatorUid : undefined}
+              onView={(sc) => setSelectedSubScenarioId(sc.id)}
               onEdit={(sc) => setEditingScenario(sc)}
+              onCloseSubScenario={() => {
+                setSelectedSubScenarioId('');
+                setEditingScenario(null);
+              }}
               excludeTypes={['initialFinancing']}
               parentScenarioId={baseScenarioId}
               selectedSubScenarioId={selectedSubScenarioId}
               expandedContent={
                 selectedSubScenarioId && subScenarioAnalysis && subScenarioPropertyForList
                   ? {
-                      analysis: subScenarioAnalysis,
+                      analysis: subScenarioAnalysis?.analysis ?? subScenarioAnalysis,
                       property: subScenarioPropertyForList,
                       scenarioType: selectedSubScenario?.type,
                       advancedExpenses,
+                      equityWithdrawal: subScenarioAnalysis?.equityWithdrawal,
+                      valueGeneratedYear:
+                        (selectedSubScenario?.type === 'refinancing' || selectedSubScenario?.type === 'renewal') &&
+                        scenario?.financing?.term != null
+                          ? (parseInt(scenario.financing.term) || 0) + 1
+                          : undefined,
                     }
                   : null
               }
@@ -1099,7 +972,7 @@ const PropertyReport = ({
               }
               renderEditForm={
                 editingScenario?.id && editingScenario?.parentScenarioId === baseScenarioId
-                  ? () => renderScenarioForm()
+                  ? () => renderScenarioForm({ embeddedInList: true })
                   : undefined
               }
             />

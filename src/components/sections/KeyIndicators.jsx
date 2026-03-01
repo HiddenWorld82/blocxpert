@@ -11,7 +11,14 @@ import {
 } from "lucide-react";
 import { useLanguage } from "../../contexts/LanguageContext";
 
-export default function KeyIndicators({ analysis, variant = "acquisition", exclude = [] }) {
+export default function KeyIndicators({
+  analysis,
+  variant = "acquisition",
+  exclude = [],
+  valueGeneratedYear,
+  equityWithdrawal,
+  onlyShowKeys,
+}) {
   const { t } = useLanguage();
   if (!analysis) return null;
 
@@ -107,7 +114,10 @@ export default function KeyIndicators({ analysis, variant = "acquisition", exclu
     },
     {
       key: "valueGeneratedYear1",
-      label: t("keyIndicators.valueGeneratedYear1"),
+      label:
+        valueGeneratedYear != null
+          ? `${t("keyIndicators.valueGeneratedAfterYearLabel")} ${valueGeneratedYear}`
+          : t("keyIndicators.valueGeneratedYear1"),
       value: formatMoney(analysis.valueGeneratedYear1),
       icon: <DollarSign className="w-6 h-6 text-indigo-600" />,
       color: analysis.valueGeneratedYear1 >= 0 ? "text-green-600" : "text-red-600",
@@ -127,6 +137,19 @@ export default function KeyIndicators({ analysis, variant = "acquisition", exclu
       color: "text-gray-700",
     },
   ];
+
+  if (equityWithdrawal !== undefined && equityWithdrawal !== null && !cards.some((c) => c.key === "equityWithdrawal")) {
+    cards = [
+      ...cards,
+      {
+        key: "equityWithdrawal",
+        label: t("financingSummary.equityWithdrawal"),
+        value: formatMoney(equityWithdrawal),
+        icon: <DollarSign className="w-6 h-6 text-emerald-600" />,
+        color: equityWithdrawal >= 0 ? "text-green-600" : "text-red-600",
+      },
+    ];
+  }
 
   if (variant === "optimization" && comparison) {
     cards = cards.concat([
@@ -239,8 +262,14 @@ export default function KeyIndicators({ analysis, variant = "acquisition", exclu
     return variantFilter ? variantFilter(card) : true;
   });
 
-  if (variant === "optimization") {
+  if (variant === "optimization" && !onlyShowKeys) {
     visibleCards = optimizationKeys
+      .map((key) => visibleCards.find((card) => card.key === key))
+      .filter(Boolean);
+  }
+
+  if (onlyShowKeys && onlyShowKeys.length > 0) {
+    visibleCards = onlyShowKeys
       .map((key) => visibleCards.find((card) => card.key === key))
       .filter(Boolean);
   }

@@ -10,7 +10,7 @@ import {
   duplicateShareScenario,
   deleteShareScenario,
 } from "../services/shareService";
-import { Eye, Pencil, Copy, Trash2 } from "lucide-react";
+import { Eye, Pencil, Copy, Trash2, X } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import KeyIndicators from "./sections/KeyIndicators";
 import FinancialSummary from "./sections/FinancialSummary";
@@ -24,6 +24,7 @@ export default function ScenarioList({
   shareFilterByCreatorUid = null,
   onEdit,
   onView,
+  onCloseSubScenario,
   excludeTypes = [],
   parentScenarioId = null,
   selectedSubScenarioId = null,
@@ -160,6 +161,14 @@ export default function ScenarioList({
                           className="text-red-600 hover:text-red-800"
                         />
                       )}
+                      {onCloseSubScenario && (s.id === selectedSubScenarioId || s.id === editingScenarioId) && (
+                        <ActionButton
+                          label={t('close')}
+                          icon={X}
+                          onClick={onCloseSubScenario}
+                          className="text-gray-600 hover:text-gray-800"
+                        />
+                      )}
                     </div>
                   </div>
                   {s.id === selectedSubScenarioId && expandedContent?.analysis && !editingScenarioId && (
@@ -171,7 +180,19 @@ export default function ScenarioList({
                             ? "private"
                             : "acquisition"
                         }
-                        exclude={expandedContent.scenarioType === "renewal" ? ["mrb", "mrn", "tga"] : []}
+                        exclude={
+                          expandedContent.scenarioType === "renewal"
+                            ? ["mrb", "mrn", "tga"]
+                            : []
+                        }
+                        valueGeneratedYear={expandedContent.valueGeneratedYear}
+                        equityWithdrawal={expandedContent.equityWithdrawal}
+                        onlyShowKeys={
+                          expandedContent.scenarioType === "refinancing" ||
+                          expandedContent.scenarioType === "optimization"
+                            ? ["valueGeneratedYear1", "equityWithdrawal", "loanValueRatio"]
+                            : undefined
+                        }
                       />
                       <div className="grid md:grid-cols-2 gap-6 mt-6">
                         <FinancialSummary
@@ -183,12 +204,14 @@ export default function ScenarioList({
                           currentProperty={expandedContent.property}
                           financing={expandedContent.property}
                           scenarioType={expandedContent.scenarioType || "refinancing"}
+                          equityAmount={expandedContent.equityWithdrawal}
+                          refinancingNotPossible={expandedContent.scenarioType === "refinancing" && expandedContent.equityWithdrawal != null && expandedContent.equityWithdrawal < 0}
                         />
                       </div>
                     </div>
                   )}
                   {s.id === editingScenarioId && typeof renderEditForm === "function" && (
-                    <div className="border-t border-gray-200">
+                    <div className="p-4 bg-gray-50 border-t border-gray-200">
                       {renderEditForm()}
                     </div>
                   )}
@@ -287,6 +310,14 @@ export default function ScenarioList({
                           icon={Trash2}
                           onClick={() => handleDelete(s.id)}
                           className="text-red-600 hover:text-red-800"
+                        />
+                      )}
+                      {onCloseSubScenario && (s.id === selectedSubScenarioId || s.id === editingScenarioId) && (
+                        <ActionButton
+                          label={t('close')}
+                          icon={X}
+                          onClick={onCloseSubScenario}
+                          className="text-gray-600 hover:text-gray-800"
                         />
                       )}
                     </div>

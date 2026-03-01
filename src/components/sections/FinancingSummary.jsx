@@ -8,6 +8,7 @@ export default function FinancingSummary({
   equityAmount,
   scenarioType,
   financing = {},
+  refinancingNotPossible = false,
 }) {
   const { t } = useLanguage();
   const formatMoney = (value) => {
@@ -84,7 +85,9 @@ export default function FinancingSummary({
         ) : null}
         {financing.amortization && (
           <div className="flex justify-between">
-            <span className="text-gray-600">{t('financingSummary.remainingAmortization')}:</span>
+            <span className="text-gray-600">
+              {isRenewal ? t('financingSummary.remainingAmortization') : t('financingSummary.amortization')}:
+            </span>
             <span className="font-medium">{financing.amortization} ans</span>
           </div>
         )}
@@ -150,7 +153,7 @@ export default function FinancingSummary({
             <span className="font-medium">{formatMoney(analysis?.acquisitionCosts)}</span>
           </div>
         )}
-        {!isRenewal && (
+        {!isRenewal && scenarioType !== "refinancing" && scenarioType !== "optimization" && (
           equityAmount !== undefined ? (
             <div className="flex justify-between border-t pt-3">
               <span className="text-gray-600 font-semibold">{t('financingSummary.equityWithdrawal')}:</span>
@@ -170,6 +173,35 @@ export default function FinancingSummary({
               </span>
             </div>
           )
+        )}
+        {scenarioType === "refinancing" && equityAmount !== undefined && (
+          <div className="flex justify-between border-t pt-3">
+            <span className="text-gray-600 font-semibold">{t('financingSummary.equityWithdrawal')}:</span>
+            <span
+              className={`font-bold text-lg ${
+                equityAmount >= 0 ? "text-green-600" : "text-red-600"
+              }`}
+            >
+              {formatMoney(equityAmount)}
+            </span>
+          </div>
+        )}
+        {scenarioType === "optimization" && equityAmount !== undefined && (
+          <div className="flex justify-between border-t pt-3">
+            <span className="text-gray-600 font-semibold">{t('financingSummary.equityWithdrawal')}:</span>
+            <span
+              className={`font-bold text-lg ${
+                equityAmount >= 0 ? "text-green-600" : "text-red-600"
+              }`}
+            >
+              {formatMoney(equityAmount)}
+            </span>
+          </div>
+        )}
+        {refinancingNotPossible && (
+          <p className="text-red-600 font-medium text-center mt-3 pt-3 border-t border-gray-200">
+            {t('scenarioForm.notPossible')}
+          </p>
         )}
         <div className="flex justify-between">
           <span className="text-gray-600">

@@ -184,6 +184,19 @@ export default function calculateFutureScenario(
     ? { ...property, ...parentScenario.financing, ...parentScenario.acquisitionCosts }
     : property;
 
+  // Si le scénario de refinancement n'a pas d'amortissement saisi, utiliser l'amortissement restant (initial − années)
+  const hasScenarioAmortization =
+    combinedProperty.amortization !== undefined &&
+    combinedProperty.amortization !== null &&
+    String(combinedProperty.amortization).trim() !== '';
+  if (!hasScenarioAmortization && parentScenario) {
+    const remainingAmortization = Math.max(
+      0,
+      (parseInt(parentProperty?.amortization) || 25) - Math.max(0, years),
+    );
+    combinedProperty.amortization = remainingAmortization;
+  }
+
   const parentAnalysis = parentProperty
     ? calculateRentability(parentProperty, advancedExpenses)
     : null;
