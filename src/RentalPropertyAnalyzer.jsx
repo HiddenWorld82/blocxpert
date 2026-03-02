@@ -25,9 +25,10 @@ import ClientsPage from './components/clients/ClientsPage';
 import MarketParamsPage from './components/marketParams/MarketParamsPage';
 import ShareModal from './components/share/ShareModal';
 import ShareWithBrokerModal from './components/share/ShareWithBrokerModal';
+import ShareMethodChoiceModal from './components/share/ShareMethodChoiceModal';
 import SharedPropertyView from './components/shared/SharedPropertyView';
 import { getShare, markSharedWithMeSeen, removeSharedWithMe, getSharesByProperty, getShareScenariosOnce, cleanupPropertyShares } from './services/shareService';
-import { getClients, getClient, getInviteByToken, updateClient } from './services/clientsService';
+import { getClients, getInviteByToken, updateClient } from './services/clientsService';
 import { setUserProfile, clearBrokerLink } from './services/userProfileService';
 
 const RentalPropertyAnalyzer = () => {
@@ -43,6 +44,7 @@ const RentalPropertyAnalyzer = () => {
   const [clients, setClients] = useState([]);
   const [shareModalPropertyId, setShareModalPropertyId] = useState(null);
   const [shareWithBrokerPropertyId, setShareWithBrokerPropertyId] = useState(null);
+  const [shareMethodChoicePropertyId, setShareMethodChoicePropertyId] = useState(null);
   const [invitationAcceptedMessage, setInvitationAcceptedMessage] = useState(null);
   const [viewingShareData, setViewingShareData] = useState(null);
   const [sharedScenariosFromClients, setSharedScenariosFromClients] = useState([]);
@@ -128,22 +130,11 @@ const RentalPropertyAnalyzer = () => {
       setShareModalPropertyId(propertyId);
       return;
     }
-    // Partager avec le courtier uniquement si un courtier est encore associé (vérifier que le client existe côté courtier)
+    // Client d'un courtier : proposer le choix (partager avec le courtier ou par courriel).
+    // On ne peut pas appeler getClient ici car les règles Firestore réservent la lecture de
+    // clients/ au courtier ; l'investisseur a déjà brokerUid/brokerClientId dans son profil.
     if (userProfile?.brokerUid && userProfile?.brokerClientId) {
-      try {
-        const client = await getClient(userProfile.brokerClientId);
-        if (!client || client.uid !== userProfile.brokerUid) {
-          await clearBrokerLink(currentUser?.uid);
-          refreshUserProfile?.();
-          setShareModalPropertyId(propertyId);
-          return;
-        }
-      } catch (e) {
-        console.warn('handleShare: getClient failed', e);
-        setShareModalPropertyId(propertyId);
-        return;
-      }
-      setShareWithBrokerPropertyId(propertyId);
+      setShareMethodChoicePropertyId(propertyId);
       return;
     }
     // Sinon partager par courriel (même options : Lecture, Lecture/Écriture, sous-scénarios)
@@ -420,6 +411,20 @@ const RentalPropertyAnalyzer = () => {
       )}
       {!viewingShareData && (
         <>
+      {shareMethodChoicePropertyId && (
+        <ShareMethodChoiceModal
+          propertyId={shareMethodChoicePropertyId}
+          onClose={() => setShareMethodChoicePropertyId(null)}
+          onChooseBroker={(id) => {
+            setShareMethodChoicePropertyId(null);
+            setShareWithBrokerPropertyId(id);
+          }}
+          onChooseEmail={(id) => {
+            setShareMethodChoicePropertyId(null);
+            setShareModalPropertyId(id);
+          }}
+        />
+      )}
       {shareModalPropertyId && (
         <ShareModal
           propertyId={shareModalPropertyId}
@@ -508,6 +513,7 @@ const RentalPropertyAnalyzer = () => {
               property={currentProperty}
               advancedExpenses={advancedExpenses}
               initialScenario={currentScenario || {}}
+              creatorUid={currentUser?.uid}
               onSaved={(sc) => {
                 setCurrentScenario(sc);
                 setCurrentStep('report');

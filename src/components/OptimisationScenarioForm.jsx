@@ -43,6 +43,7 @@ export default function OptimisationScenarioForm({
   shareFilterByCreatorUid = null,
   shareCreatorInfo = null,
   initialViewMode,
+  creatorUid = null,
   onViewResults,
   embeddedInList = false,
 }) {
@@ -332,7 +333,7 @@ export default function OptimisationScenarioForm({
         await updateScenario(propertyId, id, data);
         onSaved && onSaved({ id, ...data });
       } else {
-        const newId = await saveScenario(propertyId, data);
+        const newId = await saveScenario(propertyId, data, creatorUid ?? undefined);
         onSaved && onSaved({ id: newId, ...data });
       }
     }

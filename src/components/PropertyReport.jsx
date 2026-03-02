@@ -42,8 +42,16 @@ const PropertyReport = ({
   sharedScenariosFromClients = null,
 }) => {
   const { t } = useLanguage();
-  const { userProfile } = useAuth();
+  const { currentUser, userProfile } = useAuth();
   const [marketParamsVersion, setMarketParamsVersion] = useState(null);
+
+  const isPropertyOwner = currentUser?.uid === currentProperty?.uid;
+  const isBrokerViewingClientProperty =
+    currentProperty?.brokerUid === currentUser?.uid && currentProperty?.uid !== currentUser?.uid;
+  const canEditScenario = (sc) =>
+    isPropertyOwner || (isBrokerViewingClientProperty && sc.createdByUid === currentUser?.uid);
+  const canDeleteScenario = (sc) =>
+    isPropertyOwner || (isBrokerViewingClientProperty && sc.createdByUid === currentUser?.uid);
   const [expandedClientScenario, setExpandedClientScenario] = useState(null);
   const [clientScenarioShareData, setClientScenarioShareData] = useState(null);
   const [parentScenarioForRenewal, setParentScenarioForRenewal] = useState(null);
@@ -468,6 +476,7 @@ const PropertyReport = ({
       shareCreatorInfo: shareCreatorInfo || undefined,
       baseScenarios: shareToken ? baseScenariosProp || [] : undefined,
       initialViewMode: 'edit',
+      creatorUid: !shareToken ? currentUser?.uid : undefined,
       ...opts,
     };
     const formComponents = {
@@ -954,6 +963,9 @@ const PropertyReport = ({
                   ? {
                       analysis: subScenarioAnalysis?.analysis ?? subScenarioAnalysis,
                       property: subScenarioPropertyForList,
+                      financing: selectedSubScenario?.financing
+                        ? { ...subScenarioPropertyForList, ...selectedSubScenario.financing }
+                        : subScenarioPropertyForList,
                       scenarioType: selectedSubScenario?.type,
                       advancedExpenses,
                       equityWithdrawal: subScenarioAnalysis?.equityWithdrawal,
@@ -975,6 +987,9 @@ const PropertyReport = ({
                   ? () => renderScenarioForm({ embeddedInList: true })
                   : undefined
               }
+              canEditScenario={!shareToken ? canEditScenario : undefined}
+              canDeleteScenario={!shareToken ? canDeleteScenario : undefined}
+              creatorUid={!shareToken ? currentUser?.uid : undefined}
             />
             {sharedScenariosFromClients && sharedScenariosFromClients.length > 0 && (
               <div className="mt-6 pt-6 border-t border-gray-200">

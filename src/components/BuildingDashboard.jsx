@@ -3,6 +3,7 @@ import React from 'react';
 import { DollarSign, TrendingUp, BarChart, Building } from 'lucide-react';
 import ScenarioList from './ScenarioList';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const BuildingDashboard = ({
   property,
@@ -22,6 +23,14 @@ const BuildingDashboard = ({
   shareFilterByCreatorUid = null,
 }) => {
   const { t } = useLanguage();
+  const { currentUser } = useAuth();
+  const isPropertyOwner = currentUser?.uid === property?.uid;
+  const isBrokerViewingClientProperty =
+    property?.brokerUid === currentUser?.uid && property?.uid !== currentUser?.uid;
+  const canEditScenarioFn = (sc) =>
+    isPropertyOwner || (isBrokerViewingClientProperty && sc.createdByUid === currentUser?.uid);
+  const canDeleteScenarioFn = (sc) =>
+    isPropertyOwner || (isBrokerViewingClientProperty && sc.createdByUid === currentUser?.uid);
 
   const formatMoney = (value) =>
     new Intl.NumberFormat('fr-CA', {
@@ -219,6 +228,9 @@ const BuildingDashboard = ({
                 onEdit={onEditScenario}
                 onView={onViewScenario}
                 excludeTypes={["refinancing", "renewal", "optimization", "other"]}
+                canEditScenario={!shareToken ? canEditScenarioFn : undefined}
+                canDeleteScenario={!shareToken ? canDeleteScenarioFn : undefined}
+                creatorUid={!shareToken ? currentUser?.uid : undefined}
               />
             </>
           )}

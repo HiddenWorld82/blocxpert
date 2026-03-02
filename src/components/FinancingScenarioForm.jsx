@@ -20,6 +20,7 @@ export default function FinancingScenarioForm({
   advancedExpenses,
   onSaveScenario = null,
   onUpdateScenario = null,
+  creatorUid = null,
 }) {
   const [scenario, setScenario] = useState({
     title: "",
@@ -211,7 +212,7 @@ export default function FinancingScenarioForm({
       await updateScenario(propertyId, id, data);
       onSaved && onSaved({ id, ...data });
     } else {
-      const newId = await saveScenario(propertyId, data);
+      const newId = await saveScenario(propertyId, data, creatorUid ?? undefined);
       onSaved && onSaved({ id: newId, ...data });
     }
   };

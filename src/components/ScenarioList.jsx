@@ -31,6 +31,9 @@ export default function ScenarioList({
   expandedContent = null,
   editingScenarioId = null,
   renderEditForm = null,
+  canEditScenario = null,
+  canDeleteScenario = null,
+  creatorUid = null,
 }) {
   const { t } = useLanguage();
   const [scenarios, setScenarios] = useState([]);
@@ -81,6 +84,9 @@ export default function ScenarioList({
     ? [...(baseScenarios || []).map((s) => ({ ...s, _fromSnapshot: true })), ...filteredShareScenarios]
     : scenarios;
 
+  const canEdit = (s) => (canEditScenario == null ? true : canEditScenario(s));
+  const canDelete = (s) => (canDeleteScenario == null ? true : canDeleteScenario(s));
+
   const handleDuplicate = async (scenario) => {
     if (isShareMode) {
       if (scenario._fromSnapshot) {
@@ -91,7 +97,7 @@ export default function ScenarioList({
       }
       return;
     }
-    await duplicateScenario(propertyId, scenario);
+    await duplicateScenario(propertyId, scenario, creatorUid ?? undefined);
   };
 
   const handleDelete = async (id) => {
@@ -139,7 +145,7 @@ export default function ScenarioList({
                           className="text-indigo-600 hover:text-indigo-800"
                         />
                       )}
-                      {!s._fromSnapshot && onEdit && (
+                      {!s._fromSnapshot && onEdit && canEdit(s) && (
                         <ActionButton
                           label={t('scenarioList.edit')}
                           icon={Pencil}
@@ -153,7 +159,7 @@ export default function ScenarioList({
                         onClick={() => handleDuplicate(s)}
                         className="text-green-600 hover:text-green-800"
                       />
-                      {!s._fromSnapshot && (
+                      {!s._fromSnapshot && canDelete(s) && (
                         <ActionButton
                           label={t('scenarioList.delete')}
                           icon={Trash2}
@@ -202,7 +208,7 @@ export default function ScenarioList({
                         <FinancingSummary
                           analysis={expandedContent.analysis}
                           currentProperty={expandedContent.property}
-                          financing={expandedContent.property}
+                          financing={expandedContent.financing ?? expandedContent.property}
                           scenarioType={expandedContent.scenarioType || "refinancing"}
                           equityAmount={expandedContent.equityWithdrawal}
                           refinancingNotPossible={expandedContent.scenarioType === "refinancing" && expandedContent.equityWithdrawal != null && expandedContent.equityWithdrawal < 0}
@@ -246,7 +252,7 @@ export default function ScenarioList({
                     className="text-indigo-600 hover:text-indigo-800"
                   />
                 )}
-                {!init._fromSnapshot && onEdit && (
+                {!init._fromSnapshot && onEdit && canEdit(init) && (
                   <ActionButton
                     label={t('scenarioList.edit')}
                     icon={Pencil}
@@ -260,7 +266,7 @@ export default function ScenarioList({
                   onClick={() => handleDuplicate(init)}
                   className="text-green-600 hover:text-green-800"
                 />
-                {!init._fromSnapshot && (
+                {!init._fromSnapshot && canDelete(init) && (
                   <ActionButton
                     label={t('scenarioList.delete')}
                     icon={Trash2}
@@ -290,7 +296,7 @@ export default function ScenarioList({
                           className="text-indigo-600 hover:text-indigo-800"
                         />
                       )}
-                {!s._fromSnapshot && onEdit && (
+                {!s._fromSnapshot && onEdit && canEdit(s) && (
                   <ActionButton
                     label={t('scenarioList.edit')}
                     icon={Pencil}
@@ -304,7 +310,7 @@ export default function ScenarioList({
                         onClick={() => handleDuplicate(s)}
                         className="text-green-600 hover:text-green-800"
                       />
-                      {!s._fromSnapshot && (
+                      {!s._fromSnapshot && canDelete(s) && (
                         <ActionButton
                           label={t('scenarioList.delete')}
                           icon={Trash2}

@@ -25,6 +25,7 @@ export default function FutureScenarioForm({
   initialViewMode,
   onViewResults,
   embeddedInList = false,
+  creatorUid = null,
 }) {
   const [scenario, setScenario] = useState({
     title: "",
@@ -251,7 +252,7 @@ export default function FutureScenarioForm({
         await updateScenario(propertyId, id, data);
         onSaved && onSaved({ id, ...data });
       } else {
-        const newId = await saveScenario(propertyId, data);
+        const newId = await saveScenario(propertyId, data, creatorUid ?? undefined);
         onSaved && onSaved({ id: newId, ...data });
       }
     }
@@ -426,7 +427,10 @@ export default function FutureScenarioForm({
                 <FinancingSummary
                   analysis={analysis}
                   currentProperty={analysisProperty}
+                  financing={scenario.financing}
+                  scenarioType="refinancing"
                   equityAmount={equityWithdrawal}
+                  refinancingNotPossible={equityWithdrawal != null && equityWithdrawal < 0}
                 />
               </div>
             )}

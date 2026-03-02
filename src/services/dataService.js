@@ -77,19 +77,26 @@ export const deleteProperty = async (id) => {
   const propertyRef = doc(firestore, 'properties', id);
   await deleteDoc(propertyRef);
 };
-export const saveScenario = async (propertyId, scenario) => {
+/**
+ * @param {string} propertyId
+ * @param {object} scenario - scenario data (id excluded when creating)
+ * @param {string} [creatorUid] - uid of the user creating the scenario (for broker/client: only they can edit/delete their scenarios)
+ */
+export const saveScenario = async (propertyId, scenario, creatorUid = null) => {
   const scenariosCollection = collection(
     firestore,
     'properties',
     propertyId,
     'scenarios'
   );
-  const docRef = await addDoc(scenariosCollection, scenario);
+  const payload = { ...scenario };
+  if (creatorUid != null) payload.createdByUid = creatorUid;
+  const docRef = await addDoc(scenariosCollection, payload);
   return docRef.id;
 };
 
-export const saveFinancingScenario = async (propertyId, scenario) => {
-  return saveScenario(propertyId, { ...scenario, type: 'initialFinancing' });
+export const saveFinancingScenario = async (propertyId, scenario, creatorUid = null) => {
+  return saveScenario(propertyId, { ...scenario, type: 'initialFinancing' }, creatorUid);
 };
 
 /**
@@ -145,13 +152,18 @@ export const updateScenario = async (propertyId, id, data) => {
     'scenarios',
     id
   );
-  await updateDoc(scenarioRef, data);
+  const { createdByUid: _drop, ...rest } = data;
+  await updateDoc(scenarioRef, rest);
 };
 
-export const duplicateScenario = async (propertyId, scenario) => {
+/**
+ * @param {string} [creatorUid] - uid of the user duplicating (new scenario will have this as createdByUid)
+ */
+export const duplicateScenario = async (propertyId, scenario, creatorUid = null) => {
   const cloned = cloneScenario(scenario);
-  const newId = await saveScenario(propertyId, cloned);
-  return { id: newId, ...cloned };
+  const { createdByUid: _drop, ...clonedWithoutCreator } = cloned;
+  const newId = await saveScenario(propertyId, clonedWithoutCreator, creatorUid);
+  return { id: newId, ...clonedWithoutCreator, createdByUid: creatorUid ?? cloned.createdByUid };
 };
 
 export const deleteScenario = async (propertyId, id) => {
@@ -187,8 +199,8 @@ export const importSharedProperty = async (data, uid) => {
   const newPropertyId = await saveProperty({ ...propertyData, uid });
   const idMap = {};
   for (const sc of scenarios || []) {
-    const { id: oldId, parentScenarioId, ...scData } = sc;
-    const newId = await saveScenario(newPropertyId, scData);
+    const { id: oldId, parentScenarioId, createdByUid: _drop, ...scData } = sc;
+    const newId = await saveScenario(newPropertyId, scData, uid);
     idMap[oldId] = { newId, parentOldId: parentScenarioId };
   }
   for (const { newId, parentOldId } of Object.values(idMap)) {

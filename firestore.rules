@@ -98,7 +98,10 @@ service cloud.firestore {
       );
 
       match /scenarios/{scenarioId} {
-        allow create, read, update, delete: if canAccessProperty(database, propertyId);
+        allow create, read: if canAccessProperty(database, propertyId);
+        allow update, delete: if canAccessProperty(database, propertyId)
+          && (get(/databases/$(database)/documents/properties/$(propertyId)).data.uid == request.auth.uid
+              || resource.data.createdByUid == request.auth.uid);
       }
     }
   }
