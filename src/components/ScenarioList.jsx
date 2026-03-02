@@ -22,6 +22,7 @@ export default function ScenarioList({
   baseScenarios = null,
   shareCreatorInfo = null,
   shareFilterByCreatorUid = null,
+  additionalScenariosFromShares = null,
   onEdit,
   onView,
   onCloseSubScenario,
@@ -82,7 +83,7 @@ export default function ScenarioList({
   const isShareMode = Boolean(shareToken);
   const mergedScenarios = isShareMode
     ? [...(baseScenarios || []).map((s) => ({ ...s, _fromSnapshot: true })), ...filteredShareScenarios]
-    : scenarios;
+    : [...scenarios, ...(additionalScenariosFromShares || [])];
 
   const canEdit = (s) => (canEditScenario == null ? true : canEditScenario(s));
   const canDelete = (s) => (canDeleteScenario == null ? true : canDeleteScenario(s));
@@ -97,12 +98,19 @@ export default function ScenarioList({
       }
       return;
     }
-    await duplicateScenario(propertyId, scenario, creatorUid ?? undefined);
+    // When duplicating a scenario that came from a share into the main property, strip shareToken so it is not persisted.
+    const toDuplicate = scenario.shareToken ? { ...scenario, shareToken: undefined } : scenario;
+    await duplicateScenario(propertyId, toDuplicate, creatorUid ?? undefined);
   };
 
   const handleDelete = async (id) => {
     if (isShareMode) {
       await deleteShareScenario(shareToken, id);
+      return;
+    }
+    const scenario = mergedScenarios.find((s) => s.id === id);
+    if (scenario?.shareToken) {
+      await deleteShareScenario(scenario.shareToken, id);
       return;
     }
     await deleteScenario(propertyId, id);
@@ -135,7 +143,14 @@ export default function ScenarioList({
               {list.map((s) => (
                 <div key={s.id} className="rounded shadow overflow-hidden">
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 p-2 bg-white">
-                    <span>{s.title || t('propertyReport.untitled')}</span>
+                    <div className="flex flex-col min-w-0">
+                      <span>{s.title || t('propertyReport.untitled')}</span>
+                      {s.shareToken && (
+                        <span className="text-xs text-gray-500 mt-0.5">
+                          {t('building.createdViaShare')} {s.createdByName || s.createdByUid || '—'}
+                        </span>
+                      )}
+                    </div>
                     <div className="flex gap-2">
                       {onView && (
                         <ActionButton
@@ -242,7 +257,14 @@ export default function ScenarioList({
         return (
           <div key={init.id} className="space-y-2">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 p-2 bg-white rounded shadow">
-              <span>{init.title || t('propertyReport.untitled')}</span>
+              <div className="flex flex-col min-w-0">
+                <span>{init.title || t('propertyReport.untitled')}</span>
+                {init.shareToken && (
+                  <span className="text-xs text-gray-500 mt-0.5">
+                    {t('building.createdViaShare')} {init.createdByName || init.createdByUid || '—'}
+                  </span>
+                )}
+              </div>
               <div className="flex gap-2">
                 {onView && (
                   <ActionButton
@@ -283,10 +305,17 @@ export default function ScenarioList({
                     key={s.id}
                     className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 p-2 bg-gray-50 rounded shadow"
                   >
-                    <span>
-                      {s.title || t('propertyReport.untitled')} (
-                      {typeLabels[s.type] || s.type})
-                    </span>
+                    <div className="flex flex-col min-w-0">
+                      <span>
+                        {s.title || t('propertyReport.untitled')} (
+                        {typeLabels[s.type] || s.type})
+                      </span>
+                      {s.shareToken && (
+                        <span className="text-xs text-gray-500 mt-0.5">
+                          {t('building.createdViaShare')} {s.createdByName || s.createdByUid || '—'}
+                        </span>
+                      )}
+                    </div>
                     <div className="flex gap-2">
                       {onView && (
                         <ActionButton

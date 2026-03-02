@@ -252,18 +252,6 @@ const RentalPropertyAnalyzer = () => {
     setCurrentStep('form');
   };
 
-  const handleLinkClient = async (propertyId, clientId) => {
-    if (!propertyId) return;
-    try {
-      await updateProperty(propertyId, { clientId: clientId || undefined });
-      setCurrentProperty((prev) =>
-        prev.id === propertyId ? { ...prev, clientId: clientId || undefined } : prev
-      );
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
   const isCourtierHypo = userProfile?.persona === 'courtier_hypo';
 
   const handleDeleteProperty = async (propertyId) => {
@@ -504,7 +492,7 @@ const RentalPropertyAnalyzer = () => {
               onBack={() => setCurrentStep('home')}
               clients={clients}
               isCourtierHypo={isCourtierHypo}
-              onLinkClient={handleLinkClient}
+              additionalScenariosFromShares={sharedScenariosFromClients}
             />
           )}
           {currentStep === 'scenario' && (

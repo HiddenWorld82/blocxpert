@@ -49,7 +49,7 @@ const PropertyReport = ({
   const isBrokerViewingClientProperty =
     currentProperty?.brokerUid === currentUser?.uid && currentProperty?.uid !== currentUser?.uid;
   const canEditScenario = (sc) =>
-    isPropertyOwner || (isBrokerViewingClientProperty && sc.createdByUid === currentUser?.uid);
+    !sc.shareToken && (isPropertyOwner || (isBrokerViewingClientProperty && sc.createdByUid === currentUser?.uid));
   const canDeleteScenario = (sc) =>
     isPropertyOwner || (isBrokerViewingClientProperty && sc.createdByUid === currentUser?.uid);
   const [expandedClientScenario, setExpandedClientScenario] = useState(null);
@@ -93,18 +93,34 @@ const PropertyReport = ({
   }, [expandedClientScenario?.shareToken, expandedClientScenario?.id, currentProperty]);
 
   useEffect(() => {
-    if (!currentProperty?.id || !scenario || scenario.type !== 'renewal' || !scenario.parentScenarioId || shareToken) {
+    if (!scenario || scenario.type !== 'renewal' || !scenario.parentScenarioId) {
+      setParentScenarioForRenewal(null);
+      return;
+    }
+    if (shareToken) {
       setParentScenarioForRenewal(null);
       return;
     }
     let cancelled = false;
-    getScenario(currentProperty.id, scenario.parentScenarioId)
-      .then((parent) => {
-        if (!cancelled) setParentScenarioForRenewal(parent);
-      })
-      .catch(() => {
-        if (!cancelled) setParentScenarioForRenewal(null);
-      });
+    if (scenario.shareToken) {
+      getShareScenariosOnce(scenario.shareToken)
+        .then((shareScenarios) => {
+          if (cancelled) return;
+          const parent = shareScenarios.find((s) => s.id === scenario.parentScenarioId) || null;
+          setParentScenarioForRenewal(parent);
+        })
+        .catch(() => {
+          if (!cancelled) setParentScenarioForRenewal(null);
+        });
+    } else if (currentProperty?.id) {
+      getScenario(currentProperty.id, scenario.parentScenarioId)
+        .then((parent) => {
+          if (!cancelled) setParentScenarioForRenewal(parent);
+        })
+        .catch(() => {
+          if (!cancelled) setParentScenarioForRenewal(null);
+        });
+    }
     return () => { cancelled = true; };
   }, [currentProperty?.id, scenario, shareToken]);
 
@@ -357,6 +373,12 @@ const PropertyReport = ({
 
   const baseScenarioId = scenario ? scenario.parentScenarioId || scenario.id : null;
 
+  // Only show sub-scenarios from shares that are actual children of the current scenario (not the parent/main scenario).
+  const sharedSubScenariosFromShares = useMemo(() => {
+    if (!sharedScenariosFromClients?.length || !baseScenarioId) return [];
+    return sharedScenariosFromClients.filter((sc) => sc.parentScenarioId === baseScenarioId);
+  }, [sharedScenariosFromClients, baseScenarioId]);
+
   useEffect(() => {
     if (!currentProperty?.id) return;
     const loadScenarios = (scs) => {
@@ -497,12 +519,14 @@ const PropertyReport = ({
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
             <h2 className="text-xl sm:text-2xl font-semibold">{t('propertyReport.title')}</h2>
             <div className="flex flex-wrap items-center gap-2 sm:gap-4 self-end sm:self-auto">
-              <button
-                onClick={() => setCurrentStep('scenario')}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                {t('edit')}
-              </button>
+              {scenario && !scenario.shareToken && (
+                <button
+                  onClick={() => setCurrentStep('scenario')}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  {t('edit')}
+                </button>
+              )}
               {scenario ? (
                 <button
                   onClick={() => setCurrentStep('dashboard')}
@@ -991,13 +1015,13 @@ const PropertyReport = ({
               canDeleteScenario={!shareToken ? canDeleteScenario : undefined}
               creatorUid={!shareToken ? currentUser?.uid : undefined}
             />
-            {sharedScenariosFromClients && sharedScenariosFromClients.length > 0 && (
+            {sharedSubScenariosFromShares.length > 0 && (
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                  {t('building.clientSubScenarios')}
+                  {t('building.subScenariosFromShares')}
                 </h3>
                 <div className="space-y-2">
-                  {sharedScenariosFromClients.map((sc) => (
+                  {sharedSubScenariosFromShares.map((sc) => (
                     <div key={`${sc.shareToken}-${sc.id}`} className="rounded-lg border border-indigo-100 overflow-hidden">
                       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 p-3 bg-indigo-50">
                         <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">

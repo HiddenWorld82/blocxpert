@@ -14,23 +14,24 @@ const BuildingDashboard = ({
   onBack,
   clients = [],
   isCourtierHypo = false,
-  onLinkClient,
   readOnly = false,
   staticScenarios = null,
   shareToken = null,
   baseScenarios = null,
   shareCreatorInfo = null,
   shareFilterByCreatorUid = null,
+  additionalScenariosFromShares = null,
 }) => {
   const { t } = useLanguage();
   const { currentUser } = useAuth();
   const isPropertyOwner = currentUser?.uid === property?.uid;
   const isBrokerViewingClientProperty =
     property?.brokerUid === currentUser?.uid && property?.uid !== currentUser?.uid;
+  // Owner can edit/delete any scenario; broker viewing client property only their own. Share-created scenarios are not editable (form saves to property only) but owner can delete them.
   const canEditScenarioFn = (sc) =>
-    isPropertyOwner || (isBrokerViewingClientProperty && sc.createdByUid === currentUser?.uid);
+    !sc.shareToken && (isPropertyOwner || (isBrokerViewingClientProperty && sc.createdByUid === currentUser?.uid));
   const canDeleteScenarioFn = (sc) =>
-    isPropertyOwner || (isBrokerViewingClientProperty && sc.createdByUid === currentUser?.uid);
+    isPropertyOwner || (isBrokerViewingClientProperty && !sc.shareToken && sc.createdByUid === currentUser?.uid);
 
   const formatMoney = (value) =>
     new Intl.NumberFormat('fr-CA', {
@@ -148,23 +149,15 @@ const BuildingDashboard = ({
             <h3 className="text-xl font-semibold">
               {fullAddress || t('home.address.unset')}
             </h3>
-            {!readOnly && isCourtierHypo && clients.length > 0 && (
-              <div className="mt-2 flex items-center gap-2">
-                <label className="text-sm text-gray-600">{t('clients.title')}:</label>
-                <select
-                  value={property.clientId || ''}
-                  onChange={(e) => onLinkClient?.(property.id, e.target.value || null)}
-                  className="border rounded px-3 py-1.5 text-sm"
-                >
-                  <option value="">—</option>
-                  {clients.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name || c.email || c.id}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+            {isCourtierHypo && property.fromClient && property.clientId && clients.length > 0 && (() => {
+              const client = clients.find((c) => c.id === property.clientId);
+              if (!client) return null;
+              return (
+                <p className="mt-2 text-sm text-gray-600">
+                  {t('building.propertyOfClient')} {client.name || client.email || client.id}
+                </p>
+              );
+            })()}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
@@ -225,6 +218,7 @@ const BuildingDashboard = ({
                 baseScenarios={baseScenarios}
                 shareCreatorInfo={shareCreatorInfo}
                 shareFilterByCreatorUid={shareFilterByCreatorUid}
+                additionalScenariosFromShares={additionalScenariosFromShares}
                 onEdit={onEditScenario}
                 onView={onViewScenario}
                 excludeTypes={["refinancing", "renewal", "optimization", "other"]}
