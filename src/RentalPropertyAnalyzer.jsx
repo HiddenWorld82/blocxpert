@@ -332,7 +332,14 @@ const RentalPropertyAnalyzer = () => {
     };
     load();
     return () => { cancelled = true; };
-  }, [currentUser?.uid, propertyIdsKey, shareStatsVersion]);
+  }, [currentUser?.uid, propertyIdsKey, shareStatsVersion, currentStep]);
+
+  // Refetch share stats when user returns to the app tab (e.g. recipient removed share in another tab)
+  useEffect(() => {
+    const onFocus = () => setShareStatsVersion((v) => v + 1);
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, []);
 
   useEffect(() => {
     if (

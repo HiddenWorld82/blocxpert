@@ -25,6 +25,7 @@ const ShareModal = ({ propertyId, onClose, onShared }) => {
   const [linkCreated, setLinkCreated] = useState(null);
   const [recipientCount, setRecipientCount] = useState(null);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [messageCopied, setMessageCopied] = useState(false);
 
   useEffect(() => {
     if (!linkCreated?.token) return;
@@ -138,6 +139,29 @@ const ShareModal = ({ propertyId, onClose, onShared }) => {
               >
                 <Copy size={18} />
                 {linkCopied ? '✓' : ''}
+              </button>
+            </div>
+            <p className="text-sm text-gray-600">{t('shareModal.copyMessageForPost')}</p>
+            <div className="flex gap-2">
+              <p className="flex-1 text-sm text-gray-800 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                {t('shareModal.facebookSuggestedMessage')}
+                <br />
+                <span className="text-blue-600 break-all">{linkCreated.url}</span>
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  const text = `${t('shareModal.facebookSuggestedMessage')}\n\n${linkCreated.url}`;
+                  navigator.clipboard.writeText(text).then(() => {
+                    setMessageCopied(true);
+                    setTimeout(() => setMessageCopied(false), 2000);
+                  });
+                }}
+                className="shrink-0 flex items-center gap-1 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                title={t('shareModal.linkCopied')}
+              >
+                <Copy size={18} />
+                {messageCopied ? '✓' : ''}
               </button>
             </div>
             <div className="flex flex-wrap gap-2">

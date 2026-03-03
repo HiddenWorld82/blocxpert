@@ -23,12 +23,11 @@ function PropertyCard({ property, index, isOwner, isNewClientProperty, onSelect,
   ]
     .filter(Boolean)
     .join(', ');
-  const isShared = hasShares || shareRecipientCount > 0;
-  const shareLabel = shareRecipientCount > 0
-    ? (shareRecipientCount === 1
-        ? t('home.sharedWithCount').replace('{count}', shareRecipientCount)
-        : (t('home.sharedWithCount_plural') || t('home.sharedWithCount')).replace('{count}', shareRecipientCount))
-    : t('home.sharedShort');
+  // Only show "Partagé avec X personne(s)" when at least one person has it in "Partagés avec moi"
+  const showSharedLine = shareRecipientCount > 0;
+  const shareLabel = shareRecipientCount === 1
+    ? t('home.sharedWithCount').replace('{count}', shareRecipientCount)
+    : (t('home.sharedWithCount_plural') || t('home.sharedWithCount')).replace('{count}', shareRecipientCount);
   const shareColor = '#003e56';
 
   return (
@@ -91,7 +90,7 @@ function PropertyCard({ property, index, isOwner, isNewClientProperty, onSelect,
           <Calculator className="w-4 h-4 mr-1 text-purple-600" />
           {property.numberOfUnits ? (property.purchasePrice / property.numberOfUnits).toLocaleString('fr-CA') : '—'}{t('home.pricePerDoor')}
         </div>
-        {isShared && (
+        {showSharedLine && (
           <div className="w-1/2 flex items-center">
             <Users className="w-4 h-4 mr-1 shrink-0" style={{ color: shareColor }} />
             <span>{shareLabel}</span>
