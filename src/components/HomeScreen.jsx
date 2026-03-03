@@ -1,5 +1,5 @@
 // components/HomeScreen.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Calculator,
   Plus,
@@ -14,7 +14,7 @@ import {
 import { useLanguage } from '../contexts/LanguageContext';
 import CmbRates from './CmbRates';
 
-function PropertyCard({ property, index, isOwner, isNewClientProperty, onSelect, onShare, onDelete, t, isBrokerView = false }) {
+function PropertyCard({ property, index, isOwner, isNewClientProperty, onSelect, onShare, onDelete, t, isBrokerView = false, shareRecipientCount = 0, hasShares = false }) {
   const fullAddress = [
     property.address,
     property.city,
@@ -23,10 +23,18 @@ function PropertyCard({ property, index, isOwner, isNewClientProperty, onSelect,
   ]
     .filter(Boolean)
     .join(', ');
+  const isShared = hasShares || shareRecipientCount > 0;
+  const shareLabel = shareRecipientCount > 0
+    ? (shareRecipientCount === 1
+        ? t('home.sharedWithCount').replace('{count}', shareRecipientCount)
+        : (t('home.sharedWithCount_plural') || t('home.sharedWithCount')).replace('{count}', shareRecipientCount))
+    : t('home.sharedShort');
+  const shareColor = '#003e56';
+
   return (
     <div
       key={property.id || index}
-      className="relative border rounded-lg p-4 bg-gray-50 hover:shadow-md transition-shadow cursor-pointer"
+      className="relative rounded-lg p-4 bg-gray-50 hover:shadow-md transition-shadow cursor-pointer border border-gray-200"
       onClick={() => onSelect(property)}
     >
       {isNewClientProperty(property) && (
@@ -83,6 +91,12 @@ function PropertyCard({ property, index, isOwner, isNewClientProperty, onSelect,
           <Calculator className="w-4 h-4 mr-1 text-purple-600" />
           {property.numberOfUnits ? (property.purchasePrice / property.numberOfUnits).toLocaleString('fr-CA') : '—'}{t('home.pricePerDoor')}
         </div>
+        {isShared && (
+          <div className="w-1/2 flex items-center">
+            <Users className="w-4 h-4 mr-1 shrink-0" style={{ color: shareColor }} />
+            <span>{shareLabel}</span>
+          </div>
+        )}
       </div>
       <div
         className={`mt-2 inline-block px-2 py-1 text-sm font-medium rounded ${
@@ -168,6 +182,9 @@ const HomeScreen = ({
   currentUserId,
   clients = [],
   isBrokerView = false,
+  shareStatsVersion = 0,
+  shareStats = {},
+  hasSharesMap = {},
 }) => {
   const { t } = useLanguage();
   const isOwner = (p) => p.uid === currentUserId;
@@ -342,6 +359,8 @@ const HomeScreen = ({
                         onDelete={onDelete}
                         t={t}
                         isBrokerView={isBrokerView}
+                        shareRecipientCount={shareStats[property.id] ?? 0}
+                        hasShares={hasSharesMap[property.id] === true}
                       />
                     ))}
                   </div>
@@ -385,6 +404,8 @@ const HomeScreen = ({
                                 onDelete={onDelete}
                                 t={t}
                                 isBrokerView={isBrokerView}
+                                shareRecipientCount={shareStats[property.id] ?? 0}
+                                hasShares={hasSharesMap[property.id] === true}
                               />
                             ))}
                           </div>
@@ -467,6 +488,8 @@ const HomeScreen = ({
                         onDelete={onDelete}
                         t={t}
                         isBrokerView={isBrokerView}
+                        shareRecipientCount={shareStats[property.id] ?? 0}
+                        hasShares={hasSharesMap[property.id] === true}
                       />
                     ))}
                   </div>
@@ -525,6 +548,8 @@ const HomeScreen = ({
                   onDelete={onDelete}
                   t={t}
                   isBrokerView={isBrokerView}
+                  shareRecipientCount={shareStats[property.id] ?? 0}
+                  hasShares={hasSharesMap[property.id] === true}
                 />
               ))}
             </div>

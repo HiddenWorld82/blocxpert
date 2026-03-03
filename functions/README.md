@@ -1,13 +1,13 @@
 # Cloud Functions Rentalyzer
 
-## Envoi des courriels d'invitation (hello@dmii.ca)
+## Envoi des courriels d'invitation (hello@rentalyzer.ca)
 
-Quand un courtier ajoute un client, l’app écrit un document dans la collection Firestore **`invitationEmails`**. La fonction **`sendInvitationEmail`** se déclenche, envoie l’email via **Resend** depuis **hello@dmii.ca**, puis met à jour le document avec `status: 'sent'` ou `status: 'error'`.
+Quand un courtier ajoute un client, l’app écrit un document dans la collection Firestore **`invitationEmails`**. La fonction **`sendInvitationEmail`** se déclenche, envoie l’email via **Resend** depuis **hello@rentalyzer.ca**, puis met à jour le document avec `status: 'sent'` ou `status: 'error'`.
 
 ### Prérequis
 
 1. **Compte Resend** : [resend.com](https://resend.com) → créer une clé API.
-2. **Domaine dmii.ca** : dans Resend, ajouter et vérifier le domaine pour pouvoir envoyer depuis `hello@dmii.ca`. (Plus tard : rentalyzer.ca.)
+2. **Domaine rentalyzer.ca** : dans Resend, ajouter et vérifier le domaine pour pouvoir envoyer depuis `hello@rentalyzer.ca`.
 3. **Projet Firebase en plan Blaze** (pour déployer des Cloud Functions).
 
 ### Configuration
@@ -18,13 +18,13 @@ Définir les variables d’environnement des Functions :
 Functions → votre projet → Configuration (engrenage) → Variables d’environnement :
 
 - **RESEND_API_KEY** : votre clé API Resend (obligatoire).
-- **INVITATION_FROM_EMAIL** (optionnel) : par défaut `Rentalyzer <hello@dmii.ca>`.
+- **INVITATION_FROM_EMAIL** (optionnel) : par défaut `Rentalyzer <hello@rentalyzer.ca>`.
 
 **Option B – Fichier `.env` dans `functions/`** (pour l’émulateur ou déploiement) :
 
 ```env
 RESEND_API_KEY=re_xxxx
-INVITATION_FROM_EMAIL=Rentalyzer <hello@dmii.ca>
+INVITATION_FROM_EMAIL=Rentalyzer <hello@rentalyzer.ca>
 ```
 
 Pour le déploiement en production, privilégier les variables configurées dans la console Firebase (secrets).

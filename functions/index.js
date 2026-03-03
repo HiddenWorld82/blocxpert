@@ -1,20 +1,22 @@
 /**
  * Cloud Functions Rentalyzer
- * - Envoi des courriels d'invitation (trigger Firestore) depuis hello@dmii.ca via Resend
+ * - Envoi des courriels d'invitation (trigger Firestore) depuis hello@rentalyzer.ca via Resend
  *
  * Config Firebase (firebase functions:config:set ou Variables dans la console) :
  * - RESEND_API_KEY : clé API Resend
- * - INVITATION_FROM_EMAIL (optionnel) : ex. "Rentalyzer <hello@dmii.ca>"
+ * - INVITATION_FROM_EMAIL (optionnel) : ex. "Rentalyzer <hello@rentalyzer.ca>"
  */
 
-import { onDocumentCreated } from "firebase-functions/v2/firestore";
+import { onDocumentCreated, onDocumentDeleted } from "firebase-functions/v2/firestore";
 import { defineSecret } from "firebase-functions/params";
 import { initializeApp } from "firebase-admin/app";
+import { getFirestore, FieldValue } from "firebase-admin/firestore";
 
 initializeApp();
+const db = getFirestore();
 
 const RESEND_API_KEY = defineSecret("RESEND_API_KEY");
-const FROM_EMAIL = "Rentalyzer <hello@dmii.ca>";
+const FROM_EMAIL = "Rentalyzer <hello@rentalyzer.ca>";
 
 /**
  * Quand un document est créé dans invitationEmails, envoie l'email via Resend
@@ -170,6 +172,51 @@ export const sendShareLinkEmail = onDocumentCreated(
       await updateStatus("sent");
     } catch (e) {
       await updateStatus("error", (e && e.message) || "Send failed");
+    }
+  }
+);
+
+/**
+ * Quand un document est créé dans users/{userId}/sharedWithMe, incrémente shares/{shareToken}.recipientCount.
+ * Permet d'afficher le compteur sur la fiche immeuble sans requête "collection group" (règles Firestore).
+ */
+export const onSharedWithMeCreated = onDocumentCreated(
+  {
+    document: "users/{userId}/sharedWithMe/{docId}",
+    region: "us-central1",
+  },
+  async (event) => {
+    const snap = event.data;
+    if (!snap) return;
+    const shareToken = snap.data().shareToken;
+    if (!shareToken) return;
+    try {
+      const shareRef = db.doc(`shares/${shareToken}`);
+      await shareRef.update({ recipientCount: FieldValue.increment(1) });
+    } catch (e) {
+      console.warn("onSharedWithMeCreated: update failed", shareToken, e?.message);
+    }
+  }
+);
+
+/**
+ * Quand un document est supprimé de users/{userId}/sharedWithMe, décrémente shares/{shareToken}.recipientCount.
+ */
+export const onSharedWithMeDeleted = onDocumentDeleted(
+  {
+    document: "users/{userId}/sharedWithMe/{docId}",
+    region: "us-central1",
+  },
+  async (event) => {
+    const snap = event.data;
+    if (!snap) return;
+    const shareToken = snap.data().shareToken;
+    if (!shareToken) return;
+    try {
+      const shareRef = db.doc(`shares/${shareToken}`);
+      await shareRef.update({ recipientCount: FieldValue.increment(-1) });
+    } catch (e) {
+      console.warn("onSharedWithMeDeleted: update failed", shareToken, e?.message);
     }
   }
 );

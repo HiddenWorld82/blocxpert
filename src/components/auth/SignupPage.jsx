@@ -60,7 +60,7 @@ const SignupPage = () => {
           brokerUid: inviteData.brokerUid,
         });
       }
-      navigate('/');
+      navigate(`/${location.search}`);
     } catch (err) {
       setError(getAuthErrorMessage(err));
     }
@@ -80,7 +80,7 @@ const SignupPage = () => {
           brokerUid: inviteData.brokerUid,
         });
       }
-      navigate('/');
+      navigate(`/${location.search}`);
     } catch (err) {
       setError(getAuthErrorMessage(err) || t('auth.google.error'));
     }

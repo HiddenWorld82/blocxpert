@@ -1,6 +1,6 @@
 /**
  * Envoi d'invitation par file Firestore : on écrit un document dans invitationEmails,
- * une Cloud Function envoie le courriel via Resend (hello@dmii.ca) et met à jour le statut.
+ * une Cloud Function envoie le courriel via Resend (hello@rentalyzer.ca) et met à jour le statut.
  */
 import { collection, addDoc } from 'firebase/firestore';
 import { firestore } from '../config/firebase';

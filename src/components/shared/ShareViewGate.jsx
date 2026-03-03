@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { getShare } from '../../services/shareService';
 import SharedPropertyView from './SharedPropertyView';
 
@@ -20,18 +21,24 @@ function isTokenFormat(share) {
  * SharedPropertyView without requiring auth. Otherwise render children.
  */
 export default function ShareViewGate({ children }) {
+  const location = useLocation();
   const [shareData, setShareData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const shareParam = getShareParam();
+
   useEffect(() => {
-    const share = getShareParam();
-    if (!isTokenFormat(share)) {
+    if (!isTokenFormat(shareParam)) {
+      setShareData(null);
+      setError(null);
       setLoading(false);
       return;
     }
+    setLoading(true);
+    setError(null);
     let cancelled = false;
-    getShare(share)
+    getShare(shareParam)
       .then((data) => {
         if (!cancelled && data?.snapshot) setShareData(data);
         else if (!cancelled) setError('Invalid or expired link');
@@ -43,7 +50,14 @@ export default function ShareViewGate({ children }) {
         if (!cancelled) setLoading(false);
       });
     return () => { cancelled = true; };
-  }, []);
+  }, [shareParam]);
+
+  useEffect(() => {
+    if (!isTokenFormat(getShareParam())) {
+      setShareData(null);
+      setError(null);
+    }
+  }, [location]);
 
   if (loading && getShareParam() && isTokenFormat(getShareParam())) {
     return (

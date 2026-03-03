@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import useRentabilityCalculator from '../../hooks/useRentabilityCalculator';
@@ -6,7 +7,7 @@ import BuildingDashboard from '../BuildingDashboard';
 import PropertyReport from '../PropertyReport';
 import FinancingScenarioForm from '../FinancingScenarioForm';
 import defaultProperty from '../../defaults/defaultProperty';
-import { saveShareScenario, updateShareScenario } from '../../services/shareService';
+import { saveShareScenario, updateShareScenario, addSharedWithMe, getSharedWithMeOnce } from '../../services/shareService';
 
 const lockedFields = { debtCoverage: true, welcomeTax: true };
 
@@ -15,11 +16,13 @@ const lockedFields = { debtCoverage: true, welcomeTax: true };
  * When access === 'write', allows creating and editing scenarios (stored in share subcollection).
  */
 const SharedPropertyView = ({ shareData, openScenario = null, onBack = null }) => {
-  const { currentUser } = useAuth();
+  const { currentUser, refreshSharedWithMe } = useAuth();
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const [selectedScenario, setSelectedScenario] = useState(null);
   const [viewMode, setViewMode] = useState('dashboard');
   const [editingScenario, setEditingScenario] = useState(null);
+  const addedToDashboardRef = useRef(false);
 
   useEffect(() => {
     if (openScenario && shareData?.id) {
@@ -27,6 +30,30 @@ const SharedPropertyView = ({ shareData, openScenario = null, onBack = null }) =
       setViewMode('report');
     }
   }, [openScenario?.id, shareData?.id]);
+
+  // When user is logged in and viewing a share link, add it to their "Partagés avec moi" once (if not already there).
+  useEffect(() => {
+    if (!currentUser?.uid || !shareData?.id || !shareData?.uid || !shareData?.snapshot || addedToDashboardRef.current) return;
+    let cancelled = false;
+    getSharedWithMeOnce(currentUser.uid)
+      .then((items) => {
+        if (cancelled) return;
+        const alreadyHas = items.some((item) => item.shareToken === shareData.id);
+        if (alreadyHas) {
+          addedToDashboardRef.current = true;
+          return;
+        }
+        return addSharedWithMe(currentUser.uid, shareData.uid, shareData.id, shareData.snapshot).then(() => {
+          if (!cancelled) {
+            addedToDashboardRef.current = true;
+            refreshSharedWithMe?.();
+            navigate('/', { state: { shareAdded: true }, replace: true });
+          }
+        });
+      })
+      .catch((e) => console.warn('SharedPropertyView: addSharedWithMe', e));
+    return () => { cancelled = true; };
+  }, [currentUser?.uid, shareData?.id, shareData?.uid, shareData?.snapshot, refreshSharedWithMe]);
 
   const snapshot = shareData?.snapshot || {};
   const property = snapshot.property || defaultProperty;
@@ -41,7 +68,7 @@ const SharedPropertyView = ({ shareData, openScenario = null, onBack = null }) =
     ? t('sharedView.badgeWrite')
     : hasWriteAccess && !currentUser
       ? t('sharedView.loginToEdit')
-      : t('sharedView.badge') + ' — ' + t('sharedView.writtenBy');
+      : t('sharedView.badge');
 
   const [advancedExpenses] = useState(property?.advancedExpenses ?? false);
   const analysis = useRentabilityCalculator(
@@ -100,6 +127,24 @@ const SharedPropertyView = ({ shareData, openScenario = null, onBack = null }) =
       <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center justify-between">
         <span className="text-amber-800 text-sm font-medium">{bannerText}</span>
       </div>
+      {!currentUser && shareToken && (
+        <div className="bg-blue-50 border-b border-blue-200 px-4 py-3 flex flex-wrap items-center justify-center gap-2 text-sm">
+          <span className="text-blue-800">{t('sharedView.addToDashboard')}</span>
+          <Link
+            to={`/login?share=${shareToken}`}
+            className="text-blue-700 font-medium underline hover:no-underline"
+          >
+            {t('auth.login.link')}
+          </Link>
+          <span className="text-blue-700">|</span>
+          <Link
+            to={`/signup?share=${shareToken}`}
+            className="text-blue-700 font-medium underline hover:no-underline"
+          >
+            {t('auth.createAccount')}
+          </Link>
+        </div>
+      )}
 
       {viewMode !== 'report' || !selectedScenario ? (
         <BuildingDashboard

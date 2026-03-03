@@ -27,7 +27,7 @@ import ShareModal from './components/share/ShareModal';
 import ShareWithBrokerModal from './components/share/ShareWithBrokerModal';
 import ShareMethodChoiceModal from './components/share/ShareMethodChoiceModal';
 import SharedPropertyView from './components/shared/SharedPropertyView';
-import { getShare, markSharedWithMeSeen, removeSharedWithMe, getSharesByProperty, getShareScenariosOnce, cleanupPropertyShares } from './services/shareService';
+import { getShare, markSharedWithMeSeen, removeSharedWithMe, getSharesByProperty, getShareScenariosOnce, cleanupPropertyShares, getPropertyShareRecipientCount } from './services/shareService';
 import { getClients, getInviteByToken, updateClient } from './services/clientsService';
 import { setUserProfile, clearBrokerLink } from './services/userProfileService';
 
@@ -37,6 +37,16 @@ const RentalPropertyAnalyzer = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState('home');
+
+  useEffect(() => {
+    if (location.state?.shareAdded) {
+      setShowShareAddedBanner(true);
+      setShareStatsVersion((v) => v + 1);
+      navigate('/', { replace: true, state: {} });
+      const t = setTimeout(() => setShowShareAddedBanner(false), 5000);
+      return () => clearTimeout(t);
+    }
+  }, [location.state?.shareAdded, navigate]);
   const [currentProperty, setCurrentProperty] = useState(defaultProperty);
   const [advancedExpenses, setAdvancedExpenses] = useState(false);
   const [currentScenario, setCurrentScenario] = useState(null);
@@ -45,7 +55,11 @@ const RentalPropertyAnalyzer = () => {
   const [shareModalPropertyId, setShareModalPropertyId] = useState(null);
   const [shareWithBrokerPropertyId, setShareWithBrokerPropertyId] = useState(null);
   const [shareMethodChoicePropertyId, setShareMethodChoicePropertyId] = useState(null);
+  const [shareStatsVersion, setShareStatsVersion] = useState(0);
+  const [shareStats, setShareStats] = useState({});
+  const [hasSharesMap, setHasSharesMap] = useState({});
   const [invitationAcceptedMessage, setInvitationAcceptedMessage] = useState(null);
+  const [showShareAddedBanner, setShowShareAddedBanner] = useState(false);
   const [viewingShareData, setViewingShareData] = useState(null);
   const [sharedScenariosFromClients, setSharedScenariosFromClients] = useState([]);
   const [lockedFields] = useState({
@@ -282,6 +296,44 @@ const RentalPropertyAnalyzer = () => {
     }
   }, [currentStep, currentUser?.uid, userProfile?.persona, refreshSharedWithMe]);
 
+  // Share stats for home screen (lifted here so state updates reliably trigger re-render of HomeScreen)
+  const propertyIdsKey = (properties || []).map((p) => p.id).filter(Boolean).join(',');
+  useEffect(() => {
+    if (!currentUser?.uid || !properties?.length) {
+      setShareStats({});
+      setHasSharesMap({});
+      return;
+    }
+    const ownedIds = properties.filter((p) => p.uid === currentUser.uid).map((p) => p.id).filter(Boolean);
+    if (!ownedIds.length) {
+      setShareStats({});
+      setHasSharesMap({});
+      return;
+    }
+    let cancelled = false;
+    const load = async () => {
+      const nextCount = {};
+      const nextHas = {};
+      await Promise.all(
+        ownedIds.map(async (id) => {
+          if (cancelled) return;
+          const shares = await getSharesByProperty(currentUser.uid, id).catch(() => []);
+          const count = await getPropertyShareRecipientCount(currentUser.uid, id).catch(() => 0);
+          if (!cancelled) {
+            nextHas[id] = shares.length > 0;
+            nextCount[id] = count;
+          }
+        })
+      );
+      if (!cancelled) {
+        setShareStats(nextCount);
+        setHasSharesMap(nextHas);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, [currentUser?.uid, propertyIdsKey, shareStatsVersion]);
+
   useEffect(() => {
     if (
       currentStep !== 'dashboard' ||
@@ -416,8 +468,17 @@ const RentalPropertyAnalyzer = () => {
       {shareModalPropertyId && (
         <ShareModal
           propertyId={shareModalPropertyId}
-          onClose={() => setShareModalPropertyId(null)}
-          onShared={() => {}}
+          onClose={() => {
+            setShareModalPropertyId(null);
+            setTimeout(() => setShareStatsVersion((v) => v + 1), 600);
+          }}
+          onShared={() => {
+            setShareStatsVersion((v) => v + 1);
+            // Plusieurs rafraîchissements décalés : Firestore peut mettre un moment à propager sharedWithMe
+            setTimeout(() => setShareStatsVersion((v) => v + 1), 800);
+            setTimeout(() => setShareStatsVersion((v) => v + 1), 2000);
+            setTimeout(() => setShareStatsVersion((v) => v + 1), 4000);
+          }}
         />
       )}
       {shareWithBrokerPropertyId && (
@@ -434,6 +495,11 @@ const RentalPropertyAnalyzer = () => {
         onNavigateToClients={isCourtierHypo ? () => setCurrentStep('clients') : undefined}
         onNavigateToMarketParams={undefined}
       />
+      {showShareAddedBanner && (
+        <div className="bg-green-600 text-white text-center py-3 px-4 text-sm font-medium">
+          {t('home.shareAddedBanner')}
+        </div>
+      )}
       {propertiesLoading ? (
         <div className="flex items-center justify-center py-10">
           <span className="text-gray-700">{t('loading')}</span>
@@ -444,6 +510,9 @@ const RentalPropertyAnalyzer = () => {
             <HomeScreen
               properties={properties}
               sharedWithMe={sharedWithMe || []}
+              shareStats={shareStats}
+              hasSharesMap={hasSharesMap}
+              shareStatsVersion={shareStatsVersion}
               onSelectSharedWithMe={async (docId, shareToken) => {
                 const shareData = await getShare(shareToken);
                 if (shareData) setViewingShareData({ shareData, sharedDocId: docId });

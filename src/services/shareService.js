@@ -29,6 +29,7 @@ export async function createShare(uid, opts) {
     scenarioId,
     access,
     allowSubScenariosEdit,
+    recipientCount: 0,
     createdAt: new Date(),
     snapshot: {
       property: snapshot.property,
@@ -71,6 +72,7 @@ function buildPreview(snapshot) {
 
 /**
  * Deliver a share to an existing user (appears in their dashboard with "New").
+ * recipientCount on the share doc is updated by Cloud Functions (onCreate/onDelete sharedWithMe).
  * @param {string} recipientUid
  * @param {string} fromUid
  * @param {string} shareToken
@@ -273,6 +275,30 @@ export async function getSharesByProperty(uid, propertyId) {
   const q = query(ref, where('uid', '==', uid), where('propertyId', '==', propertyId));
   const snapshot = await getDocs(q);
   return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+/**
+ * Total number of people who have this property in their dashboard (across all share links for it).
+ */
+export async function getPropertyShareRecipientCount(uid, propertyId) {
+  const shares = await getSharesByProperty(uid, propertyId);
+  if (!shares.length) return 0;
+  const counts = await Promise.all(shares.map((s) => getShareRecipientCount(s.id)));
+  return counts.reduce((a, b) => a + b, 0);
+}
+
+/**
+ * Number of users who have this share in their "Partagés avec moi" (dashboard).
+ * Reads recipientCount from the share document (updated by Cloud Functions on create/delete of sharedWithMe).
+ */
+export async function getShareRecipientCount(shareToken) {
+  if (!shareToken) return 0;
+  const shareRef = doc(firestore, COLLECTION, shareToken);
+  const snap = await getDoc(shareRef);
+  if (!snap.exists()) return 0;
+  const data = snap.data();
+  const n = data.recipientCount;
+  return typeof n === 'number' ? Math.max(0, n) : 0;
 }
 
 /**
