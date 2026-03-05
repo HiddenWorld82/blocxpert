@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { User, Building2, Percent, Wallet, HelpCircle } from 'lucide-react';
+import { User, Building2, Percent, Wallet, HelpCircle, Trash2 } from 'lucide-react';
 
 const PERSONAS = [
   { id: 'courtier_immo', icon: Building2, labelKey: 'persona.courtier_immo' },
@@ -13,12 +13,26 @@ const PERSONAS = [
 
 export default function ProfileModal({ onClose }) {
   const { t } = useLanguage();
-  const { currentUser, userProfile, updateUserProfile } = useAuth();
+  const {
+    currentUser,
+    userProfile,
+    updateUserProfile,
+    deleteAccount,
+    reauthenticateWithGoogle,
+    reauthenticateWithEmailPassword,
+  } = useAuth();
   const [displayName, setDisplayName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [persona, setPersona] = useState('autre');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
+  const [deletePassword, setDeletePassword] = useState('');
+
+  const isGoogleUser = currentUser?.providerData?.some((p) => p.providerId === 'google.com');
+  const isEmailPasswordUser = currentUser?.providerData?.some((p) => p.providerId === 'password');
 
   useEffect(() => {
     setDisplayName(
@@ -44,6 +58,29 @@ export default function ProfileModal({ onClose }) {
       setError(err?.message || t('profile.saveError'));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeleteError(null);
+    if (isEmailPasswordUser && !deletePassword.trim()) {
+      setDeleteError(t('profile.deleteAccountPasswordHint'));
+      return;
+    }
+    setDeleting(true);
+    try {
+      if (isGoogleUser) {
+        await reauthenticateWithGoogle();
+      } else if (isEmailPasswordUser) {
+        await reauthenticateWithEmailPassword(deletePassword);
+      }
+      await deleteAccount();
+      onClose();
+    } catch (err) {
+      console.error(err);
+      setDeleteError(err?.message || t('profile.deleteAccountError'));
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -136,7 +173,67 @@ export default function ProfileModal({ onClose }) {
             </button>
           </div>
         </form>
+
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <button
+            type="button"
+            onClick={() => { setDeleteError(null); setShowDeleteConfirm(true); }}
+            className="flex items-center gap-2 text-sm text-red-600 hover:text-red-700 hover:underline"
+          >
+            <Trash2 className="w-4 h-4" />
+            {t('profile.deleteAccount')}
+          </button>
+        </div>
       </div>
+
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <p className="text-gray-700 mb-4">{t('profile.deleteAccountWarning')}</p>
+            {isGoogleUser && (
+              <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4">
+                {t('profile.deleteAccountReauthGoogle')}
+              </p>
+            )}
+            {isEmailPasswordUser && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t('auth.password')}
+                </label>
+                <input
+                  type="password"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  placeholder={t('profile.deleteAccountPasswordHint')}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  autoComplete="current-password"
+                />
+              </div>
+            )}
+            {deleteError && (
+              <p className="text-sm text-red-600 mb-3">{deleteError}</p>
+            )}
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => { setShowDeleteConfirm(false); setDeleteError(null); setDeletePassword(''); }}
+                disabled={deleting}
+                className="flex-1 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                {t('cancel')}
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteAccount}
+                disabled={deleting || (isEmailPasswordUser && !deletePassword.trim())}
+                className="flex-1 py-2 bg-red-600 text-white rounded-lg font-medium disabled:opacity-50 hover:bg-red-700"
+              >
+                {deleting ? t('profile.deleting') : t('profile.deleteAccountConfirm')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

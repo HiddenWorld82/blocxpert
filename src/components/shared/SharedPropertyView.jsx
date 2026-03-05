@@ -5,6 +5,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import useRentabilityCalculator from '../../hooks/useRentabilityCalculator';
 import BuildingDashboard from '../BuildingDashboard';
 import PropertyReport from '../PropertyReport';
+import AmortizationPage from '../AmortizationPage';
 import FinancingScenarioForm from '../FinancingScenarioForm';
 import defaultProperty from '../../defaults/defaultProperty';
 import { saveShareScenario, updateShareScenario, addSharedWithMe, getSharedWithMeOnce } from '../../services/shareService';
@@ -22,6 +23,7 @@ const SharedPropertyView = ({ shareData, openScenario = null, onBack = null }) =
   const [selectedScenario, setSelectedScenario] = useState(null);
   const [viewMode, setViewMode] = useState('dashboard');
   const [editingScenario, setEditingScenario] = useState(null);
+  const [amortizationData, setAmortizationData] = useState(null);
   const addedToDashboardRef = useRef(false);
 
   useEffect(() => {
@@ -146,7 +148,7 @@ const SharedPropertyView = ({ shareData, openScenario = null, onBack = null }) =
         </div>
       )}
 
-      {viewMode !== 'report' || !selectedScenario ? (
+      {(viewMode !== 'report' || !selectedScenario) && viewMode !== 'amortization' ? (
         <BuildingDashboard
           property={propertyWithAnalysis}
           staticScenarios={isWrite ? null : baseScenarios}
@@ -162,6 +164,21 @@ const SharedPropertyView = ({ shareData, openScenario = null, onBack = null }) =
           clients={[]}
           isCourtierHypo={false}
         />
+      ) : viewMode === 'amortization' && amortizationData ? (
+        <div className="p-4">
+          <AmortizationPage
+            analysis={amortizationData.analysis || analysis}
+            currentProperty={amortizationData.property || propertyWithAnalysis}
+            scenario={amortizationData.scenario}
+            scenarioAnalysis={amortizationData.scenarioAnalysis}
+            setCurrentStep={(step) => {
+              if (step === 'report' || step === 'dashboard') {
+                setAmortizationData(null);
+                setViewMode('report');
+              }
+            }}
+          />
+        </div>
       ) : (
         <div className="p-4">
           <PropertyReport
@@ -171,11 +188,16 @@ const SharedPropertyView = ({ shareData, openScenario = null, onBack = null }) =
             onSave={() => {}}
             advancedExpenses={advancedExpenses}
             scenario={selectedScenario}
-            onViewAmortization={() => {}}
+            onViewAmortization={(property, analysisData, scenarioData, scenarioAnalysis) => {
+              setAmortizationData({ property, analysis: analysisData, scenario: scenarioData, scenarioAnalysis });
+              setViewMode('amortization');
+            }}
             shareToken={shareToken}
             shareFilterByCreatorUid={currentUser?.uid || null}
             baseScenarios={baseScenarios}
             shareCreatorInfo={creatorInfo}
+            readOnly={!isWrite}
+            allowSubScenariosEdit={allowSubScenariosEdit}
           />
         </div>
       )}

@@ -1,29 +1,27 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { updateProperty } from '../../services/dataService';
+import { addPropertyBrokerShare } from '../../services/dataService';
 import { X } from 'lucide-react';
 
-const ShareWithBrokerModal = ({ propertyId, onClose, onShared }) => {
+const ShareWithBrokerModal = ({ propertyId, selectedBroker, onClose, onShared, alreadySharedWithThisBroker = false }) => {
   const { currentUser, userProfile } = useAuth();
   const { t } = useLanguage();
   const [includeScenarios, setIncludeScenarios] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const brokerUid = userProfile?.brokerUid;
-  const brokerClientId = userProfile?.brokerClientId;
+  const brokerUid = selectedBroker?.brokerUid ?? userProfile?.brokerUid;
+  const brokerClientId = selectedBroker?.clientId ?? userProfile?.brokerClientId;
 
   const handleShare = async () => {
     if (!currentUser?.uid || !propertyId || !brokerUid || !brokerClientId) return;
     setLoading(true);
     setError('');
     try {
-      await updateProperty(propertyId, {
-        brokerUid,
-        clientId: brokerClientId,
-        ...(includeScenarios !== false && { shareScenariosWithBroker: true }),
-      });
+      await addPropertyBrokerShare(propertyId, brokerUid, brokerClientId, 
+        includeScenarios !== false ? { shareScenariosWithBroker: true } : {}
+      );
       onShared?.(propertyId);
       onClose?.();
     } catch (e) {
@@ -50,23 +48,34 @@ const ShareWithBrokerModal = ({ propertyId, onClose, onShared }) => {
         <p className="text-gray-600 text-sm mb-4">
           {t('shareWithBroker.description')}
         </p>
-        <label className="flex items-center gap-2 mb-4">
-          <input
-            type="checkbox"
-            checked={includeScenarios}
-            onChange={(e) => setIncludeScenarios(e.target.checked)}
-          />
-          <span className="text-sm">{t('shareWithBroker.includeScenarios')}</span>
-        </label>
+        {alreadySharedWithThisBroker && (
+          <p className="text-gray-600 text-sm mb-4 py-2 px-3 bg-gray-100 rounded-lg border border-gray-200">
+            {t('shareWithBroker.alreadySharedWithThisBroker')}
+          </p>
+        )}
+        {!alreadySharedWithThisBroker && (
+          <label className="flex items-center gap-2 mb-4">
+            <input
+              type="checkbox"
+              checked={includeScenarios}
+              onChange={(e) => setIncludeScenarios(e.target.checked)}
+            />
+            <span className="text-sm">{t('shareWithBroker.includeScenarios')}</span>
+          </label>
+        )}
         {error && <p className="text-red-600 text-sm mb-2">{error}</p>}
         <div className="flex gap-2">
           <button
             type="button"
             onClick={handleShare}
-            disabled={loading}
-            className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            disabled={loading || alreadySharedWithThisBroker}
+            className={`flex-1 py-2 rounded-lg disabled:opacity-50 ${
+              alreadySharedWithThisBroker
+                ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                : 'bg-blue-600 text-white hover:bg-blue-700'
+            }`}
           >
-            {loading ? '…' : t('shareWithBroker.confirm')}
+            {loading ? '…' : alreadySharedWithThisBroker ? t('shareWithBroker.alreadyShared') : t('shareWithBroker.confirm')}
           </button>
           <button
             type="button"

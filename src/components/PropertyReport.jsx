@@ -40,6 +40,8 @@ const PropertyReport = ({
   baseScenarios: baseScenariosProp = null,
   shareCreatorInfo = null,
   sharedScenariosFromClients = null,
+  readOnly = false,
+  allowSubScenariosEdit = true,
 }) => {
   const { t } = useLanguage();
   const { currentUser, userProfile } = useAuth();
@@ -519,7 +521,7 @@ const PropertyReport = ({
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
             <h2 className="text-xl sm:text-2xl font-semibold">{t('propertyReport.title')}</h2>
             <div className="flex flex-wrap items-center gap-2 sm:gap-4 self-end sm:self-auto">
-              {scenario && !scenario.shareToken && (
+              {scenario && !scenario.shareToken && !(readOnly && !allowSubScenariosEdit) && (
                 <button
                   onClick={() => setCurrentStep('scenario')}
                   className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
@@ -906,64 +908,70 @@ const PropertyReport = ({
             >
               {t('propertyReport.amortization')}
             </button>
-            <button
-              onClick={() =>
-                setEditingScenario({ parentScenarioId: baseScenarioId })
-              }
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              {t('propertyReport.newScenario')}
-            </button>
-            <div className="flex items-center gap-2">
-              <label className="text-xs text-gray-500">
-                {t('propertyReport.reportType')}
-              </label>
-              <select
-                value={reportType}
-                onChange={(e) => setReportType(e.target.value)}
-                className="border rounded px-2 py-1 text-sm"
+            {!(readOnly && !allowSubScenariosEdit) && (
+              <button
+                onClick={() =>
+                  setEditingScenario({ parentScenarioId: baseScenarioId })
+                }
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
-                <option value="client">
-                  {t('propertyReport.reportType.client')}
-                </option>
-                <option value="bank">
-                  {t('propertyReport.reportType.bank')}
-                </option>
-                <option value="advanced">
-                  {t('propertyReport.reportType.advanced')}
-                </option>
-              </select>
-            </div>
-            <PDFDownloadLink
-              document={
-                <RentalizerPdfDocument
-                  title={t('propertyReport.title')}
-                  property={reportProperty}
-                  analysis={reportAnalysis}
-                  reportType={reportType}
-                  futureReturns={{
-                    years: returnYears,
-                    totalReturn: multiYearReturn,
-                    annualizedReturn: multiYearAnnualized,
-                    irr: multiYearIRR,
-                  }}
-                  marketParamsVersion={marketParamsVersion}
-                />
-              }
-              fileName={`rapport-${new Date().toISOString().split('T')[0]}.pdf`}
-            >
-              {({ loading }) => (
-                <button
-                  type="button"
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                  disabled={loading}
+                {t('propertyReport.newScenario')}
+              </button>
+            )}
+            {!readOnly && (
+              <>
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-gray-500">
+                    {t('propertyReport.reportType')}
+                  </label>
+                  <select
+                    value={reportType}
+                    onChange={(e) => setReportType(e.target.value)}
+                    className="border rounded px-2 py-1 text-sm"
+                  >
+                    <option value="client">
+                      {t('propertyReport.reportType.client')}
+                    </option>
+                    <option value="bank">
+                      {t('propertyReport.reportType.bank')}
+                    </option>
+                    <option value="advanced">
+                      {t('propertyReport.reportType.advanced')}
+                    </option>
+                  </select>
+                </div>
+                <PDFDownloadLink
+                  document={
+                    <RentalizerPdfDocument
+                      title={t('propertyReport.title')}
+                      property={reportProperty}
+                      analysis={reportAnalysis}
+                      reportType={reportType}
+                      futureReturns={{
+                        years: returnYears,
+                        totalReturn: multiYearReturn,
+                        annualizedReturn: multiYearAnnualized,
+                        irr: multiYearIRR,
+                      }}
+                      marketParamsVersion={marketParamsVersion}
+                    />
+                  }
+                  fileName={`rapport-${new Date().toISOString().split('T')[0]}.pdf`}
                 >
-                  {loading
-                    ? t('propertyReport.generatingPdf')
-                    : t('propertyReport.generatePdf')}
-                </button>
-              )}
-            </PDFDownloadLink>
+                  {({ loading }) => (
+                    <button
+                      type="button"
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                      disabled={loading}
+                    >
+                      {loading
+                        ? t('propertyReport.generatingPdf')
+                        : t('propertyReport.generatePdf')}
+                    </button>
+                  )}
+                </PDFDownloadLink>
+              </>
+            )}
           </div>
 
           <div className="mb-8">

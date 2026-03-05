@@ -5,7 +5,9 @@ import {
   query,
   where,
   getDoc,
+  getDocs,
   doc,
+  deleteDoc,
 } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 
@@ -56,4 +58,16 @@ export async function getMarketParamsById(docId) {
     ...d,
     createdAt: d.createdAt?.toDate?.()?.toISOString?.() ?? d.createdAt,
   };
+}
+
+/**
+ * Delete all market params versions for this user (for account deletion).
+ * @param {string} uid
+ */
+export async function deleteMarketParamsForUser(uid) {
+  if (!uid) return;
+  const ref = collection(firestore, COLLECTION);
+  const q = query(ref, where('uid', '==', uid));
+  const snapshot = await getDocs(q);
+  await Promise.all(snapshot.docs.map((d) => deleteDoc(d.ref)));
 }

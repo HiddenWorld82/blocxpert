@@ -3,8 +3,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import useNetworkStatus from '../hooks/useNetworkStatus';
 import ProfileModal from './profile/ProfileModal';
+import { isBrokerPersona } from '../constants/personas';
 
-const Header = ({ onNavigateToClients, onNavigateToMarketParams }) => {
+const Header = ({ onNavigateToClients, onNavigateToMarketParams, onNavigateToHome }) => {
   const { currentUser, userProfile, logout } = useAuth();
   const { t } = useLanguage();
   const isOnline = useNetworkStatus();
@@ -32,12 +33,19 @@ const Header = ({ onNavigateToClients, onNavigateToMarketParams }) => {
     <>
       <header className="p-4 flex justify-between items-center bg-white shadow">
         <div className="flex items-center gap-4">
-          <img
-            src="/rentalyzer-logo.png"
-            alt="Rentalyzer logo"
-            className="h-12"
-          />
-          {userProfile?.persona === 'courtier_hypo' && (
+          <button
+            type="button"
+            onClick={() => onNavigateToHome?.()}
+            className="flex items-center focus:outline-none focus:ring-2 focus:ring-blue-500/50 rounded"
+            aria-label={t('header.goToHome')}
+          >
+            <img
+              src="/rentalyzer-logo.png"
+              alt="Rentalyzer logo"
+              className="h-12"
+            />
+          </button>
+          {isBrokerPersona(userProfile?.persona) && (
             <nav className="flex gap-2">
               <button
                 type="button"

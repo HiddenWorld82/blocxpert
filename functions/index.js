@@ -220,3 +220,28 @@ export const onSharedWithMeDeleted = onDocumentDeleted(
     }
   }
 );
+
+/**
+ * Quand un courtier supprime un client (doc clients/{clientId}), on retire le lien courtier
+ * côté investisseur pour qu'il ne voie plus "Partager avec mon courtier" pour ce courtier.
+ */
+export const onClientDeleted = onDocumentDeleted(
+  {
+    document: "clients/{clientId}",
+    region: "us-central1",
+  },
+  async (event) => {
+    const snap = event.data;
+    if (!snap) return;
+    const data = snap.data();
+    const clientUserId = data?.clientUserId;
+    const brokerUid = data?.uid;
+    if (!clientUserId || !brokerUid) return;
+    try {
+      const brokerLinkRef = db.doc(`users/${clientUserId}/brokerLinks/${brokerUid}`);
+      await brokerLinkRef.delete();
+    } catch (e) {
+      console.warn("onClientDeleted: delete brokerLink failed", clientUserId, brokerUid, e?.message);
+    }
+  }
+);

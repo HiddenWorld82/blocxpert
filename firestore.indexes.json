@@ -7,6 +7,14 @@
         { "fieldPath": "uid", "order": "ASCENDING" },
         { "fieldPath": "propertyId", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "properties",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "clientId", "order": "ASCENDING" },
+        { "fieldPath": "brokerUid", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

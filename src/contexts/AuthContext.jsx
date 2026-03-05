@@ -9,12 +9,22 @@ import {
   setPersistence,
   browserLocalPersistence,
   updateProfile,
+  deleteUser,
+  reauthenticateWithPopup,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
 } from 'firebase/auth';
 import { auth, googleProvider } from '../config/firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { firestore } from '../config/firebase';
 import { getProperties, getPropertiesByBroker } from '../services/dataService';
 import { getUserProfile, setUserProfile } from '../services/userProfileService';
+import { getBrokerLinks } from '../services/brokerLinksService';
+import { setBrokerDisplayName } from '../services/brokerDisplayNameService';
 import { getSharedWithMe, refreshSharedWithMeList } from '../services/shareService';
 import { syncCurrentUserEmail } from '../services/userEmailService';
+import { deleteAllUserData } from '../services/deleteAccountService';
+import { isBrokerPersona } from '../constants/personas';
 
 const AuthContext = createContext();
 
@@ -30,6 +40,7 @@ export function AuthProvider({ children }) {
   const [propertiesLoading, setPropertiesLoading] = useState(true);
   const [userProfile, setUserProfileState] = useState(null);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [linkedBrokers, setLinkedBrokers] = useState([]);
   const [sharedWithMe, setSharedWithMe] = useState([]);
 
   const properties = useMemo(
@@ -97,19 +108,45 @@ export function AuthProvider({ children }) {
     if (!currentUser) {
       setUserProfileState(null);
       setProfileLoading(false);
+      setLinkedBrokers([]);
       return;
     }
     setProfileLoading(true);
-    getUserProfile(currentUser.uid)
-      .then((profile) => {
-        setUserProfileState(profile);
+    const userRef = doc(firestore, 'users', currentUser.uid);
+    const unsubProfile = onSnapshot(
+      userRef,
+      (snap) => {
+        if (!snap.exists()) {
+          setUserProfileState(null);
+        } else {
+          setUserProfileState({ id: snap.id, ...snap.data() });
+        }
         setProfileLoading(false);
-      })
-      .catch(() => {
+      },
+      () => {
         setUserProfileState(null);
         setProfileLoading(false);
-      });
+      }
+    );
+    return () => unsubProfile();
   }, [currentUser?.uid]);
+
+  useEffect(() => {
+    if (!currentUser?.uid) {
+      setLinkedBrokers([]);
+      return undefined;
+    }
+    const unsub = getBrokerLinks(currentUser.uid, setLinkedBrokers);
+    return () => unsub?.();
+  }, [currentUser?.uid]);
+
+  // Publish broker display name so clients can show it when picking a broker (existing links may have no brokerDisplayName).
+  useEffect(() => {
+    if (!currentUser?.uid || !userProfile) return;
+    if (!isBrokerPersona(userProfile.persona)) return;
+    const name = userProfile.displayName || currentUser.displayName || '';
+    setBrokerDisplayName(currentUser.uid, name).catch(() => {});
+  }, [currentUser?.uid, currentUser?.displayName, userProfile?.persona, userProfile?.displayName]);
 
   const refreshUserProfile = useCallback(async () => {
     if (!currentUser) return;
@@ -164,6 +201,35 @@ export function AuthProvider({ children }) {
 
   const resetPassword = (email) => sendPasswordResetEmail(auth, email);
 
+  /** Re-authenticate with Google (opens popup). Use before sensitive operations like deleteAccount. */
+  const reauthenticateWithGoogle = useCallback(async () => {
+    const user = auth.currentUser;
+    if (!user) throw new Error('Not signed in');
+    await reauthenticateWithPopup(user, googleProvider);
+  }, []);
+
+  /** Re-authenticate with email/password. Use before sensitive operations like deleteAccount. */
+  const reauthenticateWithEmailPassword = useCallback(async (password) => {
+    const user = auth.currentUser;
+    if (!user || !user.email) throw new Error('Not signed in or no email');
+    const credential = EmailAuthProvider.credential(user.email, password);
+    await reauthenticateWithCredential(user, credential);
+  }, []);
+
+  /**
+   * Delete the current user's account and all their data (properties, profile, shares, etc.).
+   * Call reauthenticateWithGoogle() or reauthenticateWithEmailPassword(password) first to avoid auth/requires-recent-login.
+   */
+  const deleteAccount = useCallback(async () => {
+    if (!currentUser) return;
+    const uid = currentUser.uid;
+    await deleteAllUserData(uid);
+    const user = auth.currentUser;
+    if (user && user.uid === uid) {
+      await deleteUser(user);
+    }
+  }, [currentUser?.uid]);
+
   const refreshSharedWithMe = useCallback(() => {
     if (!currentUser?.uid) return;
     refreshSharedWithMeList(currentUser.uid).then(setSharedWithMe).catch((e) => {
@@ -180,6 +246,7 @@ export function AuthProvider({ children }) {
     refreshSharedWithMe,
     userProfile,
     profileLoading,
+    linkedBrokers,
     refreshUserProfile,
     updateUserProfile,
     completeOnboarding,
@@ -188,6 +255,9 @@ export function AuthProvider({ children }) {
     logout,
     loginWithGoogle,
     resetPassword,
+    deleteAccount,
+    reauthenticateWithGoogle,
+    reauthenticateWithEmailPassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

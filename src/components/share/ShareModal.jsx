@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { createShare, addSharedWithMe, getShareRecipientCount } from '../../services/shareService';
@@ -26,6 +26,12 @@ const ShareModal = ({ propertyId, onClose, onShared }) => {
   const [recipientCount, setRecipientCount] = useState(null);
   const [linkCopied, setLinkCopied] = useState(false);
   const [messageCopied, setMessageCopied] = useState(false);
+  const emailInputRef = useRef(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => emailInputRef.current?.focus(), 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (!linkCreated?.token) return;
@@ -228,6 +234,7 @@ const ShareModal = ({ propertyId, onClose, onShared }) => {
                   {t('shareModal.recipientEmail')}
                 </label>
                 <input
+                  ref={emailInputRef}
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}

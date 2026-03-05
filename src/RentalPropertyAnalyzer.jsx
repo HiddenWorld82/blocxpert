@@ -26,13 +26,16 @@ import MarketParamsPage from './components/marketParams/MarketParamsPage';
 import ShareModal from './components/share/ShareModal';
 import ShareWithBrokerModal from './components/share/ShareWithBrokerModal';
 import ShareMethodChoiceModal from './components/share/ShareMethodChoiceModal';
+import BrokerPickerModal from './components/share/BrokerPickerModal';
 import SharedPropertyView from './components/shared/SharedPropertyView';
 import { getShare, markSharedWithMeSeen, removeSharedWithMe, getSharesByProperty, getShareScenariosOnce, cleanupPropertyShares, getPropertyShareRecipientCount } from './services/shareService';
 import { getClients, getInviteByToken, updateClient } from './services/clientsService';
-import { setUserProfile, clearBrokerLink } from './services/userProfileService';
+import { setUserProfile } from './services/userProfileService';
+import { addBrokerLink } from './services/brokerLinksService';
+import { isBrokerPersona } from './constants/personas';
 
 const RentalPropertyAnalyzer = () => {
-  const { currentUser, userProfile, properties, propertiesLoading, sharedWithMe, refreshSharedWithMe, refreshUserProfile } = useAuth();
+  const { currentUser, userProfile, properties, propertiesLoading, sharedWithMe, linkedBrokers, refreshSharedWithMe, refreshUserProfile } = useAuth();
   const { t } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
@@ -47,6 +50,13 @@ const RentalPropertyAnalyzer = () => {
       return () => clearTimeout(t);
     }
   }, [location.state?.shareAdded, navigate]);
+
+  useEffect(() => {
+    if (location.state?.invitationAccepted) {
+      setInvitationAcceptedMessage(true);
+      navigate('/', { replace: true, state: {} });
+    }
+  }, [location.state?.invitationAccepted, navigate]);
   const [currentProperty, setCurrentProperty] = useState(defaultProperty);
   const [advancedExpenses, setAdvancedExpenses] = useState(false);
   const [currentScenario, setCurrentScenario] = useState(null);
@@ -54,6 +64,8 @@ const RentalPropertyAnalyzer = () => {
   const [clients, setClients] = useState([]);
   const [shareModalPropertyId, setShareModalPropertyId] = useState(null);
   const [shareWithBrokerPropertyId, setShareWithBrokerPropertyId] = useState(null);
+  const [selectedBrokerForShare, setSelectedBrokerForShare] = useState(null);
+  const [shareBrokerPickerPropertyId, setShareBrokerPickerPropertyId] = useState(null);
   const [shareMethodChoicePropertyId, setShareMethodChoicePropertyId] = useState(null);
   const [shareStatsVersion, setShareStatsVersion] = useState(0);
   const [shareStats, setShareStats] = useState({});
@@ -77,7 +89,7 @@ const RentalPropertyAnalyzer = () => {
   );
 
   useEffect(() => {
-    if (userProfile?.persona === 'courtier_hypo' && currentUser?.uid) {
+    if (isBrokerPersona(userProfile?.persona) && currentUser?.uid) {
       const unsub = getClients(currentUser.uid, setClients);
       return () => {
         const u = unsub;
@@ -85,6 +97,18 @@ const RentalPropertyAnalyzer = () => {
       };
     }
   }, [userProfile?.persona, currentUser?.uid]);
+
+  // Migration : si le profil a encore brokerUid/brokerClientId mais brokerLinks est vide, ajouter le lien
+  useEffect(() => {
+    if (!currentUser?.uid || !userProfile?.brokerUid || !userProfile?.brokerClientId) return;
+    if (linkedBrokers.length > 0) return;
+    addBrokerLink(
+      currentUser.uid,
+      userProfile.brokerUid,
+      userProfile.brokerClientId,
+      userProfile.brokerDisplayName || ''
+    ).catch((e) => console.warn('brokerLinks migration failed', e?.message));
+  }, [currentUser?.uid, userProfile?.brokerUid, userProfile?.brokerClientId, userProfile?.brokerDisplayName, linkedBrokers.length]);
 
   useEffect(() => {
     const importShared = async () => {
@@ -126,6 +150,7 @@ const RentalPropertyAnalyzer = () => {
           brokerClientId: inviteData.clientId,
           brokerUid: inviteData.brokerUid,
         });
+        await addBrokerLink(currentUser.uid, inviteData.brokerUid, inviteData.clientId, '');
         await refreshUserProfile();
         if (cancelled) return;
         setInvitationAcceptedMessage(true);
@@ -138,16 +163,16 @@ const RentalPropertyAnalyzer = () => {
   }, [currentUser?.uid, location.search, navigate, refreshUserProfile]);
 
   const handleShare = async (propertyId) => {
-    if (userProfile?.persona === 'courtier_hypo') {
+    if (isBrokerPersona(userProfile?.persona)) {
       const property = properties?.find((p) => p.id === propertyId);
       if (property?.fromClient) return; // Ne pas permettre au courtier de partager un immeuble partagé par un client (données confidentielles)
       setShareModalPropertyId(propertyId);
       return;
     }
-    // Client d'un courtier : proposer le choix (partager avec le courtier ou par courriel).
-    // On ne peut pas appeler getClient ici car les règles Firestore réservent la lecture de
-    // clients/ au courtier ; l'investisseur a déjà brokerUid/brokerClientId dans son profil.
-    if (userProfile?.brokerUid && userProfile?.brokerClientId) {
+    // Investisseur avec au moins un courtier lié : proposer partage avec courtier ou par courriel.
+    // On s'appuie sur linkedBrokers (sous-collection brokerLinks) pour éviter d'afficher
+    // "Partager avec mon courtier" si l'investisseur n'est plus rattaché à un courtier.
+    if (linkedBrokers?.length > 0) {
       setShareMethodChoicePropertyId(propertyId);
       return;
     }
@@ -222,9 +247,9 @@ const RentalPropertyAnalyzer = () => {
       advancedExpenses,
       ...analysis,
       uid: ownerUid,
-      ...(userProfile?.brokerClientId && !isClientProperty && {
-        brokerUid: userProfile.brokerUid,
-        brokerClientId: userProfile.brokerClientId,
+      ...((userProfile?.brokerClientId || linkedBrokers?.[0]?.clientId) && !isClientProperty && {
+        brokerUid: userProfile?.brokerUid || linkedBrokers?.[0]?.brokerUid,
+        brokerClientId: userProfile?.brokerClientId || linkedBrokers?.[0]?.clientId,
       }),
       ...(currentProperty.fromClient && currentProperty.brokerUid && {
         brokerUid: currentProperty.brokerUid,
@@ -266,7 +291,7 @@ const RentalPropertyAnalyzer = () => {
     setCurrentStep('form');
   };
 
-  const isCourtierHypo = userProfile?.persona === 'courtier_hypo';
+  const isCourtierHypo = isBrokerPersona(userProfile?.persona);
 
   const handleDeleteProperty = async (propertyId) => {
     if (!propertyId || !currentUser?.uid) return;
@@ -289,12 +314,12 @@ const RentalPropertyAnalyzer = () => {
     }
   };
 
-  // When investor views home, refresh "Partagés avec moi" so entries whose share was deleted by broker disappear
+  // When user views home, refresh "Partagés avec moi" for all personas so entries whose share was deleted disappear
   useEffect(() => {
-    if (currentStep === 'home' && currentUser?.uid && userProfile?.persona !== 'courtier_hypo' && refreshSharedWithMe) {
+    if (currentStep === 'home' && currentUser?.uid && refreshSharedWithMe) {
       refreshSharedWithMe();
     }
-  }, [currentStep, currentUser?.uid, userProfile?.persona, refreshSharedWithMe]);
+  }, [currentStep, currentUser?.uid, refreshSharedWithMe]);
 
   // Share stats for home screen (lifted here so state updates reliably trigger re-render of HomeScreen)
   const propertyIdsKey = (properties || []).map((p) => p.id).filter(Boolean).join(',');
@@ -464,11 +489,30 @@ const RentalPropertyAnalyzer = () => {
           onClose={() => setShareMethodChoicePropertyId(null)}
           onChooseBroker={(id) => {
             setShareMethodChoicePropertyId(null);
-            setShareWithBrokerPropertyId(id);
+            if (linkedBrokers.length === 1) {
+              setSelectedBrokerForShare(linkedBrokers[0]);
+              setShareWithBrokerPropertyId(id);
+            } else {
+              setShareBrokerPickerPropertyId(id);
+            }
           }}
           onChooseEmail={(id) => {
             setShareMethodChoicePropertyId(null);
             setShareModalPropertyId(id);
+          }}
+        />
+      )}
+      {shareBrokerPickerPropertyId && linkedBrokers.length > 1 && (
+        <BrokerPickerModal
+          brokers={linkedBrokers}
+          alreadySharedBrokerUids={
+            properties?.find((p) => p.id === shareBrokerPickerPropertyId)?.sharedWithBrokerUids || []
+          }
+          onClose={() => setShareBrokerPickerPropertyId(null)}
+          onSelect={(broker) => {
+            setSelectedBrokerForShare(broker);
+            setShareWithBrokerPropertyId(shareBrokerPickerPropertyId);
+            setShareBrokerPickerPropertyId(null);
           }}
         />
       )}
@@ -491,14 +535,28 @@ const RentalPropertyAnalyzer = () => {
       {shareWithBrokerPropertyId && (
         <ShareWithBrokerModal
           propertyId={shareWithBrokerPropertyId}
-          onClose={() => setShareWithBrokerPropertyId(null)}
-          onShared={(id) => {
+          selectedBroker={selectedBrokerForShare}
+          alreadySharedWithThisBroker={
+            (() => {
+              const prop = properties?.find((p) => p.id === shareWithBrokerPropertyId);
+              const broker = selectedBrokerForShare || linkedBrokers?.[0];
+              return !!(prop?.sharedWithBrokerUids?.length && broker && prop.sharedWithBrokerUids.includes(broker.brokerUid));
+            })()
+          }
+          onClose={() => {
             setShareWithBrokerPropertyId(null);
-            setCurrentProperty((prev) => (prev?.id === id ? { ...prev, brokerUid: userProfile?.brokerUid, clientId: userProfile?.brokerClientId } : prev));
+            setSelectedBrokerForShare(null);
+          }}
+          onShared={(id) => {
+            const broker = selectedBrokerForShare || linkedBrokers?.[0];
+            setShareWithBrokerPropertyId(null);
+            setSelectedBrokerForShare(null);
+            setCurrentProperty((prev) => (prev?.id === id && broker ? { ...prev, brokerUid: broker.brokerUid, clientId: broker.clientId } : prev));
           }}
         />
       )}
       <Header
+        onNavigateToHome={() => setCurrentStep('home')}
         onNavigateToClients={isCourtierHypo ? () => setCurrentStep('clients') : undefined}
         onNavigateToMarketParams={undefined}
       />

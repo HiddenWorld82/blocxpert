@@ -278,6 +278,46 @@ export async function getSharesByProperty(uid, propertyId) {
 }
 
 /**
+ * List all share docs owned by this user (for account deletion).
+ * @param {string} uid
+ * @returns {Promise<Array<{ id: string, [key: string]: any }>>}
+ */
+export async function getSharesByUser(uid) {
+  if (!uid) return [];
+  const ref = collection(firestore, COLLECTION);
+  const q = query(ref, where('uid', '==', uid));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+/**
+ * Delete all shares owned by this user (sharedWithMe entries, share scenarios, share docs).
+ * Call when deleting user account (for shares not tied to a property, or after properties are cleaned).
+ */
+export async function deleteAllSharesForUser(uid) {
+  if (!uid) return;
+  const shares = await getSharesByUser(uid);
+  for (const share of shares) {
+    try {
+      await deleteSharedWithMeEntriesByShareToken(share.id);
+    } catch (e) {
+      console.warn('deleteAllSharesForUser: could not delete sharedWithMe for share', share.id, e);
+    }
+    try {
+      const scenariosSnap = await getDocs(shareScenariosRef(share.id));
+      await Promise.all(scenariosSnap.docs.map((d) => deleteDoc(d.ref)));
+    } catch (e) {
+      console.warn('deleteAllSharesForUser: delete share scenarios', share.id, e);
+    }
+    try {
+      await deleteDoc(doc(firestore, COLLECTION, share.id));
+    } catch (e) {
+      throw new Error('delete share doc(' + share.id + '): ' + (e?.message || e));
+    }
+  }
+}
+
+/**
  * Total number of people who have this property in their dashboard (across all share links for it).
  */
 export async function getPropertyShareRecipientCount(uid, propertyId) {

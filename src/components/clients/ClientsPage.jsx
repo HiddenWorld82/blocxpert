@@ -44,6 +44,7 @@ const ClientsPage = ({ onBack }) => {
         const { clientId, invitationLink } = await createClient(currentUser.uid, {
           name: formName,
           email: formEmail,
+          brokerDisplayName: currentUser.displayName || '',
         });
         const emailTo = (formEmail || '').trim().toLowerCase();
         if (emailTo) {

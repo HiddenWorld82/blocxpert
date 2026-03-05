@@ -12,12 +12,15 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const invitationInUrl = new URLSearchParams(location.search).get('invitation');
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     try {
       await login(email, password);
-      navigate(`/${location.search}`);
+      // Avec une invitation : passer par la page Signup pour lier le courtier (logique "déjà connecté")
+      navigate(invitationInUrl ? `/signup${location.search}` : `/${location.search}`);
     } catch {
       setError(t('auth.login.error'));
     }
@@ -27,13 +30,11 @@ const LoginPage = () => {
     setError('');
     try {
       await loginWithGoogle();
-      navigate(`/${location.search}`);
+      navigate(invitationInUrl ? `/signup${location.search}` : `/${location.search}`);
     } catch {
       setError(t('auth.google.error'));
     }
   };
-
-  const invitationInUrl = new URLSearchParams(location.search).get('invitation');
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">

@@ -1,17 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { getInviteByToken, updateClient } from '../../services/clientsService';
 import { setUserProfile } from '../../services/userProfileService';
+import { addBrokerLink } from '../../services/brokerLinksService';
 
 const SignupPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [emailAlreadyInUse, setEmailAlreadyInUse] = useState(false);
   const [inviteData, setInviteData] = useState(null);
   const [inviteLoading, setInviteLoading] = useState(true);
-  const { signup, loginWithGoogle } = useAuth();
+  const { currentUser, signup, loginWithGoogle, refreshUserProfile } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
@@ -34,9 +36,56 @@ const SignupPage = () => {
       .catch(() => setInviteLoading(false));
   }, [invitationToken]);
 
+  const [linkingBroker, setLinkingBroker] = useState(false);
+  const [linkError, setLinkError] = useState(null);
+  const redirectTimerRef = useRef(null);
+
+  // Investisseur déjà connecté qui ouvre le lien d'invitation : lier le courtier, afficher 2 s, puis rediriger
+  useEffect(() => {
+    if (!currentUser?.uid || !inviteData?.clientId || inviteLoading) return;
+    let cancelled = false;
+    setLinkError(null);
+    setLinkingBroker(true);
+    (async () => {
+      try {
+        try {
+          await updateClient(inviteData.clientId, { clientUserId: currentUser.uid });
+        } catch (e) {
+          // Client déjà lié (ex. deuxième ouverture du lien) : on continue pour mettre à jour le profil et brokerLinks
+          console.warn('SignupPage: updateClient', e?.message);
+        }
+        await setUserProfile(currentUser.uid, {
+          persona: 'investisseur',
+          onboardingCompleted: true,
+          brokerClientId: inviteData.clientId,
+          brokerUid: inviteData.brokerUid,
+        });
+        await addBrokerLink(currentUser.uid, inviteData.brokerUid, inviteData.clientId, inviteData.brokerDisplayName || '');
+        if (refreshUserProfile) await refreshUserProfile();
+        if (cancelled) return;
+        // Laisser le message visible 2 secondes avant la redirection
+        redirectTimerRef.current = setTimeout(() => {
+          if (!cancelled) {
+            navigate('/', { replace: true, state: { shareAdded: false, invitationAccepted: true } });
+          }
+        }, 2000);
+      } catch (e) {
+        console.warn('SignupPage: accept invitation while logged in', e?.message);
+        if (!cancelled) {
+          setLinkError(e?.message || t('auth.linkingBrokerError'));
+          setLinkingBroker(false);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+      if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
+    };
+  }, [currentUser?.uid, inviteData?.clientId, inviteData?.brokerUid, inviteLoading, navigate, refreshUserProfile, t]);
+
   const getAuthErrorMessage = (err) => {
     const code = err?.code || '';
-    if (code === 'auth/email-already-in-use') return t('auth.error.emailAlreadyInUse');
+    if (code === 'auth/email-already-in-use') return invitationToken ? t('auth.error.emailAlreadyInUseUseLogin') : t('auth.error.emailAlreadyInUse');
     if (code === 'auth/weak-password') return t('auth.error.weakPassword');
     if (code === 'auth/invalid-email') return t('auth.error.invalidEmail');
     if (code === 'auth/operation-not-allowed') return t('auth.error.operationNotAllowed');
@@ -48,6 +97,7 @@ const SignupPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setEmailAlreadyInUse(false);
     try {
       const cred = await signup(email, password);
       const uid = cred?.user?.uid;
@@ -59,9 +109,11 @@ const SignupPage = () => {
           brokerClientId: inviteData.clientId,
           brokerUid: inviteData.brokerUid,
         });
+        await addBrokerLink(uid, inviteData.brokerUid, inviteData.clientId, inviteData.brokerDisplayName || '');
       }
       navigate(`/${location.search}`);
     } catch (err) {
+      setEmailAlreadyInUse(err?.code === 'auth/email-already-in-use');
       setError(getAuthErrorMessage(err));
     }
   };
@@ -79,6 +131,7 @@ const SignupPage = () => {
           brokerClientId: inviteData.clientId,
           brokerUid: inviteData.brokerUid,
         });
+        await addBrokerLink(uid, inviteData.brokerUid, inviteData.clientId, inviteData.brokerDisplayName || '');
       }
       navigate(`/${location.search}`);
     } catch (err) {
@@ -86,10 +139,46 @@ const SignupPage = () => {
     }
   };
 
+  // Utilisateur déjà connecté + lien d'invitation : ne jamais afficher le formulaire, lier le courtier puis rediriger
+  if (currentUser && invitationToken) {
+    if (inviteLoading) {
+      return (
+        <div className="flex items-center justify-center min-h-screen bg-gray-100">
+          <div className="w-full max-w-md p-8 text-center text-gray-600">{t('loading')}</div>
+        </div>
+      );
+    }
+    if (linkError) {
+      return (
+        <div className="flex items-center justify-center min-h-screen bg-gray-100">
+          <div className="w-full max-w-md p-8 text-center space-y-4">
+            <p className="text-red-600">{linkError}</p>
+            <Link to="/" className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+              {t('auth.goToHome')}
+            </Link>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="w-full max-w-md p-8 text-center text-gray-600">{t('auth.linkingBroker')}</div>
+      </div>
+    );
+  }
+
   if (inviteLoading && invitationToken) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
         <div className="w-full max-w-md p-8 text-center text-gray-600">{t('loading')}</div>
+      </div>
+    );
+  }
+
+  if (linkingBroker && inviteData) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="w-full max-w-md p-8 text-center text-gray-600">{t('auth.linkingBroker')}</div>
       </div>
     );
   }
@@ -103,7 +192,18 @@ const SignupPage = () => {
             {t('auth.signup.invitedByBroker')}
           </p>
         )}
-        {error && <div className="p-2 text-red-600 bg-red-100 rounded">{error}</div>}
+        {error && (
+          <div className="p-2 text-red-600 bg-red-100 rounded space-y-2">
+            <p>{error}</p>
+            {invitationToken && emailAlreadyInUse && (
+              <p className="text-sm">
+                <Link to={`/login${location.search}`} className="text-blue-600 underline font-medium">
+                  {t('auth.signup.useLoginInstead')}
+                </Link>
+              </p>
+            )}
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium">{t('auth.email')}</label>

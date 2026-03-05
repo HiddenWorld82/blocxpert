@@ -49,6 +49,7 @@ export function getClients(uid, callback) {
 /**
  * Create client and invitation token. Returns { clientId, invitationToken, invitationLink }.
  * Call sendInvitationEmail() or use invitationLink as needed.
+ * @param {object} data.brokerDisplayName - Optional broker display name (stored in invite for client's broker link).
  */
 export async function createClient(uid, data) {
   const ref = collection(firestore, COLLECTION);
@@ -70,6 +71,7 @@ export async function createClient(uid, data) {
     brokerUid: uid,
     email: (data.email || '').trim().toLowerCase(),
     clientName: data.name || '',
+    brokerDisplayName: data.brokerDisplayName || '',
   });
   const base = typeof window !== 'undefined'
     ? `${window.location.origin}${window.location.pathname}#/signup?invitation=${invitationToken}`
@@ -103,18 +105,30 @@ export async function getInviteByToken(token) {
 
 /**
  * Delete a client. If the client had linked their account (clientUserId), clear their
- * broker association so they no longer see "Share with broker".
+ * broker association so they no longer see "Share with broker". Also clears brokerUid/clientId
+ * from all properties shared with this broker so the client's home no longer shows "Partagé avec 1 courtier".
  */
 export async function deleteClient(clientId) {
   const ref = doc(firestore, COLLECTION, clientId);
   const snap = await getDoc(ref);
   if (snap.exists()) {
     const data = snap.data();
+    const brokerUid = data?.uid;
     const clientUserId = data?.clientUserId;
     if (clientUserId) {
       const { clearBrokerLink } = await import('./userProfileService');
       await clearBrokerLink(clientUserId).catch((e) =>
         console.warn('deleteClient: clearBrokerLink failed', e)
+      );
+      const { removeBrokerLink } = await import('./brokerLinksService');
+      await removeBrokerLink(clientUserId, brokerUid).catch((e) =>
+        console.warn('deleteClient: removeBrokerLink failed', e)
+      );
+    }
+    if (brokerUid) {
+      const { clearBrokerFromClientProperties } = await import('./dataService');
+      await clearBrokerFromClientProperties(brokerUid, clientId).catch((e) =>
+        console.warn('deleteClient: clearBrokerFromClientProperties failed', e)
       );
     }
   }

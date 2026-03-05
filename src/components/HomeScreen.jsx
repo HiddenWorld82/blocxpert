@@ -23,11 +23,19 @@ function PropertyCard({ property, index, isOwner, isNewClientProperty, onSelect,
   ]
     .filter(Boolean)
     .join(', ');
-  // Only show "Partagé avec X personne(s)" when at least one person has it in "Partagés avec moi"
-  const showSharedLine = shareRecipientCount > 0;
-  const shareLabel = shareRecipientCount === 1
-    ? t('home.sharedWithCount').replace('{count}', shareRecipientCount)
-    : (t('home.sharedWithCount_plural') || t('home.sharedWithCount')).replace('{count}', shareRecipientCount);
+  const brokerCount = (property.sharedWithBrokerUids && property.sharedWithBrokerUids.length) || (property.brokerUid ? 1 : 0);
+  const sharedWithBroker = brokerCount > 0;
+  // Pour les courtiers : ne pas afficher le nombre de personnes avec qui l'immeuble est partagé (lien)
+  const displayShareCount = isBrokerView && property.fromClient ? 0 : shareRecipientCount;
+  const showSharedLine = displayShareCount > 0 || sharedWithBroker;
+  const personLabel = displayShareCount === 1
+    ? t('home.sharedWithCount').replace('{count}', displayShareCount)
+    : (t('home.sharedWithCount_plural') || t('home.sharedWithCount')).replace('{count}', displayShareCount);
+  const shareLabel = sharedWithBroker && displayShareCount > 0
+    ? t('home.sharedWithCountAndBroker').replace('{count}', String(displayShareCount))
+    : sharedWithBroker
+      ? (brokerCount > 1 ? t('home.sharedWithBrokers').replace('{count}', String(brokerCount)) : t('home.sharedWithBroker'))
+      : personLabel;
   const shareColor = '#003e56';
 
   return (
@@ -48,8 +56,13 @@ function PropertyCard({ property, index, isOwner, isNewClientProperty, onSelect,
               e.stopPropagation();
               onShare?.(property.id);
             }}
-            className="absolute top-2 right-10 text-blue-600 hover:text-blue-800"
+            className={`absolute top-2 right-10 ${
+              (property.sharedWithBrokerUids?.length ?? 0) > 0
+                ? 'text-gray-500 hover:text-gray-700'
+                : 'text-blue-600 hover:text-blue-800'
+            }`}
             aria-label={t('home.share')}
+            title={(property.sharedWithBrokerUids?.length ?? 0) > 0 ? t('shareWithBroker.alreadyShared') : undefined}
           >
             <Share2 size={16} />
           </button>
@@ -192,12 +205,12 @@ const HomeScreen = ({
   const myAnalyses = isBrokerView ? properties.filter((p) => !p.fromClient) : properties;
   const clientIdsSet = React.useMemo(() => new Set(clients.map((c) => c.id)), [clients]);
   const clientProperties = isBrokerView
-    ? properties.filter((p) => p.fromClient && p.clientId && clientIdsSet.has(p.clientId))
+    ? properties.filter((p) => p.fromClient)
     : [];
   const getClientLabel = (clientId) => {
     if (clientId === '_sans_client_') return null;
     const c = clients.find((x) => x.id === clientId);
-    return c ? (c.name || c.email || c.id) : clientId;
+    return c ? (c.name || c.email || c.id) : (t('home.clientDeleted') || 'Client supprimé');
   };
 
   const byClientEntries = React.useMemo(() => {
@@ -222,7 +235,7 @@ const HomeScreen = ({
 
 
   const totalCount = properties.length;
-  const showBrokerSections = isBrokerView && (myAnalyses.length > 0 || clientProperties.length > 0);
+  const showBrokerSections = isBrokerView && (myAnalyses.length > 0 || clientProperties.length > 0 || sharedWithMe.length > 0);
   const showClientTabs = !isBrokerView && (properties.length > 0 || sharedWithMe.length > 0);
   const [activeTab, setActiveTab] = React.useState('myAnalyses');
 
@@ -325,6 +338,23 @@ const HomeScreen = ({
                     </span>
                   )}
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('sharedWithMe')}
+                  className={`flex-1 sm:flex-none px-4 py-3 font-medium text-sm rounded-t-lg transition-colors flex items-center justify-center gap-2 ${
+                    activeTab === 'sharedWithMe'
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  <Share2 className="w-4 h-4" />
+                  {t('home.tabSharedWithMe')}
+                  {sharedWithMe.length > 0 && (
+                    <span className={`ml-1 px-1.5 py-0.5 rounded text-xs ${activeTab === 'sharedWithMe' ? 'bg-indigo-500' : 'bg-gray-300'}`}>
+                      {sharedWithMe.length}
+                    </span>
+                  )}
+                </button>
               </div>
             </div>
 
@@ -412,6 +442,31 @@ const HomeScreen = ({
                       );
                     })}
                   </div>
+                )}
+              </div>
+            )}
+
+            {/* Contenu onglet Partagés avec moi (courtier) */}
+            {activeTab === 'sharedWithMe' && (
+              <div className="bg-white rounded-b-lg shadow-lg p-6 border border-t-0 border-gray-200">
+                <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                  <Share2 className="w-5 h-5 text-indigo-600" />
+                  {t('home.sharedWithYou')}
+                </h2>
+                {sharedWithMe.length > 0 ? (
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {sharedWithMe.map((item) => (
+                      <SharedWithMeCard
+                        key={item.id}
+                        item={item}
+                        onSelect={onSelectSharedWithMe}
+                        onRemove={onRemoveSharedWithMe}
+                        t={t}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-sm py-2">{t('home.noSharedWithMe')}</p>
                 )}
               </div>
             )}
