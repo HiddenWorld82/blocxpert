@@ -5,7 +5,7 @@ import useNetworkStatus from '../hooks/useNetworkStatus';
 import ProfileModal from './profile/ProfileModal';
 import { isBrokerPersona } from '../constants/personas';
 
-const Header = ({ onNavigateToClients, onNavigateToMarketParams, onNavigateToHome }) => {
+const Header = ({ onNavigateToClients, onNavigateToChecklists, onNavigateToMarketParams, onNavigateToHome }) => {
   const { currentUser, userProfile, logout } = useAuth();
   const { t } = useLanguage();
   const isOnline = useNetworkStatus();
@@ -54,6 +54,15 @@ const Header = ({ onNavigateToClients, onNavigateToMarketParams, onNavigateToHom
               >
                 {t('home.clients')}
               </button>
+              {onNavigateToChecklists && (
+                <button
+                  type="button"
+                  onClick={() => { onNavigateToChecklists?.(); setDropdownOpen(false); }}
+                  className="text-sm text-gray-700 hover:text-blue-600 px-2 py-1 rounded"
+                >
+                  {t('home.checklists')}
+                </button>
+              )}
               {onNavigateToMarketParams && (
                 <button
                   type="button"

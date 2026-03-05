@@ -15,6 +15,22 @@
         { "fieldPath": "clientId", "order": "ASCENDING" },
         { "fieldPath": "brokerUid", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "financementDossiers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "propertyId", "order": "ASCENDING" },
+        { "fieldPath": "ownerUid", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "financementDossiers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "propertyId", "order": "ASCENDING" },
+        { "fieldPath": "brokerUid", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

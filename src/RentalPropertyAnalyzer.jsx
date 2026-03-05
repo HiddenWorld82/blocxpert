@@ -6,6 +6,8 @@ import PropertyReport from './components/PropertyReport';
 import HomeScreen from './components/HomeScreen';
 import AmortizationPage from './components/AmortizationPage';
 import BuildingDashboard from './components/BuildingDashboard';
+import ProjectDocumentsPage from './components/projectDocuments/ProjectDocumentsPage';
+import FinancementDossierPage from './components/financementDossier/FinancementDossierPage';
 import FinancingScenarioForm from './components/FinancingScenarioForm';
 import AboutPage from './components/AboutPage';
 import useRentabilityCalculator from './hooks/useRentabilityCalculator';
@@ -15,13 +17,17 @@ import { useLanguage } from './contexts/LanguageContext';
 import {
   saveProperty,
   updateProperty,
-  deleteProperty,
+  deletePropertyAndScenarios,
   exportProperty,
   importSharedProperty,
 } from './services/dataService';
+import { deleteFinancementDossiersByProperty } from './services/financementDossierService';
+import { deleteGeneralDossier } from './services/generalDossierService';
+import DeletePropertyConfirmModal from './components/DeletePropertyConfirmModal';
 import Header from './components/Header';
 import OnboardingModal from './components/onboarding/OnboardingModal';
 import ClientsPage from './components/clients/ClientsPage';
+import ChecklistsPage from './components/checklists/ChecklistsPage';
 import MarketParamsPage from './components/marketParams/MarketParamsPage';
 import ShareModal from './components/share/ShareModal';
 import ShareWithBrokerModal from './components/share/ShareWithBrokerModal';
@@ -40,6 +46,7 @@ const RentalPropertyAnalyzer = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState('home');
+  const [propertyToDelete, setPropertyToDelete] = useState(null);
 
   useEffect(() => {
     if (location.state?.shareAdded) {
@@ -74,6 +81,7 @@ const RentalPropertyAnalyzer = () => {
   const [showShareAddedBanner, setShowShareAddedBanner] = useState(false);
   const [viewingShareData, setViewingShareData] = useState(null);
   const [sharedScenariosFromClients, setSharedScenariosFromClients] = useState([]);
+  const [selectedFinancementDossier, setSelectedFinancementDossier] = useState(null);
   const [lockedFields] = useState({
     //maintenance: false,
     //concierge: false,
@@ -293,21 +301,16 @@ const RentalPropertyAnalyzer = () => {
 
   const isCourtierHypo = isBrokerPersona(userProfile?.persona);
 
-  const handleDeleteProperty = async (propertyId) => {
-    if (!propertyId || !currentUser?.uid) return;
+  const handleDeleteProperty = async (property) => {
+    const propertyId = property?.id ?? property;
+    const ownerUid = typeof property === 'object' && property?.uid != null ? property.uid : currentUser?.uid;
+    if (!propertyId || !ownerUid) return;
     try {
-      try {
-        await cleanupPropertyShares(currentUser.uid, propertyId);
-      } catch (e) {
-        console.error('handleDeleteProperty: cleanupPropertyShares failed', e);
-        throw e;
-      }
-      try {
-        await deleteProperty(propertyId);
-      } catch (e) {
-        console.error('handleDeleteProperty: deleteProperty failed', e);
-        throw e;
-      }
+      await cleanupPropertyShares(ownerUid, propertyId);
+      await deleteFinancementDossiersByProperty(propertyId, ownerUid);
+      await deleteGeneralDossier(propertyId);
+      await deletePropertyAndScenarios(propertyId);
+      setPropertyToDelete(null);
     } catch (e) {
       console.error(e);
       alert((t('share.error') || 'Erreur') + ': ' + (e?.message || e));
@@ -558,12 +561,20 @@ const RentalPropertyAnalyzer = () => {
       <Header
         onNavigateToHome={() => setCurrentStep('home')}
         onNavigateToClients={isCourtierHypo ? () => setCurrentStep('clients') : undefined}
+        onNavigateToChecklists={isCourtierHypo ? () => setCurrentStep('checklists') : undefined}
         onNavigateToMarketParams={undefined}
       />
       {showShareAddedBanner && (
         <div className="bg-green-600 text-white text-center py-3 px-4 text-sm font-medium">
           {t('home.shareAddedBanner')}
         </div>
+      )}
+      {propertyToDelete && (
+        <DeletePropertyConfirmModal
+          property={propertyToDelete}
+          onClose={() => setPropertyToDelete(null)}
+          onConfirm={() => handleDeleteProperty(propertyToDelete)}
+        />
       )}
       {propertiesLoading ? (
         <div className="flex items-center justify-center py-10">
@@ -589,7 +600,7 @@ const RentalPropertyAnalyzer = () => {
                 setAdvancedExpenses(property.advancedExpenses || false);
                 setCurrentStep('dashboard');
               }}
-              onDelete={handleDeleteProperty}
+              onDelete={(property) => setPropertyToDelete(property)}
               onShare={handleShare}
               onAbout={() => setCurrentStep('about')}
               currentUserId={currentUser?.uid}
@@ -624,9 +635,27 @@ const RentalPropertyAnalyzer = () => {
               }}
               onEditProperty={() => setCurrentStep('form')}
               onBack={() => setCurrentStep('home')}
+              onOpenProjectDocuments={() => setCurrentStep('projectDocuments')}
+              onOpenFinancementDossier={(dossier) => {
+                setSelectedFinancementDossier(dossier);
+                setCurrentStep('financementDossier');
+              }}
               clients={clients}
               isCourtierHypo={isCourtierHypo}
               additionalScenariosFromShares={sharedScenariosFromClients}
+            />
+          )}
+          {currentStep === 'projectDocuments' && (
+            <ProjectDocumentsPage
+              property={currentProperty}
+              onBack={() => setCurrentStep('dashboard')}
+            />
+          )}
+          {currentStep === 'financementDossier' && selectedFinancementDossier && currentProperty && (
+            <FinancementDossierPage
+              dossier={selectedFinancementDossier}
+              property={currentProperty}
+              onBack={() => { setSelectedFinancementDossier(null); setCurrentStep('dashboard'); }}
             />
           )}
           {currentStep === 'scenario' && (
@@ -669,6 +698,9 @@ const RentalPropertyAnalyzer = () => {
           )}
           {currentStep === 'clients' && (
             <ClientsPage onBack={() => setCurrentStep('home')} />
+          )}
+          {currentStep === 'checklists' && (
+            <ChecklistsPage onBack={() => setCurrentStep('home')} />
           )}
           {currentStep === 'marketParams' && (
             <MarketParamsPage onBack={() => setCurrentStep('home')} />

@@ -69,7 +69,7 @@ function PropertyCard({ property, index, isOwner, isNewClientProperty, onSelect,
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onDelete?.(property.id);
+              onDelete?.(property);
             }}
             className="absolute top-2 right-2 text-red-600 hover:text-red-800"
             aria-label={t('home.delete')}

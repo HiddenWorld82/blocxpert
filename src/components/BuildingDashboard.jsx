@@ -1,9 +1,15 @@
 // components/BuildingDashboard.jsx
-import React from 'react';
-import { DollarSign, TrendingUp, BarChart, Building } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { DollarSign, TrendingUp, BarChart, Building, FileStack, FileCheck } from 'lucide-react';
 import ScenarioList from './ScenarioList';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
+import {
+  subscribeFinancementDossiersForProperty,
+  subscribeFinancementDossiersByPropertyAndBroker,
+  cancelFinancementDossier,
+} from '../services/financementDossierService';
+import RequestDossierModal from './financementDossier/RequestDossierModal';
 
 const BuildingDashboard = ({
   property,
@@ -12,6 +18,8 @@ const BuildingDashboard = ({
   onViewScenario,
   onEditProperty,
   onBack,
+  onOpenProjectDocuments = null,
+  onOpenFinancementDossier = null,
   clients = [],
   isCourtierHypo = false,
   readOnly = false,
@@ -24,9 +32,27 @@ const BuildingDashboard = ({
 }) => {
   const { t } = useLanguage();
   const { currentUser } = useAuth();
+  const [financementDossiers, setFinancementDossiers] = useState([]);
+  const [brokerDossiersForThisProperty, setBrokerDossiersForThisProperty] = useState([]);
+  const [requestDossierModalOpen, setRequestDossierModalOpen] = useState(false);
+  const [cancelDossierConfirm, setCancelDossierConfirm] = useState(null);
   const isPropertyOwner = currentUser?.uid === property?.uid;
   const isBrokerViewingClientProperty =
     property?.brokerUid === currentUser?.uid && property?.uid !== currentUser?.uid;
+
+  useEffect(() => {
+    if (!property?.id || !property?.uid || !isPropertyOwner) return;
+    return subscribeFinancementDossiersForProperty(property.id, property.uid, setFinancementDossiers);
+  }, [property?.id, property?.uid, isPropertyOwner]);
+
+  useEffect(() => {
+    if (!property?.id || !currentUser?.uid || !isBrokerViewingClientProperty) return;
+    return subscribeFinancementDossiersByPropertyAndBroker(
+      property.id,
+      currentUser.uid,
+      setBrokerDossiersForThisProperty
+    );
+  }, [property?.id, currentUser?.uid, isBrokerViewingClientProperty]);
   // Owner can edit/delete any scenario; broker viewing client property only their own. Share-created scenarios are not editable (form saves to property only) but owner can delete them.
   const canEditScenarioFn = (sc) =>
     !sc.shareToken && (isPropertyOwner || (isBrokerViewingClientProperty && sc.createdByUid === currentUser?.uid));
@@ -158,6 +184,62 @@ const BuildingDashboard = ({
                 </p>
               );
             })()}
+            {isBrokerViewingClientProperty && (
+              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setRequestDossierModalOpen(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-sm"
+                  >
+                    <FileCheck className="w-5 h-5" />
+                    {t('financementDossier.sendChecklist')}
+                  </button>
+                  {brokerDossiersForThisProperty.length > 0 && onOpenFinancementDossier && (
+                    <div className="inline-flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => onOpenFinancementDossier(brokerDossiersForThisProperty[0])}
+                        className="inline-flex items-center gap-2 px-3 py-2 text-blue-600 hover:bg-blue-100 rounded-lg border border-blue-200 text-sm"
+                      >
+                        {t('financementDossier.open')} ({t(`financementDossier.status_${brokerDossiersForThisProperty[0].status || 'not_started'}`)})
+                      </button>
+                      {brokerDossiersForThisProperty[0].status !== 'submitted' && (
+                        cancelDossierConfirm === brokerDossiersForThisProperty[0].id ? (
+                          <span className="inline-flex items-center gap-1 text-sm">
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                await cancelFinancementDossier(brokerDossiersForThisProperty[0].id);
+                                setCancelDossierConfirm(null);
+                              }}
+                              className="px-2 py-1 rounded bg-red-600 text-white hover:bg-red-700"
+                            >
+                              {t('confirm')}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setCancelDossierConfirm(null)}
+                              className="px-2 py-1 rounded border hover:bg-gray-100"
+                            >
+                              {t('cancel')}
+                            </button>
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setCancelDossierConfirm(brokerDossiersForThisProperty[0].id)}
+                            className="inline-flex items-center gap-1 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg border border-red-200 text-sm"
+                          >
+                            {t('financementDossier.cancelRequest')}
+                          </button>
+                        )
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
@@ -176,10 +258,20 @@ const BuildingDashboard = ({
           </div>
 
           {!readOnly && (
-            <div className="flex justify-center mb-6">
+            <div className="flex flex-wrap justify-center gap-3 mb-6">
+              {onOpenProjectDocuments && isPropertyOwner && (
+                <button
+                  type="button"
+                  onClick={onOpenProjectDocuments}
+                  className="w-full sm:w-auto inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-blue-600 text-blue-600 hover:bg-blue-50"
+                >
+                  <FileStack className="w-5 h-5" />
+                  {t('building.projectDocuments')}
+                </button>
+              )}
               <button
                 onClick={onCreateScenario}
-                className="w-full sm:w-auto bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
+                className="w-full sm:w-auto bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 inline-flex items-center justify-center gap-2"
               >
                 {t('building.createScenario')}
               </button>
@@ -212,6 +304,39 @@ const BuildingDashboard = ({
             </div>
           ) : (
             <>
+              {isPropertyOwner && (property?.sharedWithBrokerUids?.length > 0 || financementDossiers.length > 0) && (
+                <div className="mb-6">
+                  <h3 className="font-medium text-gray-700 mb-2">{t('financementDossier.sectionTitle')}</h3>
+                  {financementDossiers.length === 0 ? (
+                    <p className="text-sm text-gray-500">{t('financementDossier.noDossiersYet')}</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {financementDossiers.map((d) => (
+                        <li
+                          key={d.id}
+                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
+                        >
+                          <span className="text-sm text-gray-700">
+                            {d.brokerDisplayName || d.brokerUid || 'Broker'}
+                            <span className="ml-2 text-gray-500">
+                              — {t(`financementDossier.status_${d.status || 'not_started'}`)}
+                            </span>
+                          </span>
+                          {onOpenFinancementDossier && (
+                            <button
+                              type="button"
+                              onClick={() => onOpenFinancementDossier(d)}
+                              className="text-sm text-blue-600 hover:underline"
+                            >
+                              {t('financementDossier.open')}
+                            </button>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
               <ScenarioList
                 propertyId={property.id}
                 shareToken={shareToken}
@@ -226,6 +351,14 @@ const BuildingDashboard = ({
                 canDeleteScenario={!shareToken ? canDeleteScenarioFn : undefined}
                 creatorUid={!shareToken ? currentUser?.uid : undefined}
               />
+              {requestDossierModalOpen && (
+                <RequestDossierModal
+                  property={property}
+                  existingDossiers={brokerDossiersForThisProperty}
+                  onClose={() => setRequestDossierModalOpen(false)}
+                  onRequested={() => setRequestDossierModalOpen(false)}
+                />
+              )}
             </>
           )}
         </div>

@@ -1,0 +1,14 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Documents du projet: lecture pour tout utilisateur authentifié (courtier peut voir les pièces des dossiers de financement); écriture pour l'app (on restreint côté app au propriétaire de la propriété).
+    match /general-dossier/{propertyId}/{documentTypeId}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    // Dossiers de financement (à utiliser plus tard)
+    match /dossier-files/{dossierId}/{path=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

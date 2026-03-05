@@ -38,6 +38,9 @@ service cloud.firestore {
     }
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
+      match /checklists/{checklistId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
       match /brokerLinks/{brokerUid} {
         allow read, write: if request.auth != null && request.auth.uid == userId;
       }
@@ -64,6 +67,20 @@ service cloud.firestore {
         || (request.resource.data.clientUserId == request.auth.uid
             && (resource.data.clientUserId == null || resource.data.clientUserId == request.auth.uid))
       );
+    }
+
+    match /financementDossiers/{dossierId} {
+      allow read: if request.auth != null
+        && (resource.data.ownerUid == request.auth.uid || resource.data.brokerUid == request.auth.uid);
+      allow create: if request.auth != null
+        && request.resource.data.brokerUid == request.auth.uid
+        && request.resource.data.keys().hasAll(['propertyId', 'ownerUid', 'brokerUid', 'checklistSnapshot', 'status'])
+        && exists(/databases/$(database)/documents/properties/$(request.resource.data.propertyId))
+        && get(/databases/$(database)/documents/properties/$(request.resource.data.propertyId)).data.uid == request.resource.data.ownerUid
+        && (request.auth.uid in get(/databases/$(database)/documents/properties/$(request.resource.data.propertyId)).data.get('sharedWithBrokerUids', [])
+            || get(/databases/$(database)/documents/properties/$(request.resource.data.propertyId)).data.brokerUid == request.auth.uid);
+      allow update, delete: if request.auth != null
+        && (resource.data.ownerUid == request.auth.uid || resource.data.brokerUid == request.auth.uid);
     }
 
     match /inviteTokens/{token} {
@@ -124,6 +141,9 @@ service cloud.firestore {
         allow update, delete: if canAccessProperty(database, propertyId)
           && (get(/databases/$(database)/documents/properties/$(propertyId)).data.uid == request.auth.uid
               || resource.data.createdByUid == request.auth.uid);
+      }
+      match /generalDossier/{docId} {
+        allow read, write: if canAccessProperty(database, propertyId);
       }
     }
   }
